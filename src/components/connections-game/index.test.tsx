@@ -1,4 +1,3 @@
-import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { gameId, useConnectionsGameResult, wordList } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
@@ -6,8 +5,11 @@ import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import { ConnectionsGame } from './index'
+import { GameSelection } from '@components/game-selection'
+import { useConnectionsGame } from '@hooks/useConnectionsGame'
 
 jest.mock('@hooks/useConnectionsGame')
+jest.mock('@components/game-selection')
 
 describe('ConnectionsGame', () => {
   beforeAll(() => {
@@ -192,5 +194,11 @@ describe('ConnectionsGame', () => {
     render(<ConnectionsGame gameId={gameId} />)
 
     expect(screen.getByText('Incorrect guesses: 2')).toBeInTheDocument()
+  })
+
+  it('displays game selection', () => {
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(GameSelection).toHaveBeenCalled()
   })
 })

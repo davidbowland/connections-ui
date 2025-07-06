@@ -1,6 +1,5 @@
 /* eslint-disable sort-keys */
 import { UseConnectionsGameResult } from '@hooks/useConnectionsGame'
-
 import { CategoryObject, ConnectionsGame } from '@types'
 
 // Connections

@@ -1,8 +1,9 @@
-import { ConnectionsGame } from '@components/connections-game'
-import PrivacyLink from '@components/privacy-link'
 import React from 'react'
 
 import Grid from '@mui/material/Grid'
+
+import { ConnectionsGame } from '@components/connections-game'
+import PrivacyLink from '@components/privacy-link'
 
 export interface GamePageProps {
   params: {

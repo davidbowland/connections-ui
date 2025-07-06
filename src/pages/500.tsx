@@ -1,5 +1,6 @@
-import ServerErrorMessage from '@components/server-error-message'
 import React from 'react'
+
+import ServerErrorMessage from '@components/server-error-message'
 
 const InternalServerError = (): React.ReactNode => {
   return (

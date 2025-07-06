@@ -1,10 +1,10 @@
-import { ConnectionsGame } from '@components/connections-game'
-import PrivacyLink from '@components/privacy-link'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 import React from 'react'
 
 import GamePage, { Head } from './[gameId]'
+import { ConnectionsGame } from '@components/connections-game'
+import PrivacyLink from '@components/privacy-link'
 
 jest.mock('@components/connections-game')
 jest.mock('@components/privacy-link')

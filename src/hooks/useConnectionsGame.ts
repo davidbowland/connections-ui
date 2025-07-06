@@ -43,11 +43,14 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
   const [solvedCategories, setSolvedCategories] = useState<SolvedCategory[]>([])
   const [words, setWords] = useState<string[]>([])
 
-  const selectWord = useCallback((word: string) => {
-    if (selectedWords.length < 4 && !selectedWords.includes(word)) {
-      setSelectedWords((prev) => [...prev, word])
-    }
-  }, [selectedWords])
+  const selectWord = useCallback(
+    (word: string) => {
+      if (selectedWords.length < 4 && !selectedWords.includes(word)) {
+        setSelectedWords((prev) => [...prev, word])
+      }
+    },
+    [selectedWords],
+  )
 
   const unselectWord = useCallback((word: string) => {
     setSelectedWords((prev) => prev.filter((w) => w !== word))
@@ -78,12 +81,12 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
 
   const revealSolution = useCallback(() => {
     const remainingCategories = Object.entries(categories).filter(
-      ([categoryName]) => !solvedCategories.some(solved => solved.description === categoryName)
+      ([categoryName]) => !solvedCategories.some((solved) => solved.description === categoryName),
     )
 
     const newSolved = remainingCategories.map(([categoryName, category]) => ({
       description: categoryName,
-      words: category.words
+      words: category.words,
     }))
 
     setSolvedCategories((prev) => [...prev, ...newSolved])

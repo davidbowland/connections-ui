@@ -1,5 +1,6 @@
-import ServerErrorMessage from '@components/server-error-message'
 import React from 'react'
+
+import ServerErrorMessage from '@components/server-error-message'
 
 const NotFound = (): React.ReactNode => {
   const display404 = typeof window !== 'undefined' && window.location.pathname.match(/^\/c\/[^/]+$/) === null

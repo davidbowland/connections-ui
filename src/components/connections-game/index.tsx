@@ -1,4 +1,4 @@
-import { useConnectionsGame } from '@hooks/useConnectionsGame'
+import { GAME_COLORS } from '@config/colors'
 import React, { useMemo } from 'react'
 import styled from 'styled-components'
 
@@ -9,7 +9,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 
-import { GAME_COLORS } from '@config/colors'
+import { GameSelection } from '@components/game-selection'
+import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { CategoryColors } from '@types'
 
 const StyledButton = styled(Button)`
@@ -19,11 +20,6 @@ const StyledButton = styled(Button)`
   height: 80px;
   text-transform: uppercase;
   width: 100%;
-
-  &:hover {
-    background-color: 'background.secondary';
-    color: 'text.primary';
-  }
 `
 
 const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
@@ -33,8 +29,21 @@ export interface ConnectionsGameProps {
 }
 
 export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNode => {
-  const { categories, clearSelectedWords, errorMessage, incorrectGuesses, isLoading, isRevealSolutionEnabled, revealSolution, selectedWords, selectWord, solvedCategories, submitWords, unselectWord, words } =
-    useConnectionsGame(gameId)
+  const {
+    categories,
+    clearSelectedWords,
+    errorMessage,
+    incorrectGuesses,
+    isLoading,
+    isRevealSolutionEnabled,
+    revealSolution,
+    selectedWords,
+    selectWord,
+    solvedCategories,
+    submitWords,
+    unselectWord,
+    words,
+  } = useConnectionsGame(gameId)
 
   const { categoryColors, selectedWordColor } = useMemo(() => {
     const availableColors = new Set(GAME_COLORS)
@@ -79,12 +88,12 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
           return (
             <Box
               key={index}
-              mb={2}
-              p={2}
               sx={{
                 backgroundColor: color.background,
                 borderRadius: 2,
                 color: color.text,
+                marginBottom: '2em',
+                padding: '2em',
                 textAlign: 'center',
               }}
             >
@@ -102,6 +111,9 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
                 <StyledButton
                   onClick={() => (isSelected ? unselectWord(word) : selectWord(word))}
                   sx={{
+                    ':hover': {
+                      backgroundColor: isSelected ? selectedWordColor.background + 'aa' : 'transparent',
+                    },
                     backgroundColor: isSelected ? selectedWordColor.background : 'transparent',
                     color: isSelected ? selectedWordColor.text : 'text.primary',
                   }}
@@ -141,9 +153,13 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
           </Box>
         </Box>
 
-        <Typography align="center" color="text.secondary" mt={2} variant="body2">
+        <Typography align="center" color="text.secondary" variant="body2" sx={{ marginTop: '2em' }}>
           Incorrect guesses: {incorrectGuesses}
         </Typography>
+
+        <Box maxWidth="300px" sx={{ margin: '0 auto 3em', paddingTop: '4em' }}>
+          <GameSelection gameId={gameId} />
+        </Box>
       </Box>
     </Box>
   )
