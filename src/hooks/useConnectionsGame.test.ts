@@ -19,6 +19,11 @@ Object.defineProperty(window, 'crypto', {
 })
 
 describe('useConnectionsGame', () => {
+  const selectWord = async (result: any, word: string) => {
+    result.current.selectWord(word)
+    await waitFor(() => expect(result.current.selectedWords).toContain(word))
+  }
+
   beforeAll(() => {
     jest.mocked(connections).fetchConnectionsGame.mockResolvedValue(connectionsGame)
 
@@ -73,20 +78,21 @@ describe('useConnectionsGame', () => {
     await waitFor(() => expect(result.current.selectedWords).toEqual([]))
   })
 
-  it('solves category when 4 correct words are selected', async () => {
+  it('submits correct words and solves category', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    result.current.selectWord('WORD01')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD01'))
-    result.current.selectWord('WORD02')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD02'))
-    result.current.selectWord('WORD03')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD03'))
-    result.current.selectWord('WORD04')
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD03')
+    await selectWord(result, 'WORD04')
+    expect(result.current.selectedWords).toHaveLength(4)
+
+    const success = result.current.submitWords()
+    expect(success).toBe(true)
 
     await waitFor(() => expect(result.current.solvedCategories).toHaveLength(1))
     expect(result.current.solvedCategories[0]).toEqual({
@@ -97,6 +103,63 @@ describe('useConnectionsGame', () => {
     expect(result.current.words).toHaveLength(12)
   })
 
+  it('handles incorrect submissions and tracks guesses', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD05')
+    await selectWord(result, 'WORD06')
+
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+
+    const success = result.current.submitWords()
+    expect(success).toBe(false)
+
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
+    expect(result.current.selectedWords).toEqual(['WORD01', 'WORD02', 'WORD05', 'WORD06'])
+    expect(result.current.isRevealSolutionEnabled).toBe(false)
+  })
+
+  it('enables reveal solution after 4 incorrect guesses', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // Make 4 incorrect guesses
+    for (let i = 0; i < 4; i++) {
+      await selectWord(result, 'WORD01')
+      await selectWord(result, 'WORD02')
+      await selectWord(result, 'WORD05')
+      await selectWord(result, 'WORD06')
+      await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+      result.current.submitWords()
+      await waitFor(() => expect(result.current.incorrectGuesses).toBe(i + 1))
+    }
+
+    expect(result.current.isRevealSolutionEnabled).toBe(true)
+  })
+
+  it('reveals all solutions', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    result.current.revealSolution()
+
+    await waitFor(() => expect(result.current.solvedCategories).toHaveLength(4))
+    expect(result.current.words).toEqual([])
+    expect(result.current.selectedWords).toEqual([])
+  })
+
   it('limits selection to 4 words', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId))
 
@@ -104,14 +167,10 @@ describe('useConnectionsGame', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    result.current.selectWord('WORD01')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD01'))
-    result.current.selectWord('WORD02')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD02'))
-    result.current.selectWord('WORD03')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD03'))
-    result.current.selectWord('WORD05')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD05'))
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD03')
+    await selectWord(result, 'WORD05')
     result.current.selectWord('WORD06')
 
     await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
@@ -125,10 +184,23 @@ describe('useConnectionsGame', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    result.current.selectWord('WORD01')
-    await waitFor(() => expect(result.current.selectedWords).toContain('WORD01'))
-    result.current.selectWord('WORD01')
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD01')
 
     await waitFor(() => expect(result.current.selectedWords).toEqual(['WORD01']))
+  })
+
+  it('returns false when submitting less than 4 words', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+
+    const success = result.current.submitWords()
+    expect(success).toBe(false)
+    expect(result.current.incorrectGuesses).toBe(0)
   })
 })

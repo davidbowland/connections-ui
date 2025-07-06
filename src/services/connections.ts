@@ -12,7 +12,7 @@ export const fetchConnectionsGame = async (gameId: string): Promise<ConnectionsG
   //   "Member of a Team with the Most Championships": { words: ["CANADIEN", "CELTIC", "PACKER", "YANKEE"]},
   //   "Create Some Volume/Texture in Hair": { words: ["CRIMP", "CURL", "FEATHER", "TEASE"]},
   //   "Supplies for Macaroni Art": { words: ["GLITTER", "GLUE", "MACARONI", "PAPER"]},
-  //   "Words After \"Golden\"":{ words:  ["DOODLE", "GOOSE", "PARACHUTE", "ROD"]}
+  //   "Words After \"Golden\"":{ words: ["DOODLE", "GOOSE", "PARACHUTE", "ROD"]}
   // } })
   const response = await api.get(`/games/${gameId}`)
   return response.data

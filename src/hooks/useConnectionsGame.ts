@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { fetchConnectionsGame } from '@services/connections'
 import { CategoryObject, SolvedCategory } from '@types'
@@ -22,10 +22,14 @@ export interface UseConnectionsGameResult {
   categories: CategoryObject
   clearSelectedWords: () => void
   errorMessage: string | null
+  incorrectGuesses: number
   isLoading: boolean
+  isRevealSolutionEnabled: boolean
+  revealSolution: () => void
   selectedWords: string[]
   selectWord: (word: string) => void
   solvedCategories: SolvedCategory[]
+  submitWords: () => boolean
   unselectWord: (word: string) => void
   words: string[]
 }
@@ -34,45 +38,67 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
   const [categories, setCategories] = useState<CategoryObject>({})
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [incorrectGuesses, setIncorrectGuesses] = useState(0)
   const [selectedWords, setSelectedWords] = useState<string[]>([])
   const [solvedCategories, setSolvedCategories] = useState<SolvedCategory[]>([])
   const [words, setWords] = useState<string[]>([])
 
-  const selectWord = (word: string) => {
+  const selectWord = useCallback((word: string) => {
     if (selectedWords.length < 4 && !selectedWords.includes(word)) {
-      const newSelected = [...selectedWords, word]
-      setSelectedWords(newSelected)
-
-      if (newSelected.length === 4) {
-        // Check if all 4 words belong to the same category
-        const categoryEntry = Object.entries(categories).find(([, category]) =>
-          newSelected.every((selectedWord) => category.words.includes(selectedWord)),
-        )
-
-        if (categoryEntry) {
-          const [categoryName, category] = categoryEntry
-          setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words }])
-          setWords((prev) => prev.filter((w) => !category.words.includes(w)))
-          setSelectedWords([])
-        }
-      }
+      setSelectedWords((prev) => [...prev, word])
     }
-  }
+  }, [selectedWords])
 
-  const unselectWord = (word: string) => {
+  const unselectWord = useCallback((word: string) => {
     setSelectedWords((prev) => prev.filter((w) => w !== word))
-  }
+  }, [])
 
-  const clearSelectedWords = () => {
+  const clearSelectedWords = useCallback(() => {
     setSelectedWords([])
-  }
+  }, [])
+
+  const submitWords = useCallback((): boolean => {
+    if (selectedWords.length !== 4) return false
+
+    const categoryEntry = Object.entries(categories).find(([, category]) =>
+      selectedWords.every((selectedWord) => category.words.includes(selectedWord)),
+    )
+
+    if (categoryEntry) {
+      const [categoryName, category] = categoryEntry
+      setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words }])
+      setWords((prev) => prev.filter((w) => !category.words.includes(w)))
+      setSelectedWords([])
+      return true
+    } else {
+      setIncorrectGuesses((prev) => prev + 1)
+      return false
+    }
+  }, [categories, selectedWords])
+
+  const revealSolution = useCallback(() => {
+    const remainingCategories = Object.entries(categories).filter(
+      ([categoryName]) => !solvedCategories.some(solved => solved.description === categoryName)
+    )
+
+    const newSolved = remainingCategories.map(([categoryName, category]) => ({
+      description: categoryName,
+      words: category.words
+    }))
+
+    setSolvedCategories((prev) => [...prev, ...newSolved])
+    setWords([])
+    setSelectedWords([])
+  }, [categories, solvedCategories])
 
   useEffect(() => {
     setIsLoading(true)
     setErrorMessage(null)
 
     setCategories({})
+    setIncorrectGuesses(0)
     setSelectedWords([])
+    setSolvedCategories([])
     setWords([])
 
     fetchConnectionsGame(gameId)
@@ -95,10 +121,14 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     categories,
     clearSelectedWords,
     errorMessage,
+    incorrectGuesses,
     isLoading,
+    isRevealSolutionEnabled: incorrectGuesses >= 4 && solvedCategories.length < 4,
+    revealSolution,
     selectedWords,
     selectWord,
     solvedCategories,
+    submitWords,
     unselectWord,
     words,
   }

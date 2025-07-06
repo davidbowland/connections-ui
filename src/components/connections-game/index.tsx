@@ -33,7 +33,7 @@ export interface ConnectionsGameProps {
 }
 
 export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNode => {
-  const { categories, errorMessage, isLoading, selectedWords, selectWord, solvedCategories, unselectWord, words } =
+  const { categories, clearSelectedWords, errorMessage, incorrectGuesses, isLoading, isRevealSolutionEnabled, revealSolution, selectedWords, selectWord, solvedCategories, submitWords, unselectWord, words } =
     useConnectionsGame(gameId)
 
   const { categoryColors, selectedWordColor } = useMemo(() => {
@@ -113,6 +113,37 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
             )
           })}
         </Grid>
+
+        <Box display="flex" flexDirection="column" gap={2} mt={3}>
+          <Box display="flex" gap={2} justifyContent="center">
+            <Button
+              onClick={submitWords}
+              sx={{ minWidth: 140, visibility: selectedWords.length >= 4 ? 'visible' : 'hidden' }}
+              variant="contained"
+            >
+              Submit
+            </Button>
+            <Button
+              onClick={clearSelectedWords}
+              sx={{ minWidth: 140, visibility: selectedWords.length > 0 ? 'visible' : 'hidden' }}
+              variant="outlined"
+            >
+              Clear selection
+            </Button>
+            <Button
+              color="secondary"
+              onClick={revealSolution}
+              sx={{ minWidth: 140, visibility: isRevealSolutionEnabled ? 'visible' : 'hidden' }}
+              variant="contained"
+            >
+              Reveal solution
+            </Button>
+          </Box>
+        </Box>
+
+        <Typography align="center" color="text.secondary" mt={2} variant="body2">
+          Incorrect guesses: {incorrectGuesses}
+        </Typography>
       </Box>
     </Box>
   )
