@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { fetchConnectionsGame } from '@services/connections'
-import { CategoryObject } from '@types'
+import { CategoryObject, SolvedCategory } from '@types'
 
 // Cryptographically secure random shuffle using Fisher-Yates algorithm
 const shuffleArray = (array: string[]): string[] => {
@@ -20,20 +20,60 @@ const shuffleArray = (array: string[]): string[] => {
 
 export interface UseConnectionsGameResult {
   categories: CategoryObject
-  words: string[]
-  isLoading: boolean
+  clearSelectedWords: () => void
   errorMessage: string | null
+  isLoading: boolean
+  selectedWords: string[]
+  selectWord: (word: string) => void
+  solvedCategories: SolvedCategory[]
+  unselectWord: (word: string) => void
+  words: string[]
 }
 
 export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => {
   const [categories, setCategories] = useState<CategoryObject>({})
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedWords, setSelectedWords] = useState<string[]>([])
+  const [solvedCategories, setSolvedCategories] = useState<SolvedCategory[]>([])
   const [words, setWords] = useState<string[]>([])
+
+  const selectWord = (word: string) => {
+    if (selectedWords.length < 4 && !selectedWords.includes(word)) {
+      const newSelected = [...selectedWords, word]
+      setSelectedWords(newSelected)
+
+      if (newSelected.length === 4) {
+        // Check if all 4 words belong to the same category
+        const categoryEntry = Object.entries(categories).find(([, category]) =>
+          newSelected.every((selectedWord) => category.words.includes(selectedWord)),
+        )
+
+        if (categoryEntry) {
+          const [categoryName, category] = categoryEntry
+          setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words }])
+          setWords((prev) => prev.filter((w) => !category.words.includes(w)))
+          setSelectedWords([])
+        }
+      }
+    }
+  }
+
+  const unselectWord = (word: string) => {
+    setSelectedWords((prev) => prev.filter((w) => w !== word))
+  }
+
+  const clearSelectedWords = () => {
+    setSelectedWords([])
+  }
 
   useEffect(() => {
     setIsLoading(true)
     setErrorMessage(null)
+
+    setCategories({})
+    setSelectedWords([])
+    setWords([])
 
     fetchConnectionsGame(gameId)
       .then((game) => {
@@ -51,5 +91,15 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
       })
   }, [gameId])
 
-  return { categories, errorMessage, isLoading, words }
+  return {
+    categories,
+    clearSelectedWords,
+    errorMessage,
+    isLoading,
+    selectedWords,
+    selectWord,
+    solvedCategories,
+    unselectWord,
+    words,
+  }
 }

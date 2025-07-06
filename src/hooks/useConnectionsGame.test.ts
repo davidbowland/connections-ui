@@ -52,4 +52,83 @@ describe('useConnectionsGame', () => {
     expect(result.current.categories).toEqual({})
     expect(result.current.words).toEqual([])
   })
+
+  it('selects and unselects words', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    result.current.selectWord('WORD01')
+    await waitFor(() => expect(result.current.selectedWords).toEqual(['WORD01']))
+
+    result.current.selectWord('WORD02')
+    await waitFor(() => expect(result.current.selectedWords).toEqual(['WORD01', 'WORD02']))
+
+    result.current.unselectWord('WORD01')
+    await waitFor(() => expect(result.current.selectedWords).toEqual(['WORD02']))
+
+    result.current.clearSelectedWords()
+    await waitFor(() => expect(result.current.selectedWords).toEqual([]))
+  })
+
+  it('solves category when 4 correct words are selected', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    result.current.selectWord('WORD01')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD01'))
+    result.current.selectWord('WORD02')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD02'))
+    result.current.selectWord('WORD03')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD03'))
+    result.current.selectWord('WORD04')
+
+    await waitFor(() => expect(result.current.solvedCategories).toHaveLength(1))
+    expect(result.current.solvedCategories[0]).toEqual({
+      description: 'Category 1',
+      words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'],
+    })
+    expect(result.current.selectedWords).toEqual([])
+    expect(result.current.words).toHaveLength(12)
+  })
+
+  it('limits selection to 4 words', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    result.current.selectWord('WORD01')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD01'))
+    result.current.selectWord('WORD02')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD02'))
+    result.current.selectWord('WORD03')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD03'))
+    result.current.selectWord('WORD05')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD05'))
+    result.current.selectWord('WORD06')
+
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+    expect(result.current.selectedWords).not.toContain('WORD06')
+  })
+
+  it('does not select already selected words', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    result.current.selectWord('WORD01')
+    await waitFor(() => expect(result.current.selectedWords).toContain('WORD01'))
+    result.current.selectWord('WORD01')
+
+    await waitFor(() => expect(result.current.selectedWords).toEqual(['WORD01']))
+  })
 })

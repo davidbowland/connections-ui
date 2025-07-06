@@ -41,7 +41,12 @@ export const wordList: string[] = [
 
 export const useConnectionsGameResult: UseConnectionsGameResult = {
   categories,
+  clearSelectedWords: jest.fn(),
   errorMessage: null,
   isLoading: false,
+  selectedWords: [],
+  selectWord: jest.fn(),
+  solvedCategories: [],
+  unselectWord: jest.fn(),
   words: wordList,
 }
