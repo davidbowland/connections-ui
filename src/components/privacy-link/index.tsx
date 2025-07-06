@@ -1,6 +1,7 @@
-import Typography from '@mui/material/Typography'
 import { Link } from 'gatsby'
 import React from 'react'
+
+import Typography from '@mui/material/Typography'
 
 const PrivacyLink = (): React.ReactNode => {
   return (

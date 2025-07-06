@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { CategoryObject } from '@types'
 import { fetchConnectionsGame } from '@services/connections'
+import { CategoryObject } from '@types'
 
 // Cryptographically secure random shuffle using Fisher-Yates algorithm
 const shuffleArray = (array: string[]): string[] => {
@@ -35,16 +35,20 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     setIsLoading(true)
     setErrorMessage(null)
 
-    fetchConnectionsGame(gameId).then((game) => {
-      const allWords = Object.values(game.categories).reduce((acc, category) => [...acc, ...category.words], [] as string[])
-      setCategories(game.categories)
-      setWords(shuffleArray(allWords))
-      setIsLoading(false)
-    }).catch((error: unknown) => {
-      console.error('fetchConnectionsGame', { error })
-      setErrorMessage('Failed to load game')
-      throw error
-    })
+    fetchConnectionsGame(gameId)
+      .then((game) => {
+        const allWords = Object.values(game.categories).reduce(
+          (acc, category) => [...acc, ...category.words],
+          [] as string[],
+        )
+        setCategories(game.categories)
+        setWords(shuffleArray(allWords))
+        setIsLoading(false)
+      })
+      .catch((error: unknown) => {
+        console.error('fetchConnectionsGame', { error })
+        setErrorMessage('Failed to load game')
+      })
   }, [gameId])
 
   return { categories, errorMessage, isLoading, words }

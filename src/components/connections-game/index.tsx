@@ -1,4 +1,7 @@
+import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import React from 'react'
+import styled from 'styled-components'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -6,14 +9,26 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 
-import { useConnectionsGame } from '@hooks/useConnectionsGame'
+const StyledButton = styled(Button)`
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  height: 80px;
+  text-transform: uppercase;
+  width: 100%;
+
+  &:hover {
+    background-color: 'background.secondary';
+    color: 'text.primary';
+  }
+`
 
 export interface ConnectionsGameProps {
   gameId: string
 }
 
 export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNode => {
-  const {errorMessage, isLoading, words } = useConnectionsGame(gameId)
+  const { errorMessage, isLoading, words } = useConnectionsGame(gameId)
 
   if (isLoading) {
     return (
@@ -26,9 +41,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
   if (errorMessage) {
     return (
       <Box p={2}>
-        <Alert severity="error">
-          Error loading game: {errorMessage}
-        </Alert>
+        <Alert severity="error">Error loading game: {errorMessage}</Alert>
       </Box>
     )
   }
@@ -46,24 +59,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         <Grid container spacing={1}>
           {words.map((word, index) => (
             <Grid item key={index} xs={3}>
-              <Button
-                fullWidth
-                sx={{
-                  borderRadius: 2,
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  height: '80px',
-                  textTransform: 'uppercase',
-
-                  '&:hover': {
-                    backgroundColor: 'background.secondary',
-                    color: 'text.primary',
-                  },
-                }}
-                variant="outlined"
-              >
-                {word}
-              </Button>
+              <StyledButton variant="outlined">{word}</StyledButton>
             </Grid>
           ))}
         </Grid>

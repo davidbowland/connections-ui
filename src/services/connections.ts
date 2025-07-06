@@ -1,5 +1,6 @@
-import { ConnectionsGame } from '@types'
 import axios from 'axios'
+
+import { ConnectionsGame } from '@types'
 
 const api = axios.create({
   baseURL: process.env.GATSBY_CONNECTIONS_API_BASE_URL,

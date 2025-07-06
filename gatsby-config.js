@@ -29,6 +29,7 @@ module.exports = {
     'gatsby-plugin-image',
     'gatsby-plugin-sitemap',
     'gatsby-plugin-sharp',
+    'gatsby-plugin-styled-components',
     'gatsby-transformer-sharp',
     {
       __key: 'pages',

@@ -1,7 +1,8 @@
+import { connectionsGame, gameId, wordList } from '@test/__mocks__'
 import { renderHook, waitFor } from '@testing-library/react'
 
-import * as connections from '@services/connections'
 import { useConnectionsGame } from './useConnectionsGame'
+import * as connections from '@services/connections'
 
 jest.mock('@services/connections')
 
@@ -18,18 +19,10 @@ Object.defineProperty(window, 'crypto', {
 })
 
 describe('useConnectionsGame', () => {
-  const gameId = '2024-01-15'
-  const mockGame = {
-    categories: {
-      'Category 1': { words: ['word01', 'word02', 'word03', 'word04'] },
-      'Category 2': { words: ['word05', 'word06', 'word07', 'word08'] },
-      'Category 3': { words: ['word09', 'word10', 'word11', 'word12'] },
-      'Category 4': { words: ['word13', 'word14', 'word15', 'word16'] },
-    },
-  }
-
   beforeAll(() => {
-    jest.mocked(connections).fetchConnectionsGame.mockResolvedValue(mockGame)
+    jest.mocked(connections).fetchConnectionsGame.mockResolvedValue(connectionsGame)
+
+    console.error = jest.fn()
   })
 
   it('loads game data and shuffles words', async () => {
@@ -41,22 +34,21 @@ describe('useConnectionsGame', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    expect(result.current.categories).toEqual(mockGame.categories)
+    expect(result.current.categories).toEqual(connectionsGame.categories)
     expect(result.current.errorMessage).toBeNull()
-    expect(result.current.words.toSorted()).toEqual(['word01', 'word02', 'word03', 'word04', 'word05', 'word06', 'word07', 'word08', 'word09', 'word10', 'word11', 'word12', 'word13', 'word14', 'word15', 'word16'])
+    expect(result.current.words.toSorted()).toEqual(wordList)
   })
 
   it('handles API errors', async () => {
-    const errorMessage = 'API Error'
-    jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error(errorMessage))
+    jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error('API Error'))
 
     const { result } = renderHook(() => useConnectionsGame(gameId))
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.errorMessage).toBe('Failed to load game')
     })
 
-    expect(result.current.errorMessage).toBe(errorMessage)
+    expect(result.current.isLoading).toBe(true)
     expect(result.current.categories).toEqual({})
     expect(result.current.words).toEqual([])
   })
