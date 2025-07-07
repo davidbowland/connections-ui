@@ -5,7 +5,6 @@ import React from 'react'
 import Forbidden, { Head } from './403'
 import ServerErrorMessage from '@components/server-error-message'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/server-error-message')
 
 describe('403 error page', () => {

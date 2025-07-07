@@ -46,11 +46,6 @@ const PrivacyPolicy = (): React.ReactNode => {
         advertising campaigns).
       </Typography>
       <Typography variant="body1">
-        We do not share your Personal Information with third parties except in the extreme cases defined below. We use{' '}
-        <Link to="https://aws.amazon.com/pinpoint/">Amazon Pinpoint</Link> to help us understand how our customers use
-        the Site.
-      </Typography>
-      <Typography variant="body1">
         Finally, we may share your Personal Information to comply with applicable laws and regulations, to respond to a
         subpoena, search warrant or other lawful request for information we receive, or to otherwise protect our rights.
       </Typography>

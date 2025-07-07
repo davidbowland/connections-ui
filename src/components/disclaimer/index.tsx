@@ -31,9 +31,7 @@ const Disclaimer = (): React.ReactNode => {
                     This site only uses essential cookies such as those used to keep you logged in. We collect no
                     personally identifiable information and no contact information. Depending on your activity, your IP
                     address may appear in our logs for up to 90 days. We never sell your information -- we intentionally
-                    don&apos;t have information to sell -- and WE DO NOT USE YOUR INTERACTIONS TO TRAIN AI MODELS, but
-                    we do collect device and site usage information using{' '}
-                    <Link to="https://aws.amazon.com/pinpoint/">Amazon Pinpoint</Link>.
+                    don&apos;t have information to sell -- and WE DO NOT USE YOUR INTERACTIONS TO TRAIN AI MODELS.
                   </Typography>
                   <Typography variant="body2">
                     See our <Link to="/privacy-policy">privacy policy</Link> for more information.

@@ -1,6 +1,6 @@
 # Connections UI
 
-Gatsby and Amplify implementation of connections-api and connections-infrastructure. Example: <https://connections.dbowland.com/>
+Gatsby implementation of connections-api and connections-infrastructure. Example: <https://connections.dbowland.com/>
 
 ## Static Site
 

@@ -28,7 +28,6 @@
     "update": "npx update-browserslist-db@latest && ncu --doctor --target minor --upgrade && npm audit fix --audit-level=none && npm run test && npm dedupe"
   },
   "dependencies": {
-    "@aws-amplify/ui-react": "^5.3.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.6",
@@ -38,7 +37,6 @@
     "@mui/lab": "^5.0.0-alpha.176",
     "@mui/material": "^5.17.1",
     "@mui/x-data-grid": "^6.20.4",
-    "aws-amplify": "^5.3.27",
     "axios": "^1.10.0",
     "babel-plugin-styled-components": "^2.1.4",
     "crypto-browserify": "^3.12.1",

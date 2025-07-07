@@ -5,7 +5,6 @@ import React from 'react'
 import PrivacyPage, { Head } from './privacy-policy'
 import PrivacyPolicy from '@components/privacy-policy'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/privacy-policy')
 
 describe('Privacy page', () => {

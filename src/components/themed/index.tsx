@@ -7,7 +7,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import Disclaimer from '@components/disclaimer'
-import '@config/amplify'
 
 export interface ThemedProps {
   children: React.ReactNode | React.ReactNode[]

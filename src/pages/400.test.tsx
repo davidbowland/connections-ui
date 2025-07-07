@@ -5,7 +5,6 @@ import React from 'react'
 import BadRequest, { Head } from './400'
 import ServerErrorMessage from '@components/server-error-message'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/server-error-message')
 
 describe('400 error page', () => {
