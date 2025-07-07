@@ -203,4 +203,43 @@ describe('useConnectionsGame', () => {
     expect(success).toBe(false)
     expect(result.current.incorrectGuesses).toBe(0)
   })
+
+  it('sets isOneAway when 3 out of 4 words are in same category', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD03')
+    await selectWord(result, 'WORD05')
+
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+
+    const success = result.current.submitWords()
+    expect(success).toBe(false)
+
+    await waitFor(() => expect(result.current.isOneAway).toBe(true))
+  })
+
+  it('resets isOneAway when selecting words', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD03')
+    await selectWord(result, 'WORD05')
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.isOneAway).toBe(true))
+
+    result.current.clearSelectedWords()
+    await waitFor(() => expect(result.current.isOneAway).toBe(false))
+  })
 })

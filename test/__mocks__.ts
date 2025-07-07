@@ -44,6 +44,7 @@ export const useConnectionsGameResult: UseConnectionsGameResult = {
   errorMessage: null,
   incorrectGuesses: 0,
   isLoading: false,
+  isOneAway: false,
   isRevealSolutionEnabled: false,
   revealSolution: jest.fn(),
   selectedWords: [],

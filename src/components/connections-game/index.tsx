@@ -47,6 +47,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
     errorMessage,
     incorrectGuesses,
     isLoading,
+    isOneAway,
     isRevealSolutionEnabled,
     revealSolution,
     selectedWords,
@@ -179,6 +180,12 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">
           Incorrect guesses: {incorrectGuesses}
         </Typography>
+
+        {isOneAway && (
+          <Typography align="center" color="warning.main" sx={{ marginTop: '1em' }} variant="h6">
+            One away!
+          </Typography>
+        )}
 
         <Box maxWidth="300px" sx={{ margin: '0 auto 3em', paddingTop: '4em' }}>
           <GameSelection gameId={gameId} />

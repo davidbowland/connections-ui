@@ -7,7 +7,6 @@ export const GAME_COLORS: GameColor[] = [
   { background: '#0049b7', text: '#fff' }, // Blue
   { background: '#8458B3', text: '#fff' }, // Purple
   { background: '#494d5f', text: '#fff' }, // Dark Gray
-  { background: '#e1b382', text: '#000' }, // Tan
   { background: '#ff6f00', text: '#000' }, // Orange
   { background: '#4caf50', text: '#fff' }, // Green
 ]

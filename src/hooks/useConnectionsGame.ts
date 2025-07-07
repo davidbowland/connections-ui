@@ -24,6 +24,7 @@ export interface UseConnectionsGameResult {
   errorMessage: string | null
   incorrectGuesses: number
   isLoading: boolean
+  isOneAway: boolean
   isRevealSolutionEnabled: boolean
   revealSolution: () => void
   selectedWords: string[]
@@ -39,6 +40,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [incorrectGuesses, setIncorrectGuesses] = useState(0)
+  const [isOneAway, setIsOneAway] = useState(false)
   const [selectedWords, setSelectedWords] = useState<string[]>([])
   const [solvedCategories, setSolvedCategories] = useState<SolvedCategory[]>([])
   const [words, setWords] = useState<string[]>([])
@@ -74,6 +76,12 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
       setSelectedWords([])
       return true
     } else {
+      const isOneAwayResult = Object.values(categories).some((category) => {
+        const matchCount = selectedWords.filter((word) => category.words.includes(word)).length
+        return matchCount === 3
+      })
+
+      setIsOneAway(isOneAwayResult)
       setIncorrectGuesses((prev) => prev + 1)
       return false
     }
@@ -95,11 +103,16 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
   }, [categories, solvedCategories])
 
   useEffect(() => {
+    setIsOneAway(false)
+  }, [selectedWords])
+
+  useEffect(() => {
     setIsLoading(true)
     setErrorMessage(null)
 
     setCategories({})
     setIncorrectGuesses(0)
+    setIsOneAway(false)
     setSelectedWords([])
     setSolvedCategories([])
     setWords([])
@@ -126,6 +139,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     errorMessage,
     incorrectGuesses,
     isLoading,
+    isOneAway,
     isRevealSolutionEnabled: incorrectGuesses >= 4 && solvedCategories.length < 4,
     revealSolution,
     selectedWords,

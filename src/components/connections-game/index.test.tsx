@@ -201,4 +201,22 @@ describe('ConnectionsGame', () => {
 
     expect(GameSelection).toHaveBeenCalled()
   })
+
+  it('displays One away message when isOneAway is true', () => {
+    const mockResult = {
+      ...useConnectionsGameResult,
+      isOneAway: true,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.getByText('One away!')).toBeInTheDocument()
+  })
+
+  it('does not display One away message when isOneAway is false', () => {
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.queryByText('One away!')).not.toBeInTheDocument()
+  })
 })
