@@ -14,6 +14,8 @@ jest.mock('@components/game-selection')
 describe('ConnectionsGame', () => {
   beforeAll(() => {
     jest.mocked(useConnectionsGame).mockReturnValue(useConnectionsGameResult)
+
+    window.HTMLElement.prototype.scrollIntoView = jest.fn() // Calling this fails if we don't mock it
   })
 
   it('displays loading state', () => {

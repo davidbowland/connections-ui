@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import styled, { keyframes, css } from 'styled-components'
 
 import Alert from '@mui/material/Alert'
@@ -59,6 +59,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
   } = useConnectionsGame(gameId)
 
   const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
+  const boardRef = useRef<HTMLDivElement>(null)
 
   const displayGameId = useMemo(() => {
     const language = typeof navigator === 'undefined' ? 'en-US' : navigator.language
@@ -76,6 +77,12 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
       const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
       setShakingTimeout(timeout)
     }
+    boardRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleRevealSolution = () => {
+    revealSolution()
+    boardRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   const { categoryColors, selectedWordColor } = useMemo(() => {
@@ -115,7 +122,13 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         {displayGameId}
       </Typography>
 
-      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto">
+      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" ref={boardRef}>
+        {isOneAway && (
+          <Typography align="center" color="warning.main" sx={{ marginBottom: '1em' }} variant="h6">
+            One away!
+          </Typography>
+        )}
+
         {solvedCategories.map((category, index) => {
           const color = categoryColors[category.description]
           return (
@@ -196,7 +209,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
             </Button>
             <Button
               color="secondary"
-              onClick={revealSolution}
+              onClick={handleRevealSolution}
               sx={{
                 maxWidth: { md: 'none', xs: '280px' },
                 minWidth: 140,
@@ -213,12 +226,6 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">
           Incorrect guesses: {incorrectGuesses}
         </Typography>
-
-        {isOneAway && (
-          <Typography align="center" color="warning.main" sx={{ marginTop: '1em' }} variant="h6">
-            One away!
-          </Typography>
-        )}
 
         <Box maxWidth="300px" sx={{ margin: '0 auto 3em', paddingTop: '4em' }}>
           <GameSelection gameId={gameId} />
