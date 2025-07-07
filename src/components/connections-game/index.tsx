@@ -22,11 +22,11 @@ const shake = keyframes`
 
 const StyledButton = styled(Button)<{ $isShaking?: boolean }>`
   border-radius: 8px;
-  font-size: 14px;
+  font-variant: small-caps;
   font-weight: bold;
-  height: 80px;
-  text-transform: uppercase;
+  text-transform: none;
   width: 100%;
+
   ${(props) =>
     props.$isShaking &&
     css`
@@ -59,6 +59,16 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
   } = useConnectionsGame(gameId)
 
   const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
+
+  const displayGameId = useMemo(() => {
+    const language = typeof navigator === 'undefined' ? 'en-US' : navigator.language
+    return new Date(gameId).toLocaleDateString(language, {
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'UTC',
+      year: 'numeric',
+    })
+  }, [gameId])
 
   const handleSubmit = () => {
     const success = submitWords()
@@ -97,15 +107,15 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
   }
 
   return (
-    <Box p={2}>
+    <Box p={{ md: 2, xs: 1 }}>
       <Typography align="center" component="h1" gutterBottom variant="h4">
         Connections
       </Typography>
       <Typography align="center" color="text.secondary" gutterBottom variant="subtitle1">
-        {gameId}
+        {displayGameId}
       </Typography>
 
-      <Box maxWidth="600px" mt={3} mx="auto">
+      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto">
         {solvedCategories.map((category, index) => {
           const color = categoryColors[category.description]
           return (
@@ -130,7 +140,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
           {words.map((word, index) => {
             const isSelected = selectedWords.includes(word)
             return (
-              <Grid item key={index} xs={3}>
+              <Grid item key={index} sm={3} xs={6}>
                 <StyledButton
                   $isShaking={shakingTimeout && isSelected}
                   onClick={() => (isSelected ? unselectWord(word) : selectWord(word))}
@@ -140,6 +150,8 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
                     },
                     backgroundColor: isSelected ? selectedWordColor.background : 'transparent',
                     color: isSelected ? selectedWordColor.text : 'text.primary',
+                    fontSize: { md: 14, xs: 12 },
+                    height: { md: 80, xs: 60 },
                   }}
                   variant="outlined"
                 >
@@ -151,17 +163,33 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         </Grid>
 
         <Box display="flex" flexDirection="column" gap={2} mt={3}>
-          <Box display="flex" gap={2} justifyContent="center">
+          <Box
+            alignItems={{ md: 'flex-start', xs: 'center' }}
+            display="flex"
+            flexDirection={{ md: 'row', xs: 'column' }}
+            gap={2}
+            justifyContent="center"
+          >
             <Button
               onClick={handleSubmit}
-              sx={{ minWidth: 140, visibility: selectedWords.length >= 4 ? 'visible' : 'hidden' }}
+              sx={{
+                maxWidth: { md: 'none', xs: '280px' },
+                minWidth: 140,
+                visibility: selectedWords.length >= 4 ? 'visible' : 'hidden',
+                width: { md: 'auto', xs: '100%' },
+              }}
               variant="contained"
             >
               Submit
             </Button>
             <Button
               onClick={clearSelectedWords}
-              sx={{ minWidth: 140, visibility: selectedWords.length > 0 ? 'visible' : 'hidden' }}
+              sx={{
+                maxWidth: { md: 'none', xs: '280px' },
+                minWidth: 140,
+                visibility: selectedWords.length > 0 ? 'visible' : 'hidden',
+                width: { md: 'auto', xs: '100%' },
+              }}
               variant="outlined"
             >
               Clear selection
@@ -169,7 +197,12 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
             <Button
               color="secondary"
               onClick={revealSolution}
-              sx={{ minWidth: 140, visibility: isRevealSolutionEnabled ? 'visible' : 'hidden' }}
+              sx={{
+                maxWidth: { md: 'none', xs: '280px' },
+                minWidth: 140,
+                visibility: isRevealSolutionEnabled ? 'visible' : 'hidden',
+                width: { md: 'auto', xs: '100%' },
+              }}
               variant="contained"
             >
               Reveal solution

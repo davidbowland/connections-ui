@@ -14,7 +14,7 @@ describe('Index page', () => {
     jest.clearAllMocks()
     // Mock current date to ensure consistent test results
     jest.useFakeTimers()
-    jest.setSystemTime(new Date('2024-01-15T10:00:00Z'))
+    jest.setSystemTime(new Date('2025-01-15T10:00:00Z'))
   })
 
   afterEach(() => {
@@ -24,7 +24,7 @@ describe('Index page', () => {
   it('redirects to current date game page', () => {
     render(<Index />)
 
-    expect(mockNavigate).toHaveBeenCalledWith('/g/2024-01-15')
+    expect(mockNavigate).toHaveBeenCalledWith('/g/2025-01-15')
   })
 
   it('renders Head with correct title', () => {

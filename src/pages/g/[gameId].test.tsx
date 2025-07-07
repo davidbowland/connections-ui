@@ -5,13 +5,12 @@ import React from 'react'
 import GamePage, { Head } from './[gameId]'
 import { ConnectionsGame } from '@components/connections-game'
 import PrivacyLink from '@components/privacy-link'
+import { gameId } from '@test/__mocks__'
 
 jest.mock('@components/connections-game')
 jest.mock('@components/privacy-link')
 
 describe('GamePage', () => {
-  const gameId = '2024-01-15'
-
   beforeAll(() => {
     jest.mocked(ConnectionsGame).mockReturnValue(<>ConnectionsGame</>)
     jest.mocked(PrivacyLink).mockReturnValue(<>PrivacyLink</>)

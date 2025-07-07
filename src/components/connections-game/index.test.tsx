@@ -1,4 +1,3 @@
-import { gameId, useConnectionsGameResult, wordList } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -7,6 +6,7 @@ import React from 'react'
 import { ConnectionsGame } from './index'
 import { GameSelection } from '@components/game-selection'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
+import { gameId, useConnectionsGameResult, wordList } from '@test/__mocks__'
 
 jest.mock('@hooks/useConnectionsGame')
 jest.mock('@components/game-selection')
@@ -45,7 +45,7 @@ describe('ConnectionsGame', () => {
     render(<ConnectionsGame gameId={gameId} />)
 
     expect(screen.getByText('Connections')).toBeInTheDocument()
-    expect(screen.getByText(gameId)).toBeInTheDocument()
+    expect(screen.getByText('January 15, 2025')).toBeInTheDocument()
 
     wordList.forEach((word) => {
       expect(screen.getByRole('button', { name: word.toUpperCase() })).toBeInTheDocument()

@@ -1,6 +1,5 @@
-import { connectionsGame, gameId } from '@test/__mocks__'
-
 import { fetchConnectionsGame, fetchConnectionsGameIds } from './connections'
+import { connectionsGame, gameId } from '@test/__mocks__'
 
 const mockGet = jest.fn()
 jest.mock('axios', () => ({
@@ -18,7 +17,7 @@ describe('connections', () => {
     it('fetches connections game for a date', async () => {
       const result = await fetchConnectionsGame(gameId)
 
-      expect(mockGet).toHaveBeenCalledWith('/games/2024-01-15')
+      expect(mockGet).toHaveBeenCalledWith('/games/2025-01-15')
       expect(result).toEqual(connectionsGame)
     })
   })

@@ -1,4 +1,3 @@
-import { theme } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
@@ -9,6 +8,7 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 
 import Themed from './index'
 import Disclaimer from '@components/disclaimer'
+import { theme } from '@test/__mocks__'
 
 jest.mock('@mui/material/CssBaseline')
 jest.mock('@mui/material/styles', () => ({

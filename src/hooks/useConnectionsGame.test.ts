@@ -1,8 +1,8 @@
-import { connectionsGame, gameId, wordList } from '@test/__mocks__'
 import { renderHook, waitFor } from '@testing-library/react'
 
 import { useConnectionsGame } from './useConnectionsGame'
 import * as connections from '@services/connections'
+import { connectionsGame, gameId, wordList } from '@test/__mocks__'
 
 jest.mock('@services/connections')
 
