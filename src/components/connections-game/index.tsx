@@ -1,6 +1,5 @@
-import { GAME_COLORS } from '@config/colors'
-import React, { useMemo } from 'react'
-import styled from 'styled-components'
+import React, { useMemo, useState } from 'react'
+import styled, { keyframes, css } from 'styled-components'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -10,16 +9,29 @@ import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 
 import { GameSelection } from '@components/game-selection'
+import { GAME_COLORS } from '@config/colors'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { CategoryColors } from '@types'
 
-const StyledButton = styled(Button)`
+const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+`
+
+const StyledButton = styled(Button)<{ $isShaking?: boolean }>`
   border-radius: 8px;
   font-size: 14px;
   font-weight: bold;
   height: 80px;
   text-transform: uppercase;
   width: 100%;
+  ${(props) =>
+    props.$isShaking &&
+    css`
+      animation: ${shake} 0.5s ease-in-out;
+    `}
 `
 
 const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
@@ -44,6 +56,16 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
     unselectWord,
     words,
   } = useConnectionsGame(gameId)
+
+  const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
+
+  const handleSubmit = () => {
+    const success = submitWords()
+    if (!success && shakingTimeout === undefined) {
+      const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
+      setShakingTimeout(timeout)
+    }
+  }
 
   const { categoryColors, selectedWordColor } = useMemo(() => {
     const availableColors = new Set(GAME_COLORS)
@@ -109,6 +131,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
             return (
               <Grid item key={index} xs={3}>
                 <StyledButton
+                  $isShaking={shakingTimeout && isSelected}
                   onClick={() => (isSelected ? unselectWord(word) : selectWord(word))}
                   sx={{
                     ':hover': {
@@ -129,7 +152,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         <Box display="flex" flexDirection="column" gap={2} mt={3}>
           <Box display="flex" gap={2} justifyContent="center">
             <Button
-              onClick={submitWords}
+              onClick={handleSubmit}
               sx={{ minWidth: 140, visibility: selectedWords.length >= 4 ? 'visible' : 'hidden' }}
               variant="contained"
             >
@@ -153,7 +176,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
           </Box>
         </Box>
 
-        <Typography align="center" color="text.secondary" variant="body2" sx={{ marginTop: '2em' }}>
+        <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">
           Incorrect guesses: {incorrectGuesses}
         </Typography>
 
