@@ -4,10 +4,11 @@ import Grid from '@mui/material/Grid'
 
 import { ConnectionsGame } from '@components/connections-game'
 import PrivacyLink from '@components/privacy-link'
+import { GameId } from '@types'
 
 export interface GamePageProps {
   params: {
-    gameId: string
+    gameId: GameId
   }
 }
 

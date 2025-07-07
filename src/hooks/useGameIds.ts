@@ -1,15 +1,30 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 
-export const useGameIds = (): string[] => {
-  return useMemo(() => {
-    const gameIds: string[] = []
-    const startDate = new Date('2025-01-01')
-    const today = new Date()
+import { fetchConnectionsGameIds } from '@services/connections'
+import { GameId } from '@types'
 
-    for (const date = new Date(startDate); date <= today; date.setDate(date.getDate() + 1)) {
-      gameIds.push(date.toISOString().split('T')[0])
-    }
+export interface UseGameIdsResult {
+  errorMessage: string | null
+  gameIds: GameId[]
+  isLoading: boolean
+}
 
-    return gameIds.reverse() // Most recent first
+export const useGameIds = (): UseGameIdsResult => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [gameIds, setGameIds] = useState<GameId[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+
+  useEffect(() => {
+    fetchConnectionsGameIds()
+      .then((response) => {
+        setGameIds(response.gameIds)
+        setIsLoading(false)
+      })
+      .catch((error: unknown) => {
+        console.error('fetchConnectionsGameIds', { error })
+        setErrorMessage('Unable to load game IDs')
+      })
   }, [])
+
+  return { errorMessage, gameIds, isLoading }
 }

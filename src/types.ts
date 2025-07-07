@@ -1,13 +1,20 @@
 export { Theme } from '@mui/material/styles'
 
-// Connections
+// API
 
-export interface Category {
-  words: string[]
+export type GameId = string
+
+export interface ConnectionsGame {
+  categories: CategoryObject
 }
 
-export interface SolvedCategory {
-  description: string
+export interface GameIdsResponse {
+  gameIds: GameId[]
+}
+
+// Categories
+
+export interface Category {
   words: string[]
 }
 
@@ -15,9 +22,12 @@ export interface CategoryObject {
   [key: string]: Category
 }
 
-export interface ConnectionsGame {
-  categories: CategoryObject
+export interface SolvedCategory {
+  description: string
+  words: string[]
 }
+
+// Colors
 
 export interface GameColor {
   background: string

@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography'
 import { GameSelection } from '@components/game-selection'
 import { GAME_COLORS } from '@config/colors'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
-import { CategoryColors } from '@types'
+import { CategoryColors, GameId } from '@types'
 
 const shake = keyframes`
   0%, 100% { transform: translateX(0); }
@@ -37,7 +37,7 @@ const StyledButton = styled(Button)<{ $isShaking?: boolean }>`
 const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
 
 export interface ConnectionsGameProps {
-  gameId: string
+  gameId: GameId
 }
 
 export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNode => {

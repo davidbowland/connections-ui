@@ -1,10 +1,10 @@
 /* eslint-disable sort-keys */
 import { UseConnectionsGameResult } from '@hooks/useConnectionsGame'
-import { CategoryObject, ConnectionsGame } from '@types'
+import { CategoryObject, ConnectionsGame, GameId } from '@types'
 
 // Connections
 
-export const gameId = '2024-01-15'
+export const gameId: GameId = '2024-01-15'
 
 export const categories: CategoryObject = {
   'Category 1': { words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'] },
