@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react'
 import styled, { keyframes, css } from 'styled-components'
 
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -45,7 +46,10 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
     categories,
     clearSelectedWords,
     errorMessage,
+    getHint,
+    hints,
     incorrectGuesses,
+    isGetHintEnabled,
     isLoading,
     isOneAway,
     isRevealSolutionEnabled,
@@ -77,6 +81,11 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
       const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
       setShakingTimeout(timeout)
     }
+    boardRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleGetHint = () => {
+    getHint()
     boardRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -122,7 +131,13 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         {displayGameId}
       </Typography>
 
-      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" ref={boardRef}>
+      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" pt={1} ref={boardRef}>
+        {hints.map((hint, index) => (
+          <Alert icon={<HelpOutlineIcon />} key={index} severity="info" sx={{ marginBottom: '1em' }} variant="outlined">
+            {hint}
+          </Alert>
+        ))}
+
         {isOneAway && (
           <Typography align="center" color="warning.main" sx={{ marginBottom: '1em' }} variant="h6">
             One away!
@@ -176,51 +191,75 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
         </Grid>
 
         <Box display="flex" flexDirection="column" gap={2} mt={3}>
-          <Box
-            alignItems={{ md: 'flex-start', xs: 'center' }}
-            display="flex"
-            flexDirection={{ md: 'row', xs: 'column' }}
-            gap={2}
-            justifyContent="center"
-          >
-            <Button
-              onClick={handleSubmit}
-              sx={{
-                maxWidth: { md: 'none', xs: '280px' },
-                minWidth: 140,
-                visibility: selectedWords.length >= 4 ? 'visible' : 'hidden',
-                width: { md: 'auto', xs: '100%' },
-              }}
-              variant="contained"
+          {selectedWords.length > 0 && (
+            <Box
+              alignItems={{ md: 'flex-start', xs: 'center' }}
+              display="flex"
+              flexDirection={{ md: 'row', xs: 'column' }}
+              gap={2}
+              justifyContent="center"
             >
-              Submit
-            </Button>
-            <Button
-              onClick={clearSelectedWords}
-              sx={{
-                maxWidth: { md: 'none', xs: '280px' },
-                minWidth: 140,
-                visibility: selectedWords.length > 0 ? 'visible' : 'hidden',
-                width: { md: 'auto', xs: '100%' },
-              }}
-              variant="outlined"
+              <Button
+                onClick={handleSubmit}
+                sx={{
+                  maxWidth: { md: 'none', xs: '280px' },
+                  minWidth: 140,
+                  visibility: selectedWords.length >= 4 ? 'visible' : 'hidden',
+                  width: { md: 'auto', xs: '100%' },
+                }}
+                variant="contained"
+              >
+                Submit
+              </Button>
+              <Button
+                onClick={clearSelectedWords}
+                sx={{
+                  maxWidth: { md: 'none', xs: '280px' },
+                  minWidth: 140,
+                  visibility: selectedWords.length > 0 ? 'visible' : 'hidden',
+                  width: { md: 'auto', xs: '100%' },
+                }}
+                variant="outlined"
+              >
+                Clear selection
+              </Button>
+            </Box>
+          )}
+          {(isGetHintEnabled || isRevealSolutionEnabled) && (
+            <Box
+              alignItems={{ md: 'flex-start', xs: 'center' }}
+              display="flex"
+              flexDirection={{ md: 'row', xs: 'column' }}
+              gap={2}
+              justifyContent="center"
             >
-              Clear selection
-            </Button>
-            <Button
-              color="secondary"
-              onClick={handleRevealSolution}
-              sx={{
-                maxWidth: { md: 'none', xs: '280px' },
-                minWidth: 140,
-                visibility: isRevealSolutionEnabled ? 'visible' : 'hidden',
-                width: { md: 'auto', xs: '100%' },
-              }}
-              variant="contained"
-            >
-              Reveal solution
-            </Button>
-          </Box>
+              <Button
+                onClick={handleGetHint}
+                sx={{
+                  maxWidth: { md: 'none', xs: '280px' },
+                  minWidth: 140,
+                  visibility: isGetHintEnabled ? 'visible' : 'hidden',
+                  width: { md: 'auto', xs: '100%' },
+                }}
+                variant="outlined"
+              >
+                Get hint
+              </Button>
+              <Button
+                color="secondary"
+                onClick={handleRevealSolution}
+                sx={{
+                  maxWidth: { md: 'none', xs: '280px' },
+                  minWidth: 140,
+                  visibility: isRevealSolutionEnabled ? 'visible' : 'hidden',
+                  width: { md: 'auto', xs: '100%' },
+                }}
+                variant="contained"
+              >
+                Reveal solution
+              </Button>
+            </Box>
+          )}
         </Box>
 
         <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">

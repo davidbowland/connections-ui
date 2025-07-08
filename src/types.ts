@@ -15,6 +15,7 @@ export interface GameIdsResponse {
 // Categories
 
 export interface Category {
+  hint: string
   words: string[]
 }
 

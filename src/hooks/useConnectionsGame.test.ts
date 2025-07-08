@@ -27,6 +27,7 @@ describe('useConnectionsGame', () => {
   beforeAll(() => {
     jest.mocked(connections).fetchConnectionsGame.mockResolvedValue(connectionsGame)
 
+    Math.random = jest.fn().mockReturnValue(0)
     console.error = jest.fn()
   })
 
@@ -241,5 +242,113 @@ describe('useConnectionsGame', () => {
 
     result.current.clearSelectedWords()
     await waitFor(() => expect(result.current.isOneAway).toBe(false))
+  })
+
+  it('enables hints after 2 incorrect guesses', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.isGetHintEnabled).toBe(false)
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD05')
+    await selectWord(result, 'WORD06')
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(2))
+
+    expect(result.current.isGetHintEnabled).toBe(true)
+  })
+
+  it('provides hints for unsolved categories', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD05')
+    await selectWord(result, 'WORD06')
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(2))
+
+    expect(result.current.hints).toEqual([])
+
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hints).toHaveLength(1))
+    expect(result.current.hints[0]).toMatch(/Hint for category/)
+  })
+
+  it('removes hints when category is solved', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD05')
+    await selectWord(result, 'WORD06')
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(2))
+    result.current.clearSelectedWords()
+    await waitFor(() => expect(result.current.selectedWords).toEqual([]))
+
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hints).toHaveLength(1))
+
+    // Solve Category 1
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD03')
+    await selectWord(result, 'WORD04')
+    result.current.submitWords()
+
+    await waitFor(() => expect(result.current.solvedCategories).toHaveLength(1))
+    expect(result.current.hints).toEqual([])
+  })
+
+  it('disables hints when no more categories available', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await selectWord(result, 'WORD01')
+    await selectWord(result, 'WORD02')
+    await selectWord(result, 'WORD05')
+    await selectWord(result, 'WORD06')
+    await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
+    result.current.submitWords()
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(2))
+
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hints).toHaveLength(1))
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hints).toHaveLength(2))
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hints).toHaveLength(3))
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hints).toHaveLength(4))
+
+    expect(result.current.isGetHintEnabled).toBe(false)
   })
 })

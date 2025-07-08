@@ -7,10 +7,10 @@ import { CategoryObject, ConnectionsGame, GameId, Theme } from '@types'
 export const gameId: GameId = '2025-01-15'
 
 export const categories: CategoryObject = {
-  'Category 1': { words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'] },
-  'Category 2': { words: ['WORD05', 'WORD06', 'WORD07', 'WORD08'] },
-  'Category 3': { words: ['WORD09', 'WORD10', 'WORD11', 'WORD12'] },
-  'Category 4': { words: ['WORD13', 'WORD14', 'WORD15', 'WORD16'] },
+  'Category 1': { words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], hint: 'Hint for category 1' },
+  'Category 2': { words: ['WORD05', 'WORD06', 'WORD07', 'WORD08'], hint: 'Hint for category 2' },
+  'Category 3': { words: ['WORD09', 'WORD10', 'WORD11', 'WORD12'], hint: 'Hint for category 3' },
+  'Category 4': { words: ['WORD13', 'WORD14', 'WORD15', 'WORD16'], hint: 'Hint for category 4' },
 }
 
 export const connectionsGame: ConnectionsGame = {
@@ -42,7 +42,10 @@ export const useConnectionsGameResult: UseConnectionsGameResult = {
   categories,
   clearSelectedWords: jest.fn(),
   errorMessage: null,
+  getHint: jest.fn(),
+  hints: [],
   incorrectGuesses: 0,
+  isGetHintEnabled: false,
   isLoading: false,
   isOneAway: false,
   isRevealSolutionEnabled: false,

@@ -22,7 +22,10 @@ export interface UseConnectionsGameResult {
   categories: CategoryObject
   clearSelectedWords: () => void
   errorMessage: string | null
+  getHint: () => void
+  hints: string[]
   incorrectGuesses: number
+  isGetHintEnabled: boolean
   isLoading: boolean
   isOneAway: boolean
   isRevealSolutionEnabled: boolean
@@ -41,6 +44,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
   const [isLoading, setIsLoading] = useState(true)
   const [incorrectGuesses, setIncorrectGuesses] = useState(0)
   const [isOneAway, setIsOneAway] = useState(false)
+  const [revealedHints, setRevealedHints] = useState<Record<string, string>>({})
   const [selectedWords, setSelectedWords] = useState<string[]>([])
   const [solvedCategories, setSolvedCategories] = useState<SolvedCategory[]>([])
   const [words, setWords] = useState<string[]>([])
@@ -74,6 +78,10 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
       setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words }])
       setWords((prev) => prev.filter((w) => !category.words.includes(w)))
       setSelectedWords([])
+      setRevealedHints((prev) => {
+        const { [categoryName]: _, ...rest } = prev
+        return rest
+      })
       return true
     } else {
       const isOneAwayResult = Object.values(categories).some((category) => {
@@ -86,6 +94,19 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
       return false
     }
   }, [categories, selectedWords])
+
+  const getHint = useCallback(() => {
+    const unsolvedCategories = Object.entries(categories).filter(
+      ([categoryName]) =>
+        !solvedCategories.some((solved) => solved.description === categoryName) && !revealedHints[categoryName],
+    )
+
+    if (unsolvedCategories.length > 0) {
+      const randomIndex = Math.floor(Math.random() * unsolvedCategories.length)
+      const [categoryName, category] = unsolvedCategories[randomIndex]
+      setRevealedHints((prev) => ({ ...prev, [categoryName]: category.hint }))
+    }
+  }, [categories, solvedCategories, revealedHints])
 
   const revealSolution = useCallback(() => {
     const remainingCategories = Object.entries(categories).filter(
@@ -113,6 +134,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     setCategories({})
     setIncorrectGuesses(0)
     setIsOneAway(false)
+    setRevealedHints({})
     setSelectedWords([])
     setSolvedCategories([])
     setWords([])
@@ -137,7 +159,12 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     categories,
     clearSelectedWords,
     errorMessage,
+    getHint,
+    hints: Object.values(revealedHints),
     incorrectGuesses,
+    isGetHintEnabled:
+      incorrectGuesses >= 2 &&
+      Object.keys(categories).length > solvedCategories.length + Object.keys(revealedHints).length,
     isLoading,
     isOneAway,
     isRevealSolutionEnabled: incorrectGuesses >= 4 && solvedCategories.length < 4,

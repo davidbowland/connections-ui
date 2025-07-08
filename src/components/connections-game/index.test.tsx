@@ -15,6 +15,7 @@ describe('ConnectionsGame', () => {
   beforeAll(() => {
     jest.mocked(useConnectionsGame).mockReturnValue(useConnectionsGameResult)
 
+    Math.random = jest.fn().mockReturnValue(0)
     window.HTMLElement.prototype.scrollIntoView = jest.fn() // Calling this fails if we don't mock it
   })
 
@@ -220,5 +221,62 @@ describe('ConnectionsGame', () => {
     render(<ConnectionsGame gameId={gameId} />)
 
     expect(screen.queryByText('One away!')).not.toBeInTheDocument()
+  })
+
+  it('displays get hint button when enabled', () => {
+    const mockResult = {
+      ...useConnectionsGameResult,
+      isGetHintEnabled: true,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.getByRole('button', { name: 'Get hint' })).toBeInTheDocument()
+  })
+
+  it('does not display get hint button when disabled', () => {
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.queryByRole('button', { name: 'Get hint' })).not.toBeInTheDocument()
+  })
+
+  it('calls getHint when get hint button is clicked', async () => {
+    const user = userEvent.setup()
+    const mockGetHint = jest.fn()
+    const mockResult = {
+      ...useConnectionsGameResult,
+      getHint: mockGetHint,
+      isGetHintEnabled: true,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    const hintButton = screen.getByRole('button', { name: 'Get hint' })
+    await user.click(hintButton)
+
+    expect(mockGetHint).toHaveBeenCalled()
+  })
+
+  it('displays hints above one away message', () => {
+    const mockResult = {
+      ...useConnectionsGameResult,
+      hints: ['Test hint 1', 'Test hint 2'],
+      isOneAway: true,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.getByText('Test hint 1')).toBeInTheDocument()
+    expect(screen.getByText('Test hint 2')).toBeInTheDocument()
+    expect(screen.getByText('One away!')).toBeInTheDocument()
+  })
+
+  it('does not display hints when none are available', () => {
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.queryByText(/hint/i)).not.toBeInTheDocument()
   })
 })
