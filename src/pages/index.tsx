@@ -3,7 +3,8 @@ import React, { useEffect } from 'react'
 
 const Index = (): React.ReactNode => {
   useEffect(() => {
-    const dateString = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    const today = new Date()
+    const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
     navigate(`/g/${dateString}`)
   }, [])
 
