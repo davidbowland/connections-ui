@@ -39,12 +39,16 @@ const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.l
 
 export interface ConnectionsGameProps {
   gameId: GameId
+  incorrectGuessesUntilHint?: number
+  incorrectGuessesUntilSolution?: number
   secondsUntilHint?: number
   secondsUntilSolution?: number
 }
 
 export const ConnectionsGame = ({
   gameId,
+  incorrectGuessesUntilHint = 2,
+  incorrectGuessesUntilSolution = 4,
   secondsUntilHint = 60,
   secondsUntilSolution = 180,
 }: ConnectionsGameProps): React.ReactNode => {
@@ -55,10 +59,10 @@ export const ConnectionsGame = ({
     getHint,
     hints,
     incorrectGuesses,
-    isGetHintEnabled,
+    isHintAvailable,
     isLoading,
     isOneAway,
-    isRevealSolutionEnabled,
+    isRevealSolutionAvailable,
     revealSolution,
     selectedWords,
     selectWord,
@@ -81,6 +85,41 @@ export const ConnectionsGame = ({
       year: 'numeric',
     })
   }, [gameId])
+
+  const { categoryColors, selectedWordColor } = useMemo(() => {
+    const availableColors = new Set(GAME_COLORS)
+    const categoryColors = Object.keys(categories).reduce((acc: CategoryColors, value: string) => {
+      const color = getRandomValue(Array.from(availableColors))
+      availableColors.delete(color)
+      return { ...acc, [value]: color }
+    }, {})
+    const selectedWordColor = getRandomValue(Array.from(availableColors))
+
+    return { categoryColors, selectedWordColor }
+  }, [gameId, categories])
+
+  const isHintEnabled =
+    isHintAvailable && (incorrectGuesses >= incorrectGuessesUntilHint || elapsedSeconds >= secondsUntilHint)
+  const isSolutionEnabled =
+    isRevealSolutionAvailable &&
+    (incorrectGuesses >= incorrectGuessesUntilSolution || elapsedSeconds >= secondsUntilSolution)
+  const isGameComplete = words.length === 0
+
+  useEffect(() => {
+    if (isLoading || isGameComplete) return
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1)
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isLoading, isGameComplete])
+
+  useEffect(() => {
+    if (!isLoading) {
+      setElapsedSeconds(0)
+    }
+  }, [gameId, isLoading])
 
   const handleSubmit = () => {
     const success = submitWords()
@@ -106,38 +145,6 @@ export const ConnectionsGame = ({
     const remainingSeconds = seconds % 60
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
-
-  const isHintAvailable = isGetHintEnabled || elapsedSeconds >= secondsUntilHint
-  const isSolutionAvailable = isRevealSolutionEnabled || elapsedSeconds >= secondsUntilSolution
-  const isGameComplete = words.length === 0
-
-  useEffect(() => {
-    if (isLoading || isGameComplete) return
-
-    const interval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1)
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [isLoading, isGameComplete])
-
-  useEffect(() => {
-    if (!isLoading) {
-      setElapsedSeconds(0)
-    }
-  }, [gameId, isLoading])
-
-  const { categoryColors, selectedWordColor } = useMemo(() => {
-    const availableColors = new Set(GAME_COLORS)
-    const categoryColors = Object.keys(categories).reduce((acc: CategoryColors, value: string) => {
-      const color = getRandomValue(Array.from(availableColors))
-      availableColors.delete(color)
-      return { ...acc, [value]: color }
-    }, {})
-    const selectedWordColor = getRandomValue(Array.from(availableColors))
-
-    return { categoryColors, selectedWordColor }
-  }, [gameId, categories])
 
   if (errorMessage) {
     return (
@@ -306,7 +313,7 @@ export const ConnectionsGame = ({
               </Button>
             </Box>
           )}
-          {!isGameComplete && (isHintAvailable || isSolutionAvailable) && (
+          {!isGameComplete && (isHintEnabled || isSolutionEnabled) && (
             <Box
               alignItems={{ md: 'flex-start', xs: 'center' }}
               display="flex"
@@ -319,7 +326,7 @@ export const ConnectionsGame = ({
                 sx={{
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: isHintAvailable ? 'visible' : 'hidden',
+                  visibility: isHintEnabled ? 'visible' : 'hidden',
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="outlined"
@@ -332,7 +339,7 @@ export const ConnectionsGame = ({
                 sx={{
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: isSolutionAvailable ? 'visible' : 'hidden',
+                  visibility: isSolutionEnabled ? 'visible' : 'hidden',
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="contained"

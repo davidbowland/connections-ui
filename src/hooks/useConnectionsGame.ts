@@ -25,10 +25,10 @@ export interface UseConnectionsGameResult {
   getHint: () => void
   hints: string[]
   incorrectGuesses: number
-  isGetHintEnabled: boolean
+  isHintAvailable: boolean
   isLoading: boolean
   isOneAway: boolean
-  isRevealSolutionEnabled: boolean
+  isRevealSolutionAvailable: boolean
   revealSolution: () => void
   selectedWords: string[]
   selectWord: (word: string) => void
@@ -165,12 +165,10 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     getHint,
     hints: Object.values(revealedHints),
     incorrectGuesses,
-    isGetHintEnabled:
-      incorrectGuesses >= 2 &&
-      Object.keys(categories).length > solvedCategories.length + Object.keys(revealedHints).length,
+    isHintAvailable: Object.keys(categories).length > solvedCategories.length + Object.keys(revealedHints).length,
     isLoading,
     isOneAway,
-    isRevealSolutionEnabled: incorrectGuesses >= 4 && solvedCategories.length < 4,
+    isRevealSolutionAvailable: solvedCategories.length < 4,
     revealSolution,
     selectedWords,
     selectWord,

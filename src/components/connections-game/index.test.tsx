@@ -165,7 +165,8 @@ describe('ConnectionsGame', () => {
   it('displays reveal solution button when enabled', () => {
     const mockResult = {
       ...useConnectionsGameResult,
-      isRevealSolutionEnabled: true,
+      incorrectGuesses: 4,
+      isRevealSolutionAvailable: true,
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
 
@@ -179,7 +180,8 @@ describe('ConnectionsGame', () => {
     const mockRevealSolution = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
-      isRevealSolutionEnabled: true,
+      incorrectGuesses: 4,
+      isRevealSolutionAvailable: true,
       revealSolution: mockRevealSolution,
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
@@ -231,7 +233,8 @@ describe('ConnectionsGame', () => {
   it('displays get hint button when enabled', () => {
     const mockResult = {
       ...useConnectionsGameResult,
-      isGetHintEnabled: true,
+      incorrectGuesses: 2,
+      isHintAvailable: true,
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
 
@@ -252,7 +255,8 @@ describe('ConnectionsGame', () => {
     const mockResult = {
       ...useConnectionsGameResult,
       getHint: mockGetHint,
-      isGetHintEnabled: true,
+      incorrectGuesses: 2,
+      isHintAvailable: true,
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
 
@@ -304,28 +308,41 @@ describe('ConnectionsGame', () => {
   })
 
   it('displays hint button after specified time', () => {
-    render(<ConnectionsGame gameId={gameId} secondsUntilHint={30} />)
+    const mockResult = {
+      ...useConnectionsGameResult,
+      isHintAvailable: true,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} secondsUntilHint={2} />)
 
     expect(screen.queryByRole('button', { name: 'Get hint' })).not.toBeInTheDocument()
 
-    act(() => jest.advanceTimersByTime(30000))
+    act(() => jest.advanceTimersByTime(5000))
     expect(screen.getByRole('button', { name: 'Get hint' })).toBeInTheDocument()
   })
 
   it('displays solution button after specified time', () => {
-    render(<ConnectionsGame gameId={gameId} secondsUntilSolution={120} />)
+    const mockResult = {
+      ...useConnectionsGameResult,
+      isRevealSolutionAvailable: true,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} secondsUntilSolution={2} />)
 
     expect(screen.queryByRole('button', { name: 'Reveal solution' })).not.toBeInTheDocument()
 
-    act(() => jest.advanceTimersByTime(120000))
+    act(() => jest.advanceTimersByTime(5000))
     expect(screen.getByRole('button', { name: 'Reveal solution' })).toBeInTheDocument()
   })
 
   it('does not display hint/solution buttons when game is complete', () => {
     const mockResult = {
       ...useConnectionsGameResult,
-      isGetHintEnabled: true,
-      isRevealSolutionEnabled: true,
+      incorrectGuesses: 4,
+      isHintAvailable: true,
+      isRevealSolutionAvailable: true,
       words: [],
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
