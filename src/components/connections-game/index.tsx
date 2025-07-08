@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import styled, { keyframes, css } from 'styled-components'
 
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
@@ -39,9 +39,15 @@ const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.l
 
 export interface ConnectionsGameProps {
   gameId: GameId
+  secondsUntilHint?: number
+  secondsUntilSolution?: number
 }
 
-export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNode => {
+export const ConnectionsGame = ({
+  gameId,
+  secondsUntilHint = 60,
+  secondsUntilSolution = 180,
+}: ConnectionsGameProps): React.ReactNode => {
   const {
     categories,
     clearSelectedWords,
@@ -63,6 +69,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
   } = useConnectionsGame(gameId)
 
   const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const boardRef = useRef<HTMLDivElement>(null)
 
   const displayGameId = useMemo(() => {
@@ -94,6 +101,32 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
     boardRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  const isHintAvailable = isGetHintEnabled || elapsedSeconds >= secondsUntilHint
+  const isSolutionAvailable = isRevealSolutionEnabled || elapsedSeconds >= secondsUntilSolution
+  const isGameComplete = words.length === 0
+
+  useEffect(() => {
+    if (isLoading || isGameComplete) return
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1)
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isLoading, isGameComplete])
+
+  useEffect(() => {
+    if (!isLoading) {
+      setElapsedSeconds(0)
+    }
+  }, [gameId, isLoading])
+
   const { categoryColors, selectedWordColor } = useMemo(() => {
     const availableColors = new Set(GAME_COLORS)
     const categoryColors = Object.keys(categories).reduce((acc: CategoryColors, value: string) => {
@@ -117,7 +150,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
   if (errorMessage) {
     return (
       <Box p={2}>
-        <Alert severity="error">Error loading game: {errorMessage}</Alert>
+        <Alert severity="error">{errorMessage}</Alert>
       </Box>
     )
   }
@@ -216,7 +249,6 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
                 sx={{
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: selectedWords.length > 0 ? 'visible' : 'hidden',
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="outlined"
@@ -225,7 +257,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
               </Button>
             </Box>
           )}
-          {(isGetHintEnabled || isRevealSolutionEnabled) && (
+          {!isGameComplete && (isHintAvailable || isSolutionAvailable) && (
             <Box
               alignItems={{ md: 'flex-start', xs: 'center' }}
               display="flex"
@@ -238,7 +270,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
                 sx={{
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: isGetHintEnabled ? 'visible' : 'hidden',
+                  visibility: isHintAvailable ? 'visible' : 'hidden',
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="outlined"
@@ -251,7 +283,7 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
                 sx={{
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: isRevealSolutionEnabled ? 'visible' : 'hidden',
+                  visibility: isSolutionAvailable ? 'visible' : 'hidden',
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="contained"
@@ -264,6 +296,10 @@ export const ConnectionsGame = ({ gameId }: ConnectionsGameProps): React.ReactNo
 
         <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">
           Incorrect guesses: {incorrectGuesses}
+        </Typography>
+
+        <Typography align="center" color="text.secondary" sx={{ marginTop: '0.5em' }} variant="body2">
+          Time: {formatTime(elapsedSeconds)}
         </Typography>
 
         <Box maxWidth="300px" sx={{ margin: '0 auto 3em', paddingTop: '4em' }}>

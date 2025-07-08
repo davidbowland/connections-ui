@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React from 'react'
+import React, { act } from 'react'
 
 import { ConnectionsGame } from './index'
 import { GameSelection } from '@components/game-selection'
@@ -17,6 +17,11 @@ describe('ConnectionsGame', () => {
 
     Math.random = jest.fn().mockReturnValue(0)
     window.HTMLElement.prototype.scrollIntoView = jest.fn() // Calling this fails if we don't mock it
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
   })
 
   it('displays loading state', () => {
@@ -41,7 +46,7 @@ describe('ConnectionsGame', () => {
 
     render(<ConnectionsGame gameId={gameId} />)
 
-    expect(screen.getByText(`Error loading game: ${errorMessage}`)).toBeInTheDocument()
+    expect(screen.getByText(errorMessage)).toBeInTheDocument()
   })
 
   it('displays game grid with words', () => {
@@ -75,7 +80,7 @@ describe('ConnectionsGame', () => {
   })
 
   it('calls selectWord when word is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const mockSelectWord = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
@@ -92,7 +97,7 @@ describe('ConnectionsGame', () => {
   })
 
   it('calls unselectWord when selected word is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const mockUnselectWord = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
@@ -122,7 +127,7 @@ describe('ConnectionsGame', () => {
   })
 
   it('calls submitWords when submit button is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const mockSubmitWords = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
@@ -140,7 +145,7 @@ describe('ConnectionsGame', () => {
   })
 
   it('calls clearSelectedWords when clear button is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const mockClearSelectedWords = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
@@ -170,7 +175,7 @@ describe('ConnectionsGame', () => {
   })
 
   it('calls revealSolution when reveal solution button is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const mockRevealSolution = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
@@ -242,7 +247,7 @@ describe('ConnectionsGame', () => {
   })
 
   it('calls getHint when get hint button is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const mockGetHint = jest.fn()
     const mockResult = {
       ...useConnectionsGameResult,
@@ -278,5 +283,56 @@ describe('ConnectionsGame', () => {
     render(<ConnectionsGame gameId={gameId} />)
 
     expect(screen.queryByText(/hint/i)).not.toBeInTheDocument()
+  })
+
+  it('displays timer when game is loaded', () => {
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.getByText('Time: 0:00')).toBeInTheDocument()
+  })
+
+  it('updates timer every second', () => {
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.getByText('Time: 0:00')).toBeInTheDocument()
+
+    act(() => jest.advanceTimersByTime(5000))
+    expect(screen.getByText('Time: 0:05')).toBeInTheDocument()
+
+    act(() => jest.advanceTimersByTime(60000))
+    expect(screen.getByText('Time: 1:05')).toBeInTheDocument()
+  })
+
+  it('displays hint button after specified time', () => {
+    render(<ConnectionsGame gameId={gameId} secondsUntilHint={30} />)
+
+    expect(screen.queryByRole('button', { name: 'Get hint' })).not.toBeInTheDocument()
+
+    act(() => jest.advanceTimersByTime(30000))
+    expect(screen.getByRole('button', { name: 'Get hint' })).toBeInTheDocument()
+  })
+
+  it('displays solution button after specified time', () => {
+    render(<ConnectionsGame gameId={gameId} secondsUntilSolution={120} />)
+
+    expect(screen.queryByRole('button', { name: 'Reveal solution' })).not.toBeInTheDocument()
+
+    act(() => jest.advanceTimersByTime(120000))
+    expect(screen.getByRole('button', { name: 'Reveal solution' })).toBeInTheDocument()
+  })
+
+  it('does not display hint/solution buttons when game is complete', () => {
+    const mockResult = {
+      ...useConnectionsGameResult,
+      isGetHintEnabled: true,
+      isRevealSolutionEnabled: true,
+      words: [],
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.queryByRole('button', { name: 'Get hint' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reveal solution' })).not.toBeInTheDocument()
   })
 })
