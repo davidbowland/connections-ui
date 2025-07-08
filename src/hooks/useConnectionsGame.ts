@@ -118,9 +118,10 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
       words: category.words,
     }))
 
+    setRevealedHints({})
+    setSelectedWords([])
     setSolvedCategories((prev) => [...prev, ...newSolved])
     setWords([])
-    setSelectedWords([])
   }, [categories, solvedCategories])
 
   useEffect(() => {
