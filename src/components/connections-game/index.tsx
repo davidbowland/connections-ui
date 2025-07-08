@@ -5,8 +5,8 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
+import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
 
 import { GameSelection } from '@components/game-selection'
@@ -139,18 +139,67 @@ export const ConnectionsGame = ({
     return { categoryColors, selectedWordColor }
   }, [gameId, categories])
 
-  if (isLoading) {
+  if (errorMessage) {
     return (
-      <Box alignItems="center" display="flex" justifyContent="center" minHeight="400px">
-        <CircularProgress />
+      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" p={2}>
+        <Alert severity="error">{errorMessage}</Alert>
       </Box>
     )
   }
 
-  if (errorMessage) {
+  if (isLoading) {
     return (
-      <Box p={2}>
-        <Alert severity="error">{errorMessage}</Alert>
+      <Box data-testid="loading-skeleton" p={{ md: 2, xs: 1 }}>
+        <Typography align="center" component="h1" gutterBottom variant="h4">
+          Connections
+        </Typography>
+        <Typography align="center" color="text.secondary" gutterBottom variant="subtitle1">
+          {displayGameId}
+        </Typography>
+
+        <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto">
+          <Grid container spacing={1}>
+            {Array.from({ length: 16 }).map((_, index) => (
+              <Grid item key={index} sm={3} xs={6}>
+                <Skeleton sx={{ borderRadius: 1, height: { md: 80, xs: 60 } }} variant="rectangular" />
+              </Grid>
+            ))}
+          </Grid>
+
+          <Box display="flex" flexDirection="column" gap={2} mt={3}>
+            <Box
+              alignItems={{ md: 'flex-start', xs: 'center' }}
+              display="flex"
+              flexDirection={{ md: 'row', xs: 'column' }}
+              gap={2}
+              justifyContent="center"
+            >
+              <Skeleton
+                height={36}
+                sx={{
+                  borderRadius: 1,
+                  maxWidth: { md: 'none', xs: '280px' },
+                  minWidth: 140,
+                  width: { md: 'auto', xs: '100%' },
+                }}
+                variant="rectangular"
+              />
+              <Skeleton
+                height={36}
+                sx={{
+                  borderRadius: 1,
+                  maxWidth: { md: 'none', xs: '280px' },
+                  minWidth: 140,
+                  width: { md: 'auto', xs: '100%' },
+                }}
+                variant="rectangular"
+              />
+            </Box>
+          </Box>
+
+          <Skeleton sx={{ fontSize: '0.875rem', mt: 4, mx: 'auto', width: '150px' }} variant="text" />
+          <Skeleton sx={{ fontSize: '0.875rem', mx: 'auto', width: '150px' }} variant="text" />
+        </Box>
       </Box>
     )
   }

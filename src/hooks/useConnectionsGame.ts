@@ -148,11 +148,13 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
         )
         setCategories(game.categories)
         setWords(shuffleArray(allWords))
-        setIsLoading(false)
       })
       .catch((error: unknown) => {
         console.error('fetchConnectionsGame', { error })
-        setErrorMessage('Failed to load game')
+        setErrorMessage('Failed to load game. Please refresh the page to try again.')
+      })
+      .finally(() => {
+        setIsLoading(false)
       })
   }, [gameId])
 

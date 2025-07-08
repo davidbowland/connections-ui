@@ -34,7 +34,7 @@ describe('ConnectionsGame', () => {
 
     render(<ConnectionsGame gameId={gameId} />)
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument()
+    expect(screen.getByTestId('loading-skeleton')).toBeInTheDocument()
   })
 
   it('displays error state', () => {

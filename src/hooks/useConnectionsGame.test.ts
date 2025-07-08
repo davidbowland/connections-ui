@@ -51,10 +51,10 @@ describe('useConnectionsGame', () => {
     const { result } = renderHook(() => useConnectionsGame(gameId))
 
     await waitFor(() => {
-      expect(result.current.errorMessage).toBe('Failed to load game')
+      expect(result.current.errorMessage).toBe('Failed to load game. Please refresh the page to try again.')
     })
 
-    expect(result.current.isLoading).toBe(true)
+    expect(result.current.isLoading).toBe(false)
     expect(result.current.categories).toEqual({})
     expect(result.current.words).toEqual([])
   })
