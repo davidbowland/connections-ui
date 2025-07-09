@@ -25,10 +25,15 @@ describe('useConnectionsGame', () => {
   }
 
   beforeAll(() => {
-    jest.mocked(connections).fetchConnectionsGame.mockResolvedValue(connectionsGame)
+    jest.mocked(connections).fetchConnectionsGame.mockResolvedValue({ data: connectionsGame, isGenerating: false })
 
     Math.random = jest.fn().mockReturnValue(0)
     console.error = jest.fn()
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
   })
 
   it('loads game data and shuffles words', async () => {
@@ -57,6 +62,33 @@ describe('useConnectionsGame', () => {
     expect(result.current.isLoading).toBe(false)
     expect(result.current.categories).toEqual({})
     expect(result.current.words).toEqual([])
+  })
+
+  it('polls when game is generating', async () => {
+    jest
+      .mocked(connections)
+      .fetchConnectionsGame.mockResolvedValueOnce({ data: connectionsGame, isGenerating: true })
+      .mockResolvedValueOnce({ data: connectionsGame, isGenerating: false })
+
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    expect(result.current.isLoading).toBe(true)
+
+    // First call returns isGenerating: true
+    await waitFor(() => {
+      expect(connections.fetchConnectionsGame).toHaveBeenCalledTimes(1)
+    })
+
+    // Advance timers by 10 seconds to trigger polling
+    jest.advanceTimersByTime(10000)
+
+    // Second call should complete the loading
+    await waitFor(() => {
+      expect(connections.fetchConnectionsGame).toHaveBeenCalledTimes(2)
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.categories).toEqual(connectionsGame.categories)
   })
 
   it('selects and unselects words', async () => {

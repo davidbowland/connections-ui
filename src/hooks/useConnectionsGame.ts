@@ -140,22 +140,30 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     setSolvedCategories([])
     setWords([])
 
-    fetchConnectionsGame(gameId)
-      .then((game) => {
+    const pollGame = async () => {
+      try {
+        const { data: game, isGenerating } = await fetchConnectionsGame(gameId)
+
+        if (isGenerating) {
+          setTimeout(pollGame, 10000) // Poll every 10 seconds
+          return
+        }
+
         const allWords = Object.values(game.categories).reduce(
           (acc, category) => [...acc, ...category.words],
           [] as string[],
         )
         setCategories(game.categories)
         setWords(shuffleArray(allWords))
-      })
-      .catch((error: unknown) => {
+        setIsLoading(false)
+      } catch (error: unknown) {
         console.error('fetchConnectionsGame', { error })
         setErrorMessage('Failed to load game. Please refresh the page to try again.')
-      })
-      .finally(() => {
         setIsLoading(false)
-      })
+      }
+    }
+
+    pollGame()
   }, [gameId])
 
   return {

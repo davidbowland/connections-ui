@@ -10,7 +10,7 @@ jest.mock('axios', () => ({
 
 describe('connections', () => {
   beforeAll(() => {
-    mockGet.mockResolvedValue({ data: connectionsGame })
+    mockGet.mockResolvedValue({ data: connectionsGame, status: 200 })
   })
 
   describe('fetchConnectionsGame', () => {
@@ -18,7 +18,15 @@ describe('connections', () => {
       const result = await fetchConnectionsGame(gameId)
 
       expect(mockGet).toHaveBeenCalledWith('/games/2025-01-15')
-      expect(result).toEqual(connectionsGame)
+      expect(result).toEqual({ data: connectionsGame, isGenerating: false })
+    })
+
+    it('returns isGenerating true when status is 202', async () => {
+      mockGet.mockResolvedValueOnce({ data: connectionsGame, status: 202 })
+
+      const result = await fetchConnectionsGame(gameId)
+
+      expect(result).toEqual({ data: connectionsGame, isGenerating: true })
     })
   })
 

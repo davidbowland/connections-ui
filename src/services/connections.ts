@@ -7,17 +7,14 @@ const api = axios.create({
   timeout: 35_000, // 35 seconds
 })
 
-export const fetchConnectionsGame = async (gameId: string): Promise<ConnectionsGame> => {
-  // return Promise.resolve({
-  //   categories: {
-  //     'Member of a Team with the Most Championships': { words: ['CANADIEN', 'CELTIC', 'PACKER', 'YANKEE'] },
-  //     'Create Some Volume/Texture in Hair': { words: ['CRIMP', 'CURL', 'FEATHER', 'TEASE'] },
-  //     'Supplies for Macaroni Art': { words: ['GLITTER', 'GLUE', 'MACARONI', 'PAPER'] },
-  //     'Words After "Golden"': { words: ['DOODLE', 'GOOSE', 'PARACHUTE', 'ROD'] },
-  //   },
-  // })
+export const fetchConnectionsGame = async (
+  gameId: string,
+): Promise<{ data: ConnectionsGame; isGenerating: boolean }> => {
   const response = await api.get(`/games/${gameId}`)
-  return response.data
+  return {
+    data: response.data,
+    isGenerating: response.status === 202,
+  }
 }
 
 export const fetchConnectionsGameIds = async (): Promise<GameIdsResponse> => {
