@@ -74,7 +74,11 @@ export const ConnectionsGame = ({
 
   const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+
   const boardRef = useRef<HTMLDivElement>(null)
+  const scrollToBoard = () => {
+    setTimeout(() => boardRef.current?.scrollIntoView({ behavior: 'smooth' }), 10)
+  }
 
   const displayGameId = useMemo(() => {
     const language = typeof navigator === 'undefined' ? 'en-US' : navigator.language
@@ -127,17 +131,17 @@ export const ConnectionsGame = ({
       const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
       setShakingTimeout(timeout)
     }
-    boardRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBoard()
   }
 
   const handleGetHint = () => {
     getHint()
-    boardRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBoard()
   }
 
   const handleRevealSolution = () => {
     revealSolution()
-    boardRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBoard()
   }
 
   const formatTime = (seconds: number): string => {
