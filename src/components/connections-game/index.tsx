@@ -295,6 +295,7 @@ export const ConnectionsGame = ({
               <Button
                 onClick={handleSubmit}
                 sx={{
+                  display: { md: 'block', xs: selectedWords.length >= 4 ? 'block' : 'none' },
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
                   visibility: selectedWords.length >= 4 ? 'visible' : 'hidden',
@@ -331,7 +332,7 @@ export const ConnectionsGame = ({
                   display: { md: 'block', xs: isHintEnabled ? 'block' : 'none' },
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: { md: isHintEnabled ? 'visible' : 'hidden', xs: 'visible' },
+                  visibility: isHintEnabled ? 'visible' : 'hidden',
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="outlined"
@@ -342,6 +343,7 @@ export const ConnectionsGame = ({
                 color="secondary"
                 onClick={handleRevealSolution}
                 sx={{
+                  display: { md: 'block', xs: isSolutionEnabled ? 'block' : 'none' },
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
                   visibility: isSolutionEnabled ? 'visible' : 'hidden',
