@@ -328,9 +328,10 @@ export const ConnectionsGame = ({
               <Button
                 onClick={handleGetHint}
                 sx={{
+                  display: { md: 'block', xs: isHintEnabled ? 'block' : 'none' },
                   maxWidth: { md: 'none', xs: '280px' },
                   minWidth: 140,
-                  visibility: isHintEnabled ? 'visible' : 'hidden',
+                  visibility: { md: isHintEnabled ? 'visible' : 'hidden', xs: 'visible' },
                   width: { md: 'auto', xs: '100%' },
                 }}
                 variant="outlined"
