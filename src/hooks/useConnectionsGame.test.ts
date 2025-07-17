@@ -189,6 +189,12 @@ describe('useConnectionsGame', () => {
     result.current.revealSolution()
 
     await waitFor(() => expect(result.current.solvedCategories).toHaveLength(4))
+    expect(result.current.solvedCategories).toEqual([
+      { description: 'Category 1', words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'] },
+      { description: 'Category 2', words: ['WORD05', 'WORD06', 'WORD07', 'WORD08'] },
+      { description: 'Category 3', words: ['WORD09', 'WORD10', 'WORD11', 'WORD12'] },
+      { description: 'Category 4', words: ['WORD13', 'WORD14', 'WORD15', 'WORD16'] },
+    ])
     expect(result.current.words).toEqual([])
     expect(result.current.selectedWords).toEqual([])
   })

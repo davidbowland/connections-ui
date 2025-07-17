@@ -75,7 +75,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
 
     if (categoryEntry) {
       const [categoryName, category] = categoryEntry
-      setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words }])
+      setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words.toSorted() }])
       setWords((prev) => prev.filter((w) => !category.words.includes(w)))
       setSelectedWords([])
       setRevealedHints((prev) => {
