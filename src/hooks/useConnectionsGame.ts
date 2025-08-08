@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 
 import { fetchConnectionsGame } from '@services/connections'
 import { CategoryObject, SolvedCategory } from '@types'
@@ -20,10 +20,12 @@ const shuffleArray = (array: string[]): string[] => {
 
 export interface UseConnectionsGameResult {
   categories: CategoryObject
+  categoriesCount: number
   clearSelectedWords: () => void
   errorMessage: string | null
   getHint: () => void
   hints: string[]
+  hintsReceived: number
   incorrectGuesses: number
   isHintAvailable: boolean
   isLoading: boolean
@@ -108,6 +110,9 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     }
   }, [categories, solvedCategories, revealedHints])
 
+  const categoriesCount = useMemo(() => Object.keys(categories).length, [categories])
+  const hintsReceived = useMemo(() => Object.keys(revealedHints).length, [revealedHints])
+
   const revealSolution = useCallback(() => {
     const remainingCategories = Object.entries(categories).filter(
       ([categoryName]) => !solvedCategories.some((solved) => solved.description === categoryName),
@@ -168,10 +173,12 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
 
   return {
     categories,
+    categoriesCount,
     clearSelectedWords,
     errorMessage,
     getHint,
     hints: Object.values(revealedHints),
+    hintsReceived,
     incorrectGuesses,
     isHintAvailable: Object.keys(categories).length > solvedCategories.length + Object.keys(revealedHints).length,
     isLoading,

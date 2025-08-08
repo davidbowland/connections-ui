@@ -40,10 +40,12 @@ export const wordList: string[] = [
 
 export const useConnectionsGameResult: UseConnectionsGameResult = {
   categories,
+  categoriesCount: 4,
   clearSelectedWords: jest.fn(),
   errorMessage: null,
   getHint: jest.fn(),
   hints: [],
+  hintsReceived: 0,
   incorrectGuesses: 0,
   isHintAvailable: false,
   isLoading: false,

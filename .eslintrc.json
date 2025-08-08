@@ -29,7 +29,6 @@
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": ["off"],
     "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "_" }],
-    "indent": ["error", 2],
     "jest/no-mocks-import": "off",
     "linebreak-style": ["error", "unix"],
     "no-negated-condition": ["error"],

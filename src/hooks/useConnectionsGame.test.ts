@@ -342,4 +342,30 @@ describe('useConnectionsGame', () => {
 
     expect(result.current.isHintAvailable).toBe(false)
   })
+
+  it('tracks the number of hints received', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.hintsReceived).toBe(0)
+
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hintsReceived).toBe(1))
+
+    result.current.getHint()
+    await waitFor(() => expect(result.current.hintsReceived).toBe(2))
+  })
+
+  it('returns the correct categories count', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.categoriesCount).toBe(4)
+  })
 })

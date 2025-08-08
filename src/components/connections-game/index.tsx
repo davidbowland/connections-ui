@@ -54,10 +54,12 @@ export const ConnectionsGame = ({
 }: ConnectionsGameProps): React.ReactNode => {
   const {
     categories,
+    categoriesCount,
     clearSelectedWords,
     errorMessage,
     getHint,
     hints,
+    hintsReceived,
     incorrectGuesses,
     isHintAvailable,
     isLoading,
@@ -358,8 +360,14 @@ export const ConnectionsGame = ({
         </Box>
 
         <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">
-          Incorrect guesses: {incorrectGuesses}
+          Incorrect guesses: {incorrectGuesses.toLocaleString()}
         </Typography>
+
+        {hintsReceived > 0 && (
+          <Typography align="center" color="text.secondary" sx={{ marginTop: '0.5em' }} variant="body2">
+            Hints received: {hintsReceived}/{categoriesCount}
+          </Typography>
+        )}
 
         <Typography align="center" color="text.secondary" sx={{ marginTop: '0.5em' }} variant="body2">
           Time: {formatTime(elapsedSeconds)}

@@ -36,9 +36,9 @@
     "@mui/lab": "^5.0.0-alpha.177",
     "@mui/material": "^5.18.0",
     "@mui/x-data-grid": "^6.20.4",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "crypto-browserify": "^3.12.1",
-    "gatsby": "^5.14.5",
+    "gatsby": "^5.14.6",
     "gatsby-plugin-alias-imports": "^1.0.5",
     "gatsby-plugin-image": "^3.14.0",
     "gatsby-plugin-sharp": "^5.14.0",
@@ -54,7 +54,7 @@
     "stream-browserify": "^3.0.0",
     "styled-components": "^5.3.11",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "universal-cookie": "^4.0.4"
   },
   "devDependencies": {
@@ -80,7 +80,7 @@
     "lint-staged": "^15.5.2",
     "prettier": "^3.6.2",
     "react-test-renderer": "^18.3.1",
-    "ts-jest": "^29.4.0",
+    "ts-jest": "^29.4.1",
     "undici": "^6.21.3"
   },
   "lint-staged": {

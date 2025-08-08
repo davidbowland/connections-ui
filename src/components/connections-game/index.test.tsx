@@ -352,4 +352,30 @@ describe('ConnectionsGame', () => {
     expect(screen.queryByRole('button', { name: 'Get hint' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reveal solution' })).not.toBeInTheDocument()
   })
+
+  it('displays hints received count when hints have been taken', () => {
+    const mockResult = {
+      ...useConnectionsGameResult,
+      categoriesCount: 4,
+      hintsReceived: 2,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.getByText('Hints received: 2/4')).toBeInTheDocument()
+  })
+
+  it('does not display hints received count when no hints have been taken', () => {
+    const mockResult = {
+      ...useConnectionsGameResult,
+      categoriesCount: 4,
+      hintsReceived: 0,
+    }
+    jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
+
+    render(<ConnectionsGame gameId={gameId} />)
+
+    expect(screen.queryByText(/Hints received:/)).not.toBeInTheDocument()
+  })
 })
