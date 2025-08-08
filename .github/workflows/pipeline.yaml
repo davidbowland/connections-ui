@@ -42,24 +42,55 @@ jobs:
       - name: Run tests
         run: npm run test
 
+  build:
+    name: Build Gatsby site
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+      - name: Install Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install and audit packages
+        run: npm ci --legacy-peer-deps && npm audit --audit-level=critical
+        env:
+          NODE_ENV: production
+      - name: Build Gatsby site for feature branches
+        if: github.ref != 'refs/heads/master'
+        run: npm run build
+        env:
+          DEVELOPMENT: true
+          NODE_ENV: production
+      - name: Build Gatsby site for master branch
+        if: github.ref == 'refs/heads/master'
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatsby-build
+          path: public/
+          retention-days: 1
+
   build-and-deploy-feature:
     name: Deploy feature branch
     if: github.ref != 'refs/heads/master'
-    needs: [test]
+    needs: [test, build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v4
 
-      - name: Install Node 20
-        uses: actions/setup-node@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20.x
-      - name: Build Gatsby site
-        run: npm run build
-        env:
-          DEVELOPMENT: true
-          NODE_ENV: production
+          name: gatsby-build
+          path: public/
 
       - name: Install Python 3
         uses: actions/setup-python@v5
@@ -95,21 +126,17 @@ jobs:
   deploy-testing:
     name: Deploy to test environment
     if: github.ref == 'refs/heads/master'
-    needs: [test]
+    needs: [test, build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v4
 
-      - name: Install Node 20
-        uses: actions/setup-node@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20.x
-      - name: Build Gatsby site
-        run: npm run build
-        env:
-          DEVELOPMENT: true
-          NODE_ENV: production
+          name: gatsby-build
+          path: public/
 
       - name: Install Python 3
         uses: actions/setup-python@v5
@@ -151,14 +178,11 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v4
 
-      - name: Install Node 20
-        uses: actions/setup-node@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20.x
-      - name: Build Gatsby site
-        run: npm run build
-        env:
-          NODE_ENV: production
+          name: gatsby-build
+          path: public/
 
       - name: Install Python 3
         uses: actions/setup-python@v5
