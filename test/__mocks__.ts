@@ -45,7 +45,7 @@ export const useConnectionsGameResult: UseConnectionsGameResult = {
   errorMessage: null,
   getHint: jest.fn(),
   hints: [],
-  hintsReceived: 0,
+  hintsUsed: 0,
   incorrectGuesses: 0,
   isHintAvailable: false,
   isLoading: false,

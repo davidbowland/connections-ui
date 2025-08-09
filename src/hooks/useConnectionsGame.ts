@@ -25,7 +25,7 @@ export interface UseConnectionsGameResult {
   errorMessage: string | null
   getHint: () => void
   hints: string[]
-  hintsReceived: number
+  hintsUsed: number
   incorrectGuesses: number
   isHintAvailable: boolean
   isLoading: boolean
@@ -46,10 +46,16 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
   const [isLoading, setIsLoading] = useState(true)
   const [incorrectGuesses, setIncorrectGuesses] = useState(0)
   const [isOneAway, setIsOneAway] = useState(false)
+  const [hintsUsed, setHintsUsed] = useState(0)
   const [revealedHints, setRevealedHints] = useState<Record<string, string>>({})
   const [selectedWords, setSelectedWords] = useState<string[]>([])
   const [solvedCategories, setSolvedCategories] = useState<SolvedCategory[]>([])
   const [words, setWords] = useState<string[]>([])
+
+  const isHintAvailable = useMemo(
+    () => Object.keys(categories).length > solvedCategories.length + Object.keys(revealedHints).length,
+    [categories, revealedHints, solvedCategories],
+  )
 
   const selectWord = useCallback(
     (word: string) => {
@@ -107,12 +113,11 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
       const randomIndex = Math.floor(Math.random() * unsolvedCategories.length)
       const [categoryName, category] = unsolvedCategories[randomIndex]
       setRevealedHints((prev) => ({ ...prev, [categoryName]: category.hint }))
+      setHintsUsed((prev) => prev + 1)
     }
   }, [categories, solvedCategories, revealedHints])
 
   const categoriesCount = useMemo(() => Object.keys(categories).length, [categories])
-  const hintsReceived = useMemo(() => Object.keys(revealedHints).length, [revealedHints])
-
   const revealSolution = useCallback(() => {
     const remainingCategories = Object.entries(categories).filter(
       ([categoryName]) => !solvedCategories.some((solved) => solved.description === categoryName),
@@ -138,6 +143,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     setErrorMessage(null)
 
     setCategories({})
+    setHintsUsed(0)
     setIncorrectGuesses(0)
     setIsOneAway(false)
     setRevealedHints({})
@@ -178,9 +184,9 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     errorMessage,
     getHint,
     hints: Object.values(revealedHints),
-    hintsReceived,
+    hintsUsed,
     incorrectGuesses,
-    isHintAvailable: Object.keys(categories).length > solvedCategories.length + Object.keys(revealedHints).length,
+    isHintAvailable,
     isLoading,
     isOneAway,
     isRevealSolutionAvailable: solvedCategories.length < 4,

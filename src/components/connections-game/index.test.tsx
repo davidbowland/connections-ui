@@ -357,7 +357,7 @@ describe('ConnectionsGame', () => {
     const mockResult = {
       ...useConnectionsGameResult,
       categoriesCount: 4,
-      hintsReceived: 2,
+      hintsUsed: 2,
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
 
@@ -370,7 +370,7 @@ describe('ConnectionsGame', () => {
     const mockResult = {
       ...useConnectionsGameResult,
       categoriesCount: 4,
-      hintsReceived: 0,
+      hintsUsed: 0,
     }
     jest.mocked(useConnectionsGame).mockReturnValueOnce(mockResult)
 

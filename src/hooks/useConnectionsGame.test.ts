@@ -350,13 +350,13 @@ describe('useConnectionsGame', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    expect(result.current.hintsReceived).toBe(0)
+    expect(result.current.hintsUsed).toBe(0)
 
     result.current.getHint()
-    await waitFor(() => expect(result.current.hintsReceived).toBe(1))
+    await waitFor(() => expect(result.current.hintsUsed).toBe(1))
 
     result.current.getHint()
-    await waitFor(() => expect(result.current.hintsReceived).toBe(2))
+    await waitFor(() => expect(result.current.hintsUsed).toBe(2))
   })
 
   it('returns the correct categories count', async () => {

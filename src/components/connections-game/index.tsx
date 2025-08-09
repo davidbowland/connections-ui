@@ -59,7 +59,7 @@ export const ConnectionsGame = ({
     errorMessage,
     getHint,
     hints,
-    hintsReceived,
+    hintsUsed,
     incorrectGuesses,
     isHintAvailable,
     isLoading,
@@ -363,9 +363,9 @@ export const ConnectionsGame = ({
           Incorrect guesses: {incorrectGuesses.toLocaleString()}
         </Typography>
 
-        {hintsReceived > 0 && (
+        {hintsUsed > 0 && (
           <Typography align="center" color="text.secondary" sx={{ marginTop: '0.5em' }} variant="body2">
-            Hints received: {hintsReceived}/{categoriesCount}
+            Hints received: {hintsUsed}/{categoriesCount}
           </Typography>
         )}
 
