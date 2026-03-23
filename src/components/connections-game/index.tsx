@@ -78,8 +78,22 @@ export const ConnectionsGame = ({
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
   const boardRef = useRef<HTMLDivElement>(null)
+  const hintsRef = useRef<HTMLDivElement>(null)
+  const oneAwayRef = useRef<HTMLDivElement>(null)
   const scrollToBoard = () => {
-    setTimeout(() => boardRef.current?.scrollIntoView({ behavior: 'smooth' }), 10)
+    setTimeout(() => boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }
+  const scrollToHints = () => {
+    setTimeout(() => hintsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }
+  const scrollToOneAway = () => {
+    setTimeout(() => {
+      if (oneAwayRef.current) {
+        oneAwayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } else {
+        boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }
 
   const displayGameId = useMemo(() => {
@@ -133,12 +147,16 @@ export const ConnectionsGame = ({
       const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
       setShakingTimeout(timeout)
     }
-    scrollToBoard()
+    if (success) {
+      scrollToBoard()
+    } else {
+      scrollToOneAway()
+    }
   }
 
   const handleGetHint = () => {
     getHint()
-    scrollToBoard()
+    scrollToHints()
   }
 
   const handleRevealSolution = () => {
@@ -227,14 +245,22 @@ export const ConnectionsGame = ({
       </Typography>
 
       <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" pt={1} ref={boardRef}>
-        {hints.map((hint, index) => (
-          <Alert icon={<HelpOutlineIcon />} key={index} severity="info" sx={{ marginBottom: '1em' }} variant="outlined">
-            {hint}
-          </Alert>
-        ))}
+        <div ref={hintsRef}>
+          {hints.map((hint, index) => (
+            <Alert
+              icon={<HelpOutlineIcon />}
+              key={index}
+              severity="info"
+              sx={{ marginBottom: '1em' }}
+              variant="outlined"
+            >
+              {hint}
+            </Alert>
+          ))}
+        </div>
 
         {isOneAway && (
-          <Typography align="center" color="warning.main" sx={{ marginBottom: '1em' }} variant="h6">
+          <Typography align="center" color="warning.main" ref={oneAwayRef} sx={{ marginBottom: '1em' }} variant="h6">
             One away!
           </Typography>
         )}

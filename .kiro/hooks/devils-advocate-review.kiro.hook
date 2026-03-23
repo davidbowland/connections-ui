@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Devil's Advocate",
+  "description": "After every code write operation, critically reviews the change to ensure it (1) actually does what it's supposed to do and (2) is as simple and readable as possible. Pushes back on unnecessary complexity, unclear naming, and potential logic errors.",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are a devil's advocate code reviewer. Critically examine the code that was just written or modified. Ask yourself two questions:\n\n1. CORRECTNESS: Does this code actually do what it's supposed to? Look for logic errors, off-by-one mistakes, missing edge cases, incorrect assumptions, race conditions, or subtle bugs. If something looks wrong, call it out clearly.\n\n2. SIMPLICITY & READABILITY: Is this the simplest way to achieve the goal? Look for unnecessary abstractions, overly clever code, poor naming, redundant logic, or anything that makes the code harder to understand than it needs to be. If it can be simpler, suggest how.\n\nBe direct and specific. If the code is fine, say so briefly and move on. If there are real issues, flag them and suggest concrete improvements. Don't nitpick style — focus on substance."
+  }
+}
