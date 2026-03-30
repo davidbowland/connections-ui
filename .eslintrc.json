@@ -39,7 +39,6 @@
     ],
     "react/jsx-sort-props": ["error"],
     "semi": ["error", "never"],
-    "sort-keys": ["error", "asc", { "caseSensitive": false, "natural": false }],
     "sort-vars": ["error"]
   },
   "settings": {
