@@ -62,9 +62,7 @@ describe('GameSelection', () => {
     render(<GameSelection gameId="2025-01-02" />)
 
     const select = screen.getByLabelText('Select game')
-    await user.click(select)
-    const option = screen.getByRole('option', { name: '1/3/2025' })
-    await user.click(option)
+    await user.selectOptions(select, '2025-01-03')
 
     expect(mockPush).toHaveBeenCalledWith('/g/2025-01-03')
   })
@@ -92,6 +90,16 @@ describe('GameSelection', () => {
 
     expect(screen.getByLabelText('Select game')).toBeInTheDocument()
     expect(screen.getByText(errorMessage)).toBeInTheDocument()
+  })
+
+  it('uses en-US locale when navigator is undefined', () => {
+    const originalNavigator = global.navigator
+    Object.defineProperty(global, 'navigator', { value: undefined, writable: true })
+
+    render(<GameSelection gameId="2025-01-02" />)
+
+    expect(screen.getByLabelText('Select game')).toBeInTheDocument()
+    Object.defineProperty(global, 'navigator', { value: originalNavigator, writable: true })
   })
 
   it('does not display error message when none exists', () => {

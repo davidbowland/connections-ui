@@ -1,8 +1,6 @@
 import Head from 'next/head'
 import React from 'react'
 
-import Paper from '@mui/material/Paper'
-
 import PrivacyPolicy from '@components/privacy-policy'
 
 const PrivacyPage = (): React.ReactNode => {
@@ -12,9 +10,9 @@ const PrivacyPage = (): React.ReactNode => {
         <title>Connections | Privacy Policy</title>
       </Head>
       <main>
-        <Paper elevation={3} sx={{ margin: 'auto', maxWidth: '900px' }}>
+        <div className="mx-auto max-w-[900px] shadow-md">
           <PrivacyPolicy />
-        </Paper>
+        </div>
       </main>
     </>
   )

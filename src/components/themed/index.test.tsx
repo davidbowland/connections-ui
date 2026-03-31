@@ -2,18 +2,9 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
-import CssBaseline from '@mui/material/CssBaseline'
-import { createTheme, ThemeProvider } from '@mui/material/styles'
-
 import Themed from './index'
 import Disclaimer from '@components/disclaimer'
-import { theme } from '@test/__mocks__'
 
-jest.mock('@mui/material/CssBaseline')
-jest.mock('@mui/material/styles', () => ({
-  createTheme: jest.fn(),
-  ThemeProvider: jest.fn(),
-}))
 jest.mock('@components/disclaimer')
 
 const mockMatchMedia = (matches: boolean) => {
@@ -28,65 +19,50 @@ describe('Themed component', () => {
   const children = <>fnord</>
 
   beforeAll(() => {
-    jest.mocked(CssBaseline).mockReturnValue(<>CssBaseline</>)
     jest.mocked(Disclaimer).mockReturnValue(<>Disclaimer</>)
-    jest.mocked(ThemeProvider).mockImplementation(({ children }) => <>{children}</>)
-    jest.mocked(createTheme).mockReturnValue(theme)
     mockMatchMedia(false)
   })
 
-  test('expect rendering Themed has children in output', async () => {
+  test('renders children', async () => {
     render(<Themed>{children}</Themed>)
 
     expect(await screen.findByText(/fnord/)).toBeInTheDocument()
   })
 
-  test('expect rendering Themed renders CssBaseline', async () => {
+  test('renders Disclaimer', async () => {
     render(<Themed>{children}</Themed>)
 
-    expect(CssBaseline).toHaveBeenCalledTimes(1)
+    expect(Disclaimer).toHaveBeenCalled()
   })
 
-  test('expect rendering Themed renders Disclaimer', async () => {
-    render(<Themed>{children}</Themed>)
-
-    expect(Disclaimer).toHaveBeenCalledTimes(1)
-  })
-
-  test('expect rendering Themed uses light theme when requested', () => {
-    render(<Themed>{children}</Themed>)
-
-    expect(createTheme).toHaveBeenCalledWith({
-      palette: {
-        background: {
-          default: '#ededed',
-          paper: '#fff',
-        },
-        mode: 'light',
-        text: {
-          primary: '#000',
-        },
-      },
-    })
-    expect(ThemeProvider).toHaveBeenCalledWith(expect.objectContaining({ theme }), undefined)
-  })
-
-  test('expect rendering Themed uses dark theme when reqeusted', () => {
+  test('adds dark class to documentElement when prefers-color-scheme is dark', () => {
     mockMatchMedia(true)
     render(<Themed>{children}</Themed>)
 
-    expect(createTheme).toHaveBeenCalledWith({
-      palette: {
-        background: {
-          default: '#121212',
-          paper: '#121212',
-        },
-        mode: 'dark',
-        text: {
-          primary: '#fff',
-        },
-      },
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+  })
+
+  test('does not add dark class when prefers-color-scheme is light', () => {
+    document.documentElement.classList.remove('dark')
+    mockMatchMedia(false)
+    render(<Themed>{children}</Themed>)
+
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
+  })
+
+  test('adds dark class when media query fires dark event', () => {
+    let handler: ((e: MediaQueryListEvent) => void) | undefined
+    window.matchMedia = jest.fn().mockReturnValue({
+      addEventListener: jest.fn((_, h) => {
+        handler = h
+      }),
+      matches: false,
+      removeEventListener: jest.fn(),
     })
-    expect(ThemeProvider).toHaveBeenCalledWith(expect.objectContaining({ theme }), undefined)
+    document.documentElement.classList.remove('dark')
+    render(<Themed>{children}</Themed>)
+
+    handler?.({ matches: true } as MediaQueryListEvent)
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 })

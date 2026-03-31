@@ -1,57 +1,47 @@
+import { Button } from '@heroui/react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Cookies from 'universal-cookie'
 
-import Button from '@mui/material/Button'
-import Drawer from '@mui/material/Drawer'
-import Grid from '@mui/material/Grid'
-import Stack from '@mui/material/Stack'
-import { useTheme } from '@mui/material/styles'
-import Typography from '@mui/material/Typography'
-
 const Disclaimer = (): React.ReactNode => {
-  const theme = useTheme()
-  const cookies = new Cookies()
+  const cookies = useRef(new Cookies()).current
+  const [open, setOpen] = useState(true)
 
-  const [open, setOpen] = useState(cookies.get('disclaimer_accept') !== 'true')
+  useEffect(() => {
+    if (cookies.get('disclaimer_accept') === 'true') {
+      setOpen(false)
+    }
+  }, [])
 
   const closeDrawer = (): void => {
-    setOpen(false)
     cookies.set('disclaimer_accept', 'true', { path: '/', sameSite: 'strict', secure: true })
+    setOpen(false)
   }
 
   return (
     <>
       {open && (
-        <Drawer
-          PaperProps={{ style: { backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary } }}
-          anchor="bottom"
-          variant="permanent"
-        >
-          <Stack spacing={1} sx={{ p: 2 }}>
-            <Typography variant="h6">Cookie and Privacy Disclosure</Typography>
-            <Grid container justifyContent="center" sx={{ width: '100%' }}>
-              <Grid item md sm={12}>
-                <Stack spacing={1}>
-                  <Typography variant="body2">
-                    This site only uses essential cookies such as those used to keep you logged in. We collect no
-                    personally identifiable information and no contact information. Depending on your activity, your IP
-                    address may appear in our logs for up to 90 days. We never sell your information -- we intentionally
-                    don&apos;t have information to sell.
-                  </Typography>
-                  <Typography variant="body2">
-                    See our <Link href="/privacy-policy">privacy policy</Link> for more information.
-                  </Typography>
-                </Stack>
-              </Grid>
-              <Grid item lg={2} md={3} sm={6} sx={{ p: 1, textAlign: 'center' }} xs={12}>
-                <Button fullWidth onClick={closeDrawer} variant="contained">
-                  Accept &amp; continue
-                </Button>
-              </Grid>
-            </Grid>
-          </Stack>
-        </Drawer>
+        <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-zinc-900 shadow-lg z-50 p-4">
+          <div className="max-w-[900px] mx-auto flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-2">
+              <h6 className="text-lg font-semibold">Cookie and Privacy Disclosure</h6>
+              <p className="text-sm">
+                This site only uses essential cookies such as those used to keep you logged in. We collect no personally
+                identifiable information and no contact information. Depending on your activity, your IP address may
+                appear in our logs for up to 90 days. We never sell your information -- we intentionally don&apos;t have
+                information to sell.
+              </p>
+              <p className="text-sm">
+                See our <Link href="/privacy-policy">privacy policy</Link> for more information.
+              </p>
+            </div>
+            <div className="flex justify-center p-1 md:min-w-[140px]">
+              <Button className="w-full" onPress={closeDrawer} variant="primary">
+                Accept &amp; continue
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

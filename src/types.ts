@@ -1,5 +1,3 @@
-export type { Theme } from '@mui/material/styles'
-
 // API
 
 export type GameId = string

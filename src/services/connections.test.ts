@@ -73,10 +73,28 @@ describe('connections', () => {
       await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Invalid gameId')
     })
 
+    it('throws on 400 with fallback message when no error field', async () => {
+      mockPost.mockRejectedValueOnce({
+        isAxiosError: true,
+        response: { status: 400, data: {} },
+      })
+
+      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Bad request')
+    })
+
     it('throws on 500 with message', async () => {
       mockPost.mockRejectedValueOnce({
         isAxiosError: true,
         response: { status: 500, data: { message: 'Internal server error' } },
+      })
+
+      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Internal server error')
+    })
+
+    it('throws on 500 with fallback message when no message field', async () => {
+      mockPost.mockRejectedValueOnce({
+        isAxiosError: true,
+        response: { status: 500, data: {} },
       })
 
       await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Internal server error')

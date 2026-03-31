@@ -1,24 +1,26 @@
+import { Button, CardContent, CardHeader, CardRoot, CardTitle, Input, Spinner } from '@heroui/react'
 import type { GetStaticPaths, GetStaticProps } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import CircularProgress from '@mui/material/CircularProgress'
-import Grid from '@mui/material/Grid'
-import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
-
+import FeedbackMessage from '@components/feedback-message'
 import { rerollGame } from '@services/connections'
 
 const RerollPage = (): React.ReactNode => {
-  const { query } = useRouter()
-  const gameId = query.gameId as string | undefined
+  const router = useRouter()
+  const [gameId, setGameId] = useState<string | undefined>(undefined)
   const [password, setPassword] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [isError, setIsError] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const match = window.location.pathname.match(/\/g\/([^/]+)\/reroll/)
+    if (match) {
+      setGameId(match[1])
+    }
+  }, [router.asPath])
 
   if (!gameId) return null
 
@@ -44,34 +46,33 @@ const RerollPage = (): React.ReactNode => {
       <Head>
         <title>Reroll Game</title>
       </Head>
-      <main style={{ minHeight: '90vh' }}>
-        <Grid container sx={{ padding: { sm: '50px', xs: '25px 10px' } }}>
-          <Grid item sx={{ m: 'auto', maxWidth: 500, width: '100%' }}>
-            <Typography sx={{ mb: 3 }} variant="h5">
-              Reroll game: {gameId}
-            </Typography>
-            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
+      <main className="flex min-h-[90vh] items-center justify-center px-4 py-10">
+        <CardRoot className="w-full max-w-[400px]">
+          <CardHeader>
+            <CardTitle>Reroll Game</CardTitle>
+            <p className="mt-1 font-mono text-xs tracking-widest text-gray-400 uppercase dark:text-gray-500">
+              {gameId}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+              <Input
+                aria-label="Password"
                 autoComplete="off"
                 disabled={isLoading}
-                fullWidth
-                label="Password"
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 type="password"
                 value={password}
+                variant="secondary"
               />
-              <Button disabled={isLoading || !password} type="submit" variant="contained">
-                {isLoading ? <CircularProgress size={24} /> : 'Reroll'}
+              <Button isDisabled={isLoading || !password} type="submit" variant="primary">
+                {isLoading ? <Spinner size="sm" /> : 'Reroll'}
               </Button>
-            </Box>
-            {feedback && (
-              <Typography color={isError ? 'error' : 'success.main'} sx={{ mt: 2 }}>
-                {feedback}
-              </Typography>
-            )}
-          </Grid>
-        </Grid>
+            </form>
+            {feedback && <FeedbackMessage isError={isError} message={feedback} />}
+          </CardContent>
+        </CardRoot>
       </main>
     </>
   )

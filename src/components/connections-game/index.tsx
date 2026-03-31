@@ -1,39 +1,27 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import styled, { keyframes, css } from 'styled-components'
 
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
-import Alert from '@mui/material/Alert'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import Grid from '@mui/material/Grid'
-import Skeleton from '@mui/material/Skeleton'
-import Typography from '@mui/material/Typography'
-
+import {
+  ActionButton,
+  ActionRow,
+  ActionsContainer,
+  BoardContainer,
+  GameSelectionWrapper,
+  GameSubtitle,
+  GameTitle,
+  GameWrapper,
+  HintCard,
+  HintsContainer,
+  LoadingState,
+  OneAwayMessage,
+  SolvedCategoryCard,
+  StatLine,
+  WordGrid,
+  WordTile,
+} from './elements'
 import { GameSelection } from '@components/game-selection'
 import { GAME_COLORS } from '@config/colors'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { CategoryColors, GameId } from '@types'
-
-const shake = keyframes`
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-4px); }
-`
-
-const StyledButton = styled(Button)<{ $isShaking?: boolean }>`
-  border-radius: 8px;
-  font-variant: small-caps;
-  font-weight: bold;
-  text-transform: none;
-  width: 100%;
-
-  ${(props) =>
-    props.$isShaking &&
-    css`
-      animation: ${shake} 0.5s ease-in-out;
-    `}
-`
 
 const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
 
@@ -80,6 +68,7 @@ export const ConnectionsGame = ({
   const boardRef = useRef<HTMLDivElement>(null)
   const hintsRef = useRef<HTMLDivElement>(null)
   const oneAwayRef = useRef<HTMLDivElement>(null)
+
   const scrollToBoard = () => {
     setTimeout(() => boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
@@ -171,238 +160,93 @@ export const ConnectionsGame = ({
   }
 
   if (errorMessage) {
-    return (
-      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" p={2}>
-        <Alert severity="error">{errorMessage}</Alert>
-      </Box>
-    )
+    return <div role="alert">{errorMessage}</div>
   }
 
   if (isLoading) {
-    return (
-      <Box data-testid="loading-skeleton" p={{ md: 2, xs: 1 }}>
-        <Typography align="center" component="h1" gutterBottom variant="h4">
-          Connections
-        </Typography>
-        <Typography align="center" color="text.secondary" gutterBottom variant="subtitle1">
-          {displayGameId}
-        </Typography>
-
-        <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto">
-          <Grid container spacing={1}>
-            {Array.from({ length: 16 }).map((_, index) => (
-              <Grid item key={index} sm={3} xs={6}>
-                <Skeleton sx={{ borderRadius: 1, height: { md: 80, xs: 60 } }} variant="rectangular" />
-              </Grid>
-            ))}
-          </Grid>
-
-          <Box display="flex" flexDirection="column" gap={2} mt={3}>
-            <Box
-              alignItems={{ md: 'flex-start', xs: 'center' }}
-              display="flex"
-              flexDirection={{ md: 'row', xs: 'column' }}
-              gap={2}
-              justifyContent="center"
-            >
-              <Skeleton
-                height={36}
-                sx={{
-                  borderRadius: 1,
-                  maxWidth: { md: 'none', xs: '280px' },
-                  minWidth: 140,
-                  width: { md: 'auto', xs: '100%' },
-                }}
-                variant="rectangular"
-              />
-              <Skeleton
-                height={36}
-                sx={{
-                  borderRadius: 1,
-                  maxWidth: { md: 'none', xs: '280px' },
-                  minWidth: 140,
-                  width: { md: 'auto', xs: '100%' },
-                }}
-                variant="rectangular"
-              />
-            </Box>
-          </Box>
-
-          <Skeleton sx={{ fontSize: '0.875rem', mt: 4, mx: 'auto', width: '150px' }} variant="text" />
-          <Skeleton sx={{ fontSize: '0.875rem', mx: 'auto', width: '150px' }} variant="text" />
-        </Box>
-      </Box>
-    )
+    return <LoadingState displayGameId={displayGameId} />
   }
 
   return (
-    <Box p={{ md: 2, xs: 1 }}>
-      <Typography align="center" component="h1" gutterBottom variant="h4">
-        Connections
-      </Typography>
-      <Typography align="center" color="text.secondary" gutterBottom variant="subtitle1">
-        {displayGameId}
-      </Typography>
+    <GameWrapper>
+      <GameTitle />
+      <GameSubtitle>{displayGameId}</GameSubtitle>
 
-      <Box maxWidth="600px" mt={{ md: 3, xs: 2 }} mx="auto" pt={1} ref={boardRef}>
-        <div ref={hintsRef}>
+      <BoardContainer ref={boardRef}>
+        <HintsContainer ref={hintsRef}>
           {hints.map((hint, index) => (
-            <Alert
-              icon={<HelpOutlineIcon />}
-              key={index}
-              severity="info"
-              sx={{ marginBottom: '1em' }}
-              variant="outlined"
-            >
-              {hint}
-            </Alert>
+            <HintCard hint={hint} key={index} />
           ))}
-        </div>
+        </HintsContainer>
 
-        {isOneAway && (
-          <Typography align="center" color="warning.main" ref={oneAwayRef} sx={{ marginBottom: '1em' }} variant="h6">
-            One away!
-          </Typography>
-        )}
+        {isOneAway && <OneAwayMessage ref={oneAwayRef} />}
 
-        {solvedCategories.map((category, index) => {
-          const color = categoryColors[category.description]
-          return (
-            <Box
-              key={index}
-              sx={{
-                backgroundColor: color.background,
-                borderRadius: 2,
-                color: color.text,
-                marginBottom: '2em',
-                padding: '2em',
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="h6">{category.description}</Typography>
-              <Typography variant="body2">{category.words.join(', ')}</Typography>
-            </Box>
-          )
-        })}
+        {solvedCategories.map((category, index) => (
+          <SolvedCategoryCard
+            color={categoryColors[category.description]}
+            description={category.description}
+            key={index}
+            words={category.words}
+          />
+        ))}
 
-        <Grid container spacing={1}>
+        <WordGrid>
           {words.map((word, index) => {
             const isSelected = selectedWords.includes(word)
             return (
-              <Grid item key={index} sm={3} xs={6}>
-                <StyledButton
-                  $isShaking={shakingTimeout && isSelected}
-                  onClick={() => (isSelected ? unselectWord(word) : selectWord(word))}
-                  sx={{
-                    ':hover': {
-                      backgroundColor: isSelected ? selectedWordColor.background + 'aa' : 'transparent',
-                    },
-                    backgroundColor: isSelected ? selectedWordColor.background : 'transparent',
-                    color: isSelected ? selectedWordColor.text : 'text.primary',
-                    fontSize: { md: 14, xs: 12 },
-                    height: { md: 80, xs: 60 },
-                  }}
-                  variant="outlined"
-                >
-                  {word}
-                </StyledButton>
-              </Grid>
+              <WordTile
+                isSelected={isSelected}
+                isShaking={!!shakingTimeout && isSelected}
+                key={index}
+                onPress={() => (isSelected ? unselectWord(word) : selectWord(word))}
+                selectedColor={selectedWordColor}
+                word={word}
+              />
             )
           })}
-        </Grid>
+        </WordGrid>
 
-        <Box display="flex" flexDirection="column" gap={2} mt={3}>
+        <ActionsContainer>
           {selectedWords.length > 0 && (
-            <Box
-              alignItems={{ md: 'flex-start', xs: 'center' }}
-              display="flex"
-              flexDirection={{ md: 'row', xs: 'column' }}
-              gap={2}
-              justifyContent="center"
-            >
-              <Button
-                onClick={handleSubmit}
-                sx={{
-                  display: { md: 'block', xs: selectedWords.length >= 4 ? 'block' : 'none' },
-                  maxWidth: { md: 'none', xs: '280px' },
-                  minWidth: 140,
-                  visibility: selectedWords.length >= 4 ? 'visible' : 'hidden',
-                  width: { md: 'auto', xs: '100%' },
-                }}
-                variant="contained"
-              >
-                Submit
-              </Button>
-              <Button
-                onClick={clearSelectedWords}
-                sx={{
-                  maxWidth: { md: 'none', xs: '280px' },
-                  minWidth: 140,
-                  width: { md: 'auto', xs: '100%' },
-                }}
-                variant="outlined"
-              >
+            <ActionRow>
+              {selectedWords.length >= 4 && (
+                <ActionButton onPress={handleSubmit} variant="primary">
+                  Submit
+                </ActionButton>
+              )}
+              <ActionButton onPress={clearSelectedWords} variant="outline">
                 Clear selection
-              </Button>
-            </Box>
+              </ActionButton>
+            </ActionRow>
           )}
           {!isGameComplete && (isHintEnabled || isSolutionEnabled) && (
-            <Box
-              alignItems={{ md: 'flex-start', xs: 'center' }}
-              display="flex"
-              flexDirection={{ md: 'row', xs: 'column' }}
-              gap={2}
-              justifyContent="center"
-            >
-              <Button
-                onClick={handleGetHint}
-                sx={{
-                  display: { md: 'block', xs: isHintEnabled ? 'block' : 'none' },
-                  maxWidth: { md: 'none', xs: '280px' },
-                  minWidth: 140,
-                  visibility: isHintEnabled ? 'visible' : 'hidden',
-                  width: { md: 'auto', xs: '100%' },
-                }}
-                variant="outlined"
-              >
-                Get hint
-              </Button>
-              <Button
-                color="secondary"
-                onClick={handleRevealSolution}
-                sx={{
-                  display: { md: 'block', xs: isSolutionEnabled ? 'block' : 'none' },
-                  maxWidth: { md: 'none', xs: '280px' },
-                  minWidth: 140,
-                  visibility: isSolutionEnabled ? 'visible' : 'hidden',
-                  width: { md: 'auto', xs: '100%' },
-                }}
-                variant="contained"
-              >
-                Reveal solution
-              </Button>
-            </Box>
+            <ActionRow>
+              {isHintEnabled && (
+                <ActionButton onPress={handleGetHint} variant="outline">
+                  Get hint
+                </ActionButton>
+              )}
+              {isSolutionEnabled && (
+                <ActionButton onPress={handleRevealSolution} variant="primary">
+                  Reveal solution
+                </ActionButton>
+              )}
+            </ActionRow>
           )}
-        </Box>
+        </ActionsContainer>
 
-        <Typography align="center" color="text.secondary" sx={{ marginTop: '2em' }} variant="body2">
-          Incorrect guesses: {incorrectGuesses.toLocaleString()}
-        </Typography>
-
+        <StatLine first>Incorrect guesses: {incorrectGuesses.toLocaleString()}</StatLine>
         {hintsUsed > 0 && (
-          <Typography align="center" color="text.secondary" sx={{ marginTop: '0.5em' }} variant="body2">
+          <StatLine>
             Hints received: {hintsUsed}/{categoriesCount}
-          </Typography>
+          </StatLine>
         )}
+        <StatLine>Time: {formatTime(elapsedSeconds)}</StatLine>
 
-        <Typography align="center" color="text.secondary" sx={{ marginTop: '0.5em' }} variant="body2">
-          Time: {formatTime(elapsedSeconds)}
-        </Typography>
-
-        <Box maxWidth="300px" sx={{ margin: '0 auto 3em', paddingTop: '4em' }}>
+        <GameSelectionWrapper>
           <GameSelection gameId={gameId} />
-        </Box>
-      </Box>
-    </Box>
+        </GameSelectionWrapper>
+      </BoardContainer>
+    </GameWrapper>
   )
 }
