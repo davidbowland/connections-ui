@@ -93,6 +93,9 @@ Resources:
           CachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6' # Managed-CachingOptimized
           Compress: true
           DefaultTTL: 0
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt UiUrlRewriteFunction.FunctionARN
           ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03 # Managed-SecurityHeadersPolicy
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: 'redirect-to-https'
@@ -121,6 +124,42 @@ Resources:
           Value: 'connections'
         - Key: 'environment'
           Value: !Ref Environment
+
+  UiUrlRewriteFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+
+          if (/^\/g\/[^\/]+\/reroll(\/)?$/.test(uri)) {
+            request.uri = '/g/[gameId]/reroll/index.html';
+            return request;
+          }
+
+          if (/^\/g\/[^\/]+(\/)?$/.test(uri)) {
+            request.uri = '/g/[gameId]/index.html';
+            return request;
+          }
+
+          if (uri.endsWith('/')) {
+            request.uri += 'index.html';
+          } else if (!/\.[^/]+$/.test(uri)) {
+            request.uri += '/index.html';
+          }
+
+          return request;
+        }
+      FunctionConfig:
+        Comment: !Sub
+          - 'URL rewrite for ${Domain} - appends index.html and rewrites dynamic game routes'
+          - Domain: !FindInMap [EnvironmentMap, !Ref Environment, domain]
+        Runtime: cloudfront-js-2.0
+      Name: !Sub
+        - '${Environment}-connections-ui-url-rewrite'
+        - Environment: !Ref Environment
 
   # DNS
 

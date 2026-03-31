@@ -1,16 +1,23 @@
-import { navigate } from 'gatsby'
+import Head from 'next/head'
+import { useRouter } from 'next/router'
 import React, { useEffect } from 'react'
 
 const Index = (): React.ReactNode => {
+  const router = useRouter()
+
   useEffect(() => {
     const today = new Date()
     const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-    navigate(`/g/${dateString}`)
-  }, [])
+    router.replace(`/g/${dateString}`)
+  }, []) // eslint-disable-line
 
-  return null
+  return (
+    <>
+      <Head>
+        <title>Connections | dbowland.com</title>
+      </Head>
+    </>
+  )
 }
-
-export const Head = () => <title>Connections | dbowland.com</title>
 
 export default Index

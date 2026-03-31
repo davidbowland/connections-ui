@@ -41,6 +41,17 @@
     "semi": ["error", "never"],
     "sort-vars": ["error"]
   },
+  "overrides": [
+    {
+      "env": {
+        "node": true
+      },
+      "files": ["scripts/**/*.js", "*.config.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ],
   "settings": {
     "react": {
       "version": "detect"

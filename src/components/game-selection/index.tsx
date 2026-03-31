@@ -1,4 +1,4 @@
-import { navigate } from 'gatsby'
+import { useRouter } from 'next/router'
 import React, { useMemo } from 'react'
 
 import Alert from '@mui/material/Alert'
@@ -15,6 +15,7 @@ export interface GameSelectionProps {
 }
 
 export const GameSelection = ({ gameId }: GameSelectionProps): React.ReactNode => {
+  const router = useRouter()
   const { errorMessage, gameIds, isLoading } = useGameIds()
 
   const formattedGameIds = useMemo(
@@ -32,7 +33,7 @@ export const GameSelection = ({ gameId }: GameSelectionProps): React.ReactNode =
   )
 
   const handleChange = (event: SelectChangeEvent) => {
-    navigate(`/g/${event.target.value}`)
+    router.push(`/g/${event.target.value}`)
   }
 
   return (

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { ConnectionsGame, GameIdsResponse } from '@types'
 
 const api = axios.create({
-  baseURL: process.env.GATSBY_CONNECTIONS_API_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_CONNECTIONS_API_BASE_URL,
   timeout: 35_000, // 35 seconds
 })
 

@@ -1,14 +1,16 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import * as gatsby from 'gatsby'
+import { useRouter } from 'next/router'
 import React from 'react'
 
 import { GameSelection } from './index'
 import { useGameIds } from '@hooks/useGameIds'
 
 jest.mock('@hooks/useGameIds')
-jest.mock('gatsby')
+jest.mock('next/router', () => ({
+  useRouter: jest.fn(),
+}))
 
 describe('GameSelection', () => {
   const mockGameIds = ['2025-01-03', '2025-01-02', '2025-01-01']
@@ -18,9 +20,12 @@ describe('GameSelection', () => {
     isLoading: false,
   }
 
+  const mockPush = jest.fn()
+
   beforeEach(() => {
     jest.mocked(useGameIds).mockReturnValue(defaultMockResult)
-    jest.mocked(gatsby.navigate).mockClear()
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any)
+    mockPush.mockClear()
   })
 
   it('displays select with game options when not loading', () => {
@@ -61,7 +66,7 @@ describe('GameSelection', () => {
     const option = screen.getByRole('option', { name: '1/3/2025' })
     await user.click(option)
 
-    expect(gatsby.navigate).toHaveBeenCalledWith('/g/2025-01-03')
+    expect(mockPush).toHaveBeenCalledWith('/g/2025-01-03')
   })
 
   it('displays current gameId as selected', () => {

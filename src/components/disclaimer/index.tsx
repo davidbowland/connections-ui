@@ -1,4 +1,4 @@
-import { Link } from 'gatsby'
+import Link from 'next/link'
 import React, { useState } from 'react'
 import Cookies from 'universal-cookie'
 
@@ -6,9 +6,11 @@ import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
 import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
+import { useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 
 const Disclaimer = (): React.ReactNode => {
+  const theme = useTheme()
   const cookies = new Cookies()
 
   const [open, setOpen] = useState(cookies.get('disclaimer_accept') !== 'true')
@@ -21,7 +23,11 @@ const Disclaimer = (): React.ReactNode => {
   return (
     <>
       {open && (
-        <Drawer anchor="bottom" variant="permanent">
+        <Drawer
+          PaperProps={{ style: { backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary } }}
+          anchor="bottom"
+          variant="permanent"
+        >
           <Stack spacing={1} sx={{ p: 2 }}>
             <Typography variant="h6">Cookie and Privacy Disclosure</Typography>
             <Grid container justifyContent="center" sx={{ width: '100%' }}>
@@ -34,7 +40,7 @@ const Disclaimer = (): React.ReactNode => {
                     don&apos;t have information to sell.
                   </Typography>
                   <Typography variant="body2">
-                    See our <Link to="/privacy-policy">privacy policy</Link> for more information.
+                    See our <Link href="/privacy-policy">privacy policy</Link> for more information.
                   </Typography>
                 </Stack>
               </Grid>

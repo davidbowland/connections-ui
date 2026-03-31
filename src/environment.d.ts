@@ -1,7 +1,7 @@
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      GATSBY_CONNECTIONS_API_BASE_URL: string
+      NEXT_PUBLIC_CONNECTIONS_API_BASE_URL: string
     }
   }
 }

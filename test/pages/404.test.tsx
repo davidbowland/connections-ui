@@ -1,11 +1,24 @@
+import NotFound from '@pages/404'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 import React from 'react'
 
-import NotFound, { Head } from './404'
 import ServerErrorMessage from '@components/server-error-message'
 
 jest.mock('@components/server-error-message')
+
+jest.mock('next/head', () => {
+  const MockHead = ({ children }: { children: React.ReactNode }) => {
+    React.Children.forEach(children, (child) => {
+      if (React.isValidElement(child) && child.type === 'title') {
+        document.title = (child.props as { children: string }).children
+      }
+    })
+    return null
+  }
+  MockHead.displayName = 'MockHead'
+  return MockHead
+})
 
 describe('404 error page', () => {
   beforeAll(() => {
@@ -24,10 +37,7 @@ describe('404 error page', () => {
     const expectedTitle = '404: Not Found'
     render(<NotFound />)
 
-    expect(ServerErrorMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ title: expectedTitle }),
-      expect.anything(),
-    )
+    expect(ServerErrorMessage).toHaveBeenCalledWith(expect.objectContaining({ title: expectedTitle }), undefined)
     expect(ServerErrorMessage).toHaveBeenCalledTimes(1)
   })
 
@@ -44,9 +54,9 @@ describe('404 error page', () => {
     expect(ServerErrorMessage).toHaveBeenCalledTimes(1)
   })
 
-  it('renders Head', () => {
-    render(<Head />)
-
+  it('renders title', () => {
+    window.location.pathname = '/an-invalid-page'
+    render(<NotFound />)
     expect(document.title).toEqual('Connections | 404: Not Found')
   })
 })

@@ -1,10 +1,9 @@
 import '@fontsource/roboto'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import Box from '@mui/material/Box'
 import CssBaseline from '@mui/material/CssBaseline'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import useMediaQuery from '@mui/material/useMediaQuery'
 
 import Disclaimer from '@components/disclaimer'
 
@@ -13,7 +12,15 @@ export interface ThemedProps {
 }
 
 const Themed = ({ children }: ThemedProps): React.ReactNode => {
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
+  const [prefersDarkMode, setPrefersDarkMode] = useState(false)
+
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    setPrefersDarkMode(mql.matches)
+    const handler = (e: MediaQueryListEvent) => setPrefersDarkMode(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
 
   const theme = useMemo(
     () =>
