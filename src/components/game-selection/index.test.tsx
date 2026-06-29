@@ -22,10 +22,9 @@ describe('GameSelection', () => {
 
   const mockPush = jest.fn()
 
-  beforeEach(() => {
+  beforeAll(() => {
     jest.mocked(useGameIds).mockReturnValue(defaultMockResult)
     jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any)
-    mockPush.mockClear()
   })
 
   it('displays select with game options when not loading', () => {
@@ -35,7 +34,7 @@ describe('GameSelection', () => {
   })
 
   it('does not display select when loading', () => {
-    jest.mocked(useGameIds).mockReturnValue({
+    jest.mocked(useGameIds).mockReturnValueOnce({
       ...defaultMockResult,
       isLoading: true,
     })
@@ -47,7 +46,7 @@ describe('GameSelection', () => {
 
   it('displays error message when present', () => {
     const errorMessage = 'Unable to load game IDs'
-    jest.mocked(useGameIds).mockReturnValue({
+    jest.mocked(useGameIds).mockReturnValueOnce({
       ...defaultMockResult,
       errorMessage,
     })
@@ -81,7 +80,7 @@ describe('GameSelection', () => {
 
   it('displays both select and error message when error exists and not loading', () => {
     const errorMessage = 'Unable to load game IDs'
-    jest.mocked(useGameIds).mockReturnValue({
+    jest.mocked(useGameIds).mockReturnValueOnce({
       ...defaultMockResult,
       errorMessage,
     })

@@ -30,6 +30,7 @@ const config: Config = {
     '^@test/(.*)$': '<rootDir>/test/$1',
     '^@types$': '<rootDir>/src/types',
     '@fontsource/(.*)$': '<rootDir>/__mocks__/file-mock.js',
+    '^framer-motion$': '<rootDir>/__mocks__/framer-motion.js',
   },
   setupFiles: ['<rootDir>/jest.setup-test-env.js'],
   testEnvironment: 'jsdom',

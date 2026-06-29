@@ -1,93 +1,72 @@
 import Link from 'next/link'
 import React from 'react'
 
-const PrivacyPolicy = (): React.ReactNode => {
-  return (
-    <div className="flex flex-col gap-4 p-8">
-      <h5 className="text-2xl font-normal">Connections Privacy Policy</h5>
-      <p>
-        This Privacy Policy describes how your personal information is collected, used, and shared when you visit{' '}
-        <Link href="https://connections.dbowland.com/">https://connections.dbowland.com</Link> (the &quot;Site&quot;).
+const Section = ({ heading, children }: { heading: string; children: React.ReactNode }): React.ReactNode => (
+  <div>
+    <hr className="border-black/8 dark:border-white/8" />
+    <div className="py-8">
+      <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
+        {heading}
       </p>
-      <h6 className="text-xl font-normal">PERSONAL INFORMATION WE COLLECT</h6>
-      <p>
-        When you visit the Site, we automatically collect certain information about your device, including information
-        about your web browser, IP address, time zone, and some of the cookies that are installed on your device.
-        Additionally, as you browse the Site, we collect information about the individual web pages or products that you
-        view, what websites or search terms referred you to the Site, and information about how you interact with the
-        Site. We refer to this automatically-collected information as &quot;Device Information.&quot;
-      </p>
-      <div>
-        We collect Device Information using the following technologies:
-        <ul>
-          <li>
-            &quot;Cookies&quot; are data files that are placed on your device or computer and often include an anonymous
-            unique identifier. For more information about cookies, and how to disable cookies, visit{' '}
-            <Link href="http://www.allaboutcookies.org">http://www.allaboutcookies.org</Link>.
-          </li>
-          <li>
-            &quot;Log files&quot; track actions occurring on the Site, and collect data including your IP address,
-            browser type, Internet service provider, referring/exit pages, and date/time stamps.
-          </li>
-        </ul>
-      </div>
-      <p>
-        When we talk about &quot;Personal Information&quot; in this Privacy Policy, we are talking about Device
-        Information.
-      </p>
-      <h6 className="text-xl font-normal">HOW DO WE USE YOUR PERSONAL INFORMATION?</h6>
-      <p>
-        We use the Device Information that we collect to help us screen for potential risk and fraud (in particular,
-        your IP address), and more generally to improve and optimize our Site (for example, by generating analytics
-        about how our customers browse and interact with the Site, and to assess the success of our marketing and
-        advertising campaigns).
-      </p>
-      <p>
-        Finally, we may share your Personal Information to comply with applicable laws and regulations, to respond to a
-        subpoena, search warrant or other lawful request for information we receive, or to otherwise protect our rights.
-      </p>
-      <h6 className="text-xl font-normal">DO NOT TRACK</h6>
-      <p>
-        Please note that we do not alter our Site&apos;s data collection and use practices when we see a Do Not Track
-        signal from your browser.
-      </p>
-      <h6 className="text-xl font-normal">YOUR RIGHTS</h6>
-      <p>
-        If you are a European resident, you have the right to access personal information we hold about you and to ask
-        that your personal information be corrected, updated, or deleted. If you would like to exercise this right,
-        please contact us through the contact information below. Additionally, if you are a European resident we note
-        that we are processing your information in order to fulfill contracts we might have with you (for example if you
-        make an order through the Site), or otherwise to pursue our legitimate business interests listed above. Further,
-        please note that your information will be transferred outside of Europe, including to the United States.
-      </p>
-      <h6 className="text-xl font-normal">DATA RETENTION</h6>
-      <p>
-        We may maintain log files for up to 90 days. If you request data you entered into the site to be deleted, it
-        will be removed within 30 days of your request.
-      </p>
-      <h6 className="text-xl font-normal">AI INTERACTIONS</h6>
-      <p>
-        We do not use your interactions with the site to train AI models. We store claims and conversation chat history
-        at least 24 hours to provide the opportunity to pause and resume conversations or refer back to them. Roughly
-        24-48 hours after a chat session is initiated, all information about it is permanently deleted, including the
-        claim and chat history.
-      </p>
-      <h6 className="text-xl font-normal">MINORS</h6>
-      <p>The Site is not intended for individuals under the age of 18.</p>
-      <h6 className="text-xl font-normal">CHANGES</h6>
-      <p>
-        We may update this privacy policy from time to time in order to reflect, for example, changes to our practices
-        or for other operational, legal or regulatory reasons.
-      </p>
-      <h6 className="text-xl font-normal">CONTACT US</h6>
-      <p>
-        For more information about our privacy practices, if you have questions, or if you would like to make a
-        complaint, please contact us by e-mail at <Link href="mailto:privacy@dbowland.com">privacy@dbowland.com</Link>{' '}
-        or by mail using the details provided below:
-      </p>
-      <p>dbowland.com Privacy Department, P.O. Box 81226, Seattle, WA, 98108-1226</p>
+      <p className="text-[15px] leading-relaxed text-black/55 dark:text-white/55">{children}</p>
     </div>
-  )
-}
+  </div>
+)
+
+const PrivacyPolicy = (): React.ReactNode => (
+  <div className="mx-auto max-w-[680px] px-6 py-20 md:px-8">
+    <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-600 dark:text-violet-400">
+      Legal
+    </p>
+    <h1 className="mb-6 text-5xl font-light tracking-tight text-black/88 dark:text-white/90">Privacy Policy</h1>
+    <p className="mb-10 text-[15px] leading-relaxed text-black/55 dark:text-white/55">
+      This policy describes how{' '}
+      <strong className="font-semibold text-black/75 dark:text-white/75">connections.dbowland.com</strong> handles your
+      data. The short version: we collect very little, we keep it briefly, and we never sell it.
+    </p>
+
+    <Section heading="What we collect">
+      Our servers automatically log your IP address, browser type, and the pages you visit. We use these logs to detect
+      abuse and keep the site running. We set no cookies and collect no other personal information. That&apos;s
+      everything.
+    </Section>
+
+    <Section heading="Why we collect it">
+      We process server log data under legitimate interests — operating a secure, functional website. We don&apos;t rely
+      on your consent, and we don&apos;t use your data for advertising or profiling.
+    </Section>
+
+    <Section heading="What we don't do">
+      We don&apos;t sell your data. We don&apos;t share it with advertisers. We don&apos;t build profiles. We don&apos;t
+      set cookies. We intentionally don&apos;t collect contact information or anything personally identifying beyond
+      what appears in a standard server log.
+    </Section>
+
+    <Section heading="When we share your data">
+      We share data only when legally required — for example, in response to a valid court order or law enforcement
+      request.
+    </Section>
+
+    <Section heading="Data retention">
+      We may maintain server logs for up to 90 days, after which they are permanently deleted.
+    </Section>
+
+    <Section heading="Your rights">
+      If you are a European resident, you have the right to access personal information we hold about you and to ask
+      that it be corrected or deleted. Contact us at the address below.
+    </Section>
+
+    <Section heading="Contact">
+      For questions about this policy, contact us at{' '}
+      <Link
+        className="text-violet-600 underline hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+        href="mailto:privacy@dbowland.com"
+      >
+        privacy@dbowland.com
+      </Link>{' '}
+      or by mail: dbowland.com Privacy Department, P.O. Box 81226, Seattle, WA 98108-1226.
+    </Section>
+  </div>
+)
 
 export default PrivacyPolicy

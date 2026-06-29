@@ -1,11 +1,24 @@
 @import '@heroui/styles';
 
 html {
+  background-color: #f4f4f6;
   scroll-behavior: smooth;
+  --card-bg-outer-a: 0.38;
+  --card-bg-inner-a: 0.24;
+  --tile-sel-bg-a: 0.22;
+  --tile-sel-bd-a: 0.65;
+}
+
+html.dark {
+  background-color: #060608;
+  --card-bg-outer-a: 0.62;
+  --card-bg-inner-a: 0.44;
+  --tile-sel-bg-a: 0.36;
+  --tile-sel-bd-a: 0.88;
 }
 
 body {
-  font-family: 'Nunito', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 @keyframes shake {

@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connections — Solve Animation Comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #060608;
+        --surface: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: rgba(255, 255, 255, 0.88);
+        --muted: rgba(255, 255, 255, 0.25);
+        --accent: #8b5cf6;
+        --accent-glow: rgba(139, 92, 246, 0.35);
+        --selected-bg: rgba(139, 92, 246, 0.22);
+        --selected-border: rgba(168, 130, 255, 0.5);
+        --selected-text: rgba(220, 190, 255, 0.95);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Space Grotesk', sans-serif;
+        min-height: 100vh;
+      }
+
+      /* ─── STICKY NAV ─── */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: rgba(6, 6, 8, 0.88);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+      }
+      .top-nav-label {
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-right: 8px;
+        white-space: nowrap;
+      }
+      .nav-pill {
+        padding: 7px 18px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: rgba(255, 255, 255, 0.6);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .nav-pill:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .nav-pill.active {
+        background: #fff;
+        color: #000;
+        border-color: #fff;
+      }
+
+      /* ─── RECOMMENDATION BANNER ─── */
+      .rec-banner {
+        margin-top: 60px;
+        background: rgba(139, 92, 246, 0.08);
+        border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+        padding: 24px 32px;
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+      }
+      .rec-badge {
+        background: var(--accent);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 5px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+      .rec-text {
+        font-size: 14px;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 760px;
+      }
+      .rec-text strong {
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      /* ─── SECTION WRAPPER ─── */
+      .demo-section {
+        padding: 60px 20px 80px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .demo-section:last-child {
+        border-bottom: none;
+      }
+
+      .section-eyebrow {
+        font-size: 9px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .section-heading {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-align: center;
+      }
+      .section-desc {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 36px;
+        text-align: center;
+        max-width: 480px;
+      }
+      .rec-star {
+        display: inline-block;
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid rgba(139, 92, 246, 0.35);
+        color: rgba(200, 170, 255, 0.9);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        padding: 3px 12px;
+        border-radius: 999px;
+        margin-bottom: 10px;
+      }
+
+      /* ─── BOARD ─── */
+      .board-wrap {
+        width: 100%;
+        max-width: 520px;
+        position: relative;
+      }
+
+      /* solved cards */
+      .solved-stack {
+        margin-bottom: 8px;
+      }
+      .solved-card {
+        border-radius: 12px;
+        padding: 14px 20px;
+        text-align: center;
+        margin-bottom: 6px;
+        transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .solved-card .cat-name {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .solved-card .cat-words {
+        font-size: 11px;
+        font-weight: 300;
+        margin-top: 3px;
+        letter-spacing: 0.04em;
+        opacity: 0.75;
+      }
+      .solved-card.cyan {
+        background: rgba(0, 210, 255, 0.15);
+        border: 1px solid rgba(0, 210, 255, 0.25);
+        color: rgba(160, 240, 255, 0.9);
+      }
+      .solved-card.orange {
+        background: rgba(255, 111, 0, 0.15);
+        border: 1px solid rgba(255, 111, 0, 0.3);
+        color: rgba(255, 190, 110, 0.95);
+      }
+
+      /* hint */
+      .hint-card {
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 10px;
+        padding: 11px 16px;
+        background: rgba(139, 92, 246, 0.07);
+        font-size: 12px;
+        color: rgba(200, 160, 255, 0.85);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .hint-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1px solid rgba(200, 160, 255, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+
+      /* one away */
+      .one-away {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .one-away-chip {
+        display: inline-block;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(255, 210, 60, 0.85);
+        background: rgba(255, 210, 60, 0.07);
+        border: 1px solid rgba(255, 210, 60, 0.2);
+        border-radius: 999px;
+        padding: 7px 18px;
+      }
+
+      /* word grid */
+      .word-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .tile {
+        height: 68px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.65);
+        cursor: pointer;
+        transition:
+          transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+          opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+          background 0.2s,
+          border-color 0.2s,
+          box-shadow 0.3s;
+        will-change: transform, opacity;
+      }
+      .tile.sel {
+        background: var(--selected-bg);
+        border-color: var(--selected-border);
+        color: var(--selected-text);
+        box-shadow:
+          0 0 16px var(--accent-glow),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      /* actions */
+      .actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      .btn {
+        padding: 10px 28px;
+        border-radius: 999px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background: rgba(255, 255, 255, 0.95);
+        color: #060608;
+        border: none;
+      }
+      .btn-primary:hover {
+        background: #fff;
+        transform: scale(1.02);
+      }
+      .btn-outline {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.55);
+        border: 1px solid var(--border);
+      }
+      .btn-outline:hover {
+        border-color: rgba(255, 255, 255, 0.22);
+        color: #fff;
+      }
+      .solve-trigger {
+        padding: 11px 28px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        margin-bottom: 0;
+        transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+      }
+      .solve-trigger:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 28px rgba(139, 92, 246, 0.45);
+      }
+      .solve-trigger:disabled {
+        opacity: 0.4;
+        cursor: default;
+        transform: none;
+      }
+
+      .demo-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 4px;
+        flex-wrap: wrap;
+      }
+      .reset-btn {
+        padding: 8px 20px;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .reset-btn:hover {
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .label-row {
+        font-size: 10px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      /* stats */
+      .stats {
+        display: flex;
+        gap: 28px;
+        justify-content: center;
+        margin-top: 4px;
+      }
+      .stat-val {
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+      }
+      .stat-lbl {
+        font-size: 8px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 2px;
+        text-align: center;
+      }
+
+      /* ─── OPTION B: glass overlay card ─── */
+      .overlay-area {
+        position: relative;
+      }
+      .glass-overlay-card {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -10px;
+        border-radius: 16px;
+        padding: 20px;
+        background: rgba(20, 10, 40, 0.75);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(168, 130, 255, 0.3);
+        box-shadow:
+          0 8px 40px rgba(139, 92, 246, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        opacity: 0;
+        transform: translateY(-24px) scale(0.96);
+        pointer-events: none;
+        transition:
+          opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+          transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+        z-index: 10;
+      }
+      .glass-overlay-card.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
+      }
+      .glass-overlay-cat {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 190, 110, 0.95);
+      }
+      .glass-overlay-words {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.55);
+        letter-spacing: 0.04em;
+      }
+      .glass-overlay-dismiss {
+        margin-top: 8px;
+        padding: 8px 22px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.6);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .glass-overlay-dismiss:hover {
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+      }
+
+      /* ─── OPTION D: ascend & crystallize ─── */
+      .ascend-group {
+        position: absolute;
+        left: 0;
+        right: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+        z-index: 5;
+      }
+      .ascend-group.visible {
+        opacity: 1;
+      }
+
+      /* ─── SHAKE ANIMATION (preserved!) ─── */
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-5px);
+        }
+        40% {
+          transform: translateX(5px);
+        }
+        60% {
+          transform: translateX(-5px);
+        }
+        80% {
+          transform: translateX(5px);
+        }
+      }
+      .shaking {
+        animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+      }
+
+      /* ─── SLIDE-IN ANIMATION for Option A solved card ─── */
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-16px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .slide-in {
+        animation: slideDown 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      }
+
+      /* ─── GLOW PULSE before solving ─── */
+      @keyframes glowPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 16px var(--accent-glow);
+        }
+        50% {
+          box-shadow:
+            0 0 28px rgba(139, 92, 246, 0.6),
+            0 0 50px rgba(139, 92, 246, 0.2);
+        }
+      }
+      .tile.pulsing {
+        animation: glowPulse 0.6s ease-in-out 2;
+      }
+
+      /* ─── TILE FLIP for Option D ─── */
+      @keyframes tileFlip {
+        0% {
+          transform: rotateY(0deg) scale(1);
+        }
+        30% {
+          transform: rotateY(90deg) scale(0.85);
+        }
+        60% {
+          transform: rotateY(0deg) scale(1.05);
+          background: rgba(255, 111, 0, 0.25);
+          border-color: rgba(255, 160, 60, 0.5);
+        }
+        100% {
+          transform: rotateY(0deg) scale(1);
+        }
+      }
+      .tile.flipping {
+        animation: tileFlip 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      }
+
+      @keyframes riseOut {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        30% {
+          transform: translateY(-8px) scale(1.04);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-80px) scale(0.7);
+          opacity: 0;
+        }
+      }
+      .tile.rising {
+        animation: riseOut 0.5s cubic-bezier(0.32, 0.72, 0, 1) 0.5s forwards;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 0;
+      }
+
+      .bottom-note {
+        padding: 40px 20px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ─── NAV ─── -->
+    <nav class="top-nav">
+      <span class="top-nav-label">Solve animation</span>
+      <button class="nav-pill active" onclick="navTo('opt-a', this)">A — Collapse & Stack</button>
+      <button class="nav-pill" onclick="navTo('opt-b', this)">B — Glass Overlay</button>
+      <button class="nav-pill" onclick="navTo('opt-d', this)">D — Flip &amp; Rise</button>
+    </nav>
+
+    <!-- ─── RECOMMENDATION ─── -->
+    <div class="rec-banner">
+      <span class="rec-badge">UX Rec</span>
+      <p class="rec-text">
+        <strong>A — Collapse &amp; Stack</strong> is the right call. It communicates progress through a shrinking grid
+        (16→12→8→4 tiles), keeps every solved category visible for reference, and never occludes anything the player
+        needs to see. The fade-out → reflow → slide-in sequence maps to the mental model of "I solved that group, now
+        it's filed away." It also degrades perfectly on mobile and animates purely with <code>transform</code> +
+        <code>opacity</code>, so Framer Motion's <code>layout</code> prop will make it silky. B and D are more
+        cinematic, but both sacrifice spatial clarity for spectacle — fine for a one-time wow, frustrating on a daily
+        puzzle you play for speed.
+      </p>
+    </div>
+
+    <!-- ══════════════════════════
+     OPTION A — Collapse & Stack
+══════════════════════════ -->
+    <section class="demo-section" id="opt-a">
+      <p class="section-eyebrow">Option A</p>
+      <span class="rec-star">★ Recommended</span>
+      <h2 class="section-heading">Collapse &amp; Stack</h2>
+      <p class="section-desc">
+        Solved tiles fade out, the grid reflows, and the category card slides down to join the stack above. Progress is
+        always visible.
+      </p>
+
+      <div class="board-wrap">
+        <!-- solved stack -->
+        <div class="solved-stack" id="a-solved-stack">
+          <div class="solved-card cyan">
+            <div class="cat-name">Types of Cloud</div>
+            <div class="cat-words">Cirrus · Cumulus · Nimbus · Stratus</div>
+          </div>
+        </div>
+
+        <!-- hint -->
+        <div class="hint-card">
+          <span class="hint-icon">?</span>
+          These are all found glowing inside a cave
+        </div>
+
+        <!-- one away -->
+        <div class="one-away" id="a-one-away">
+          <span class="one-away-chip">One away</span>
+        </div>
+
+        <!-- grid -->
+        <div class="word-grid" id="a-grid">
+          <div class="tile sel" id="a-ember">Ember</div>
+          <div class="tile">Vex</div>
+          <div class="tile sel" id="a-storm">Storm</div>
+          <div class="tile">Lace</div>
+          <div class="tile sel" id="a-cliff">Cliff</div>
+          <div class="tile">Prism</div>
+          <div class="tile">Anchor</div>
+          <div class="tile sel" id="a-silk">Silk</div>
+          <div class="tile">Drift</div>
+          <div class="tile">Plume</div>
+          <div class="tile">Crest</div>
+          <div class="tile">Haze</div>
+        </div>
+
+        <!-- action buttons (static) -->
+        <div class="actions">
+          <button class="btn btn-primary">Submit</button>
+          <button class="btn btn-outline">Clear</button>
+        </div>
+
+        <div class="stats" style="margin-bottom: 28px">
+          <div>
+            <div class="stat-val">3</div>
+            <div class="stat-lbl">Wrong</div>
+          </div>
+          <div>
+            <div class="stat-val">1</div>
+            <div class="stat-lbl">Hints</div>
+          </div>
+          <div>
+            <div class="stat-val">2:17</div>
+            <div class="stat-lbl">Time</div>
+          </div>
+        </div>
+
+        <div class="demo-controls">
+          <button class="solve-trigger" id="a-solve-btn" onclick="solveA()">→ Solve &ldquo;Cave Dwellers&rdquo;</button>
+          <button class="reset-btn" onclick="resetA()">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════
+     OPTION B — Glass Overlay
+══════════════════════════ -->
+    <section class="demo-section" id="opt-b">
+      <p class="section-eyebrow">Option B</p>
+      <h2 class="section-heading">Glass Overlay</h2>
+      <p class="section-desc">
+        Solved tiles fade out. A cinematic glass card drops in from above, floating over the board. Dismiss to continue.
+      </p>
+
+      <div class="board-wrap">
+        <!-- solved stack -->
+        <div class="solved-stack">
+          <div class="solved-card cyan">
+            <div class="cat-name">Types of Cloud</div>
+            <div class="cat-words">Cirrus · Cumulus · Nimbus · Stratus</div>
+          </div>
+        </div>
+
+        <!-- hint -->
+        <div class="hint-card">
+          <span class="hint-icon">?</span>
+          These are all found glowing inside a cave
+        </div>
+
+        <!-- one away -->
+        <div class="one-away" id="b-one-away">
+          <span class="one-away-chip">One away</span>
+        </div>
+
+        <!-- overlay area -->
+        <div class="overlay-area" id="b-overlay-area">
+          <!-- floating glass card -->
+          <div class="glass-overlay-card" id="b-overlay-card">
+            <div class="glass-overlay-cat">Cave Dwellers</div>
+            <div class="glass-overlay-words">Ember · Storm · Cliff · Silk</div>
+            <button class="glass-overlay-dismiss" onclick="dismissB()">Continue →</button>
+          </div>
+
+          <!-- grid -->
+          <div class="word-grid" id="b-grid">
+            <div class="tile sel" id="b-ember">Ember</div>
+            <div class="tile">Vex</div>
+            <div class="tile sel" id="b-storm">Storm</div>
+            <div class="tile">Lace</div>
+            <div class="tile sel" id="b-cliff">Cliff</div>
+            <div class="tile">Prism</div>
+            <div class="tile">Anchor</div>
+            <div class="tile sel" id="b-silk">Silk</div>
+            <div class="tile">Drift</div>
+            <div class="tile">Plume</div>
+            <div class="tile">Crest</div>
+            <div class="tile">Haze</div>
+          </div>
+        </div>
+
+        <!-- actions -->
+        <div class="actions" style="margin-top: 8px">
+          <button class="btn btn-primary">Submit</button>
+          <button class="btn btn-outline">Clear</button>
+        </div>
+
+        <div class="stats" style="margin-bottom: 28px">
+          <div>
+            <div class="stat-val">3</div>
+            <div class="stat-lbl">Wrong</div>
+          </div>
+          <div>
+            <div class="stat-val">1</div>
+            <div class="stat-lbl">Hints</div>
+          </div>
+          <div>
+            <div class="stat-val">2:17</div>
+            <div class="stat-lbl">Time</div>
+          </div>
+        </div>
+
+        <div class="demo-controls">
+          <button class="solve-trigger" id="b-solve-btn" onclick="solveB()">→ Solve &ldquo;Cave Dwellers&rdquo;</button>
+          <button class="reset-btn" onclick="resetB()">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════
+     OPTION D — Flip & Rise
+══════════════════════════ -->
+    <section class="demo-section" id="opt-d">
+      <p class="section-eyebrow">Option D — Bonus idea</p>
+      <h2 class="section-heading">Flip &amp; Rise</h2>
+      <p class="section-desc">
+        Selected tiles flip to reveal their category color, then ascend as a group and crystallize into a solved card at
+        the top.
+      </p>
+
+      <div class="board-wrap">
+        <!-- solved stack -->
+        <div class="solved-stack" id="d-solved-stack">
+          <div class="solved-card cyan">
+            <div class="cat-name">Types of Cloud</div>
+            <div class="cat-words">Cirrus · Cumulus · Nimbus · Stratus</div>
+          </div>
+        </div>
+
+        <!-- hint -->
+        <div class="hint-card">
+          <span class="hint-icon">?</span>
+          These are all found glowing inside a cave
+        </div>
+
+        <!-- one away -->
+        <div class="one-away" id="d-one-away">
+          <span class="one-away-chip">One away</span>
+        </div>
+
+        <!-- grid -->
+        <div class="word-grid" id="d-grid">
+          <div class="tile sel" id="d-ember">Ember</div>
+          <div class="tile">Vex</div>
+          <div class="tile sel" id="d-storm">Storm</div>
+          <div class="tile">Lace</div>
+          <div class="tile sel" id="d-cliff">Cliff</div>
+          <div class="tile">Prism</div>
+          <div class="tile">Anchor</div>
+          <div class="tile sel" id="d-silk">Silk</div>
+          <div class="tile">Drift</div>
+          <div class="tile">Plume</div>
+          <div class="tile">Crest</div>
+          <div class="tile">Haze</div>
+        </div>
+
+        <!-- actions -->
+        <div class="actions">
+          <button class="btn btn-primary">Submit</button>
+          <button class="btn btn-outline">Clear</button>
+        </div>
+
+        <div class="stats" style="margin-bottom: 28px">
+          <div>
+            <div class="stat-val">3</div>
+            <div class="stat-lbl">Wrong</div>
+          </div>
+          <div>
+            <div class="stat-val">1</div>
+            <div class="stat-lbl">Hints</div>
+          </div>
+          <div>
+            <div class="stat-val">2:17</div>
+            <div class="stat-lbl">Time</div>
+          </div>
+        </div>
+
+        <div class="demo-controls">
+          <button class="solve-trigger" id="d-solve-btn" onclick="solveD()">→ Solve &ldquo;Cave Dwellers&rdquo;</button>
+          <button class="reset-btn" onclick="resetD()">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="bottom-note">Click → Solve on each board to see the animation. Hit Reset to replay.</div>
+
+    <script>
+      /* ──────────────────────────────────────────
+     NAV
+  ────────────────────────────────────────── */
+      function navTo(id, btn) {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth' })
+        document.querySelectorAll('.nav-pill').forEach((b) => b.classList.remove('active'))
+        btn.classList.add('active')
+      }
+      const sections = ['opt-a', 'opt-b', 'opt-d']
+      window.addEventListener('scroll', () => {
+        let cur = 0
+        sections.forEach((id, i) => {
+          const el = document.getElementById(id)
+          if (el && window.scrollY >= el.offsetTop - 100) cur = i
+        })
+        document.querySelectorAll('.nav-pill').forEach((b, i) => b.classList.toggle('active', i === cur))
+      })
+
+      /* ──────────────────────────────────────────
+     SHARED HELPERS
+  ────────────────────────────────────────── */
+      const SEL_IDS_A = ['a-ember', 'a-storm', 'a-cliff', 'a-silk']
+      const SEL_IDS_B = ['b-ember', 'b-storm', 'b-cliff', 'b-silk']
+      const SEL_IDS_D = ['d-ember', 'd-storm', 'd-cliff', 'd-silk']
+
+      /* ──────────────────────────────────────────
+     OPTION A — Collapse & Stack
+  ────────────────────────────────────────── */
+      function solveA() {
+        const btn = document.getElementById('a-solve-btn')
+        btn.disabled = true
+
+        // Pulse selected tiles
+        SEL_IDS_A.forEach((id) => {
+          document.getElementById(id).classList.add('pulsing')
+        })
+
+        // After pulse, fade them out
+        setTimeout(() => {
+          SEL_IDS_A.forEach((id) => {
+            const tile = document.getElementById(id)
+            tile.classList.remove('pulsing')
+            tile.style.transition = 'transform 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease'
+            tile.style.transform = 'translateY(-12px) scale(0.9)'
+            tile.style.opacity = '0'
+          })
+
+          // Remove tiles from grid after they fade
+          setTimeout(() => {
+            SEL_IDS_A.forEach((id) => {
+              const tile = document.getElementById(id)
+              tile.style.display = 'none'
+            })
+            document.getElementById('a-one-away').style.display = 'none'
+
+            // Inject new solved card with slide-in animation
+            const stack = document.getElementById('a-solved-stack')
+            const card = document.createElement('div')
+            card.className = 'solved-card orange slide-in'
+            card.innerHTML = `
+          <div class="cat-name">Cave Dwellers</div>
+          <div class="cat-words">Ember · Storm · Cliff · Silk</div>
+        `
+            stack.appendChild(card)
+            btn.textContent = '✓ Solved'
+          }, 320)
+        }, 800)
+      }
+
+      function resetA() {
+        // Remove injected solved card
+        const stack = document.getElementById('a-solved-stack')
+        const extras = stack.querySelectorAll('.orange')
+        extras.forEach((el) => el.remove())
+
+        // Restore tiles
+        SEL_IDS_A.forEach((id) => {
+          const tile = document.getElementById(id)
+          tile.style.display = ''
+          tile.style.transform = ''
+          tile.style.opacity = ''
+          tile.classList.remove('pulsing', 'rising', 'flipping')
+        })
+
+        document.getElementById('a-one-away').style.display = ''
+
+        const btn = document.getElementById('a-solve-btn')
+        btn.disabled = false
+        btn.textContent = '→ Solve “Cave Dwellers”'
+      }
+
+      /* ──────────────────────────────────────────
+     OPTION B — Glass Overlay
+  ────────────────────────────────────────── */
+      function solveB() {
+        const btn = document.getElementById('b-solve-btn')
+        btn.disabled = true
+
+        // Pulse selected tiles
+        SEL_IDS_B.forEach((id) => {
+          document.getElementById(id).classList.add('pulsing')
+        })
+
+        // After pulse, fade tiles with intense glow, then show overlay
+        setTimeout(() => {
+          SEL_IDS_B.forEach((id) => {
+            const tile = document.getElementById(id)
+            tile.classList.remove('pulsing')
+            tile.style.transition = 'transform 0.3s, opacity 0.3s, box-shadow 0.3s'
+            tile.style.boxShadow = '0 0 40px rgba(255,111,0,0.5)'
+            tile.style.opacity = '0.4'
+            tile.style.transform = 'scale(1.08)'
+          })
+
+          setTimeout(() => {
+            SEL_IDS_B.forEach((id) => {
+              const tile = document.getElementById(id)
+              tile.style.opacity = '0.08'
+              tile.style.transform = 'scale(0.9)'
+              tile.style.pointerEvents = 'none'
+            })
+
+            document.getElementById('b-one-away').style.display = 'none'
+
+            // Show glass card
+            setTimeout(() => {
+              document.getElementById('b-overlay-card').classList.add('visible')
+              btn.textContent = '✓ Solved — dismiss to continue'
+            }, 200)
+          }, 250)
+        }, 800)
+      }
+
+      function dismissB() {
+        const card = document.getElementById('b-overlay-card')
+        card.style.transition = 'opacity 0.3s, transform 0.3s'
+        card.style.opacity = '0'
+        card.style.transform = 'translateY(-12px) scale(0.96)'
+
+        setTimeout(() => {
+          card.classList.remove('visible')
+          card.style.transition = ''
+          card.style.opacity = ''
+          card.style.transform = ''
+
+          // Replace faded tiles with clean solved card style
+          SEL_IDS_B.forEach((id) => {
+            const tile = document.getElementById(id)
+            tile.style.background = 'rgba(255,111,0,0.15)'
+            tile.style.borderColor = 'rgba(255,111,0,0.25)'
+            tile.style.color = 'rgba(255,190,110,0.6)'
+            tile.style.opacity = '0.5'
+            tile.style.transform = ''
+          })
+        }, 300)
+      }
+
+      function resetB() {
+        const card = document.getElementById('b-overlay-card')
+        card.classList.remove('visible')
+        card.style.cssText = ''
+
+        SEL_IDS_B.forEach((id) => {
+          const tile = document.getElementById(id)
+          tile.style.cssText = ''
+          tile.classList.remove('pulsing')
+        })
+
+        document.getElementById('b-one-away').style.display = ''
+
+        const btn = document.getElementById('b-solve-btn')
+        btn.disabled = false
+        btn.textContent = '→ Solve “Cave Dwellers”'
+      }
+
+      /* ──────────────────────────────────────────
+     OPTION D — Flip & Rise
+  ────────────────────────────────────────── */
+      function solveD() {
+        const btn = document.getElementById('d-solve-btn')
+        btn.disabled = true
+
+        const selTiles = SEL_IDS_D.map((id) => document.getElementById(id))
+
+        // Step 1: pulse
+        selTiles.forEach((t) => t.classList.add('pulsing'))
+
+        setTimeout(() => {
+          selTiles.forEach((t) => t.classList.remove('pulsing'))
+
+          // Step 2: flip tiles to reveal orange color
+          selTiles.forEach((t, i) => {
+            setTimeout(() => {
+              t.classList.add('flipping')
+              t.style.background = 'rgba(255,111,0,0.22)'
+              t.style.borderColor = 'rgba(255,160,60,0.5)'
+              t.style.color = 'rgba(255,190,110,0.95)'
+              t.style.boxShadow = '0 0 20px rgba(255,111,0,0.3)'
+            }, i * 60)
+          })
+
+          // Step 3: rise up and out
+          setTimeout(() => {
+            selTiles.forEach((t, i) => {
+              t.classList.remove('flipping')
+              setTimeout(() => {
+                t.style.transition = 'transform 0.45s cubic-bezier(0.32,0.72,0,1), opacity 0.45s ease'
+                t.style.transform = 'translateY(-100px) scale(0.6)'
+                t.style.opacity = '0'
+              }, i * 40)
+            })
+
+            // Step 4: hide tiles and inject solved card
+            setTimeout(() => {
+              selTiles.forEach((t) => {
+                t.style.display = 'none'
+              })
+              document.getElementById('d-one-away').style.display = 'none'
+
+              const stack = document.getElementById('d-solved-stack')
+              const card = document.createElement('div')
+              card.className = 'solved-card orange slide-in'
+              card.innerHTML = `
+            <div class="cat-name">Cave Dwellers</div>
+            <div class="cat-words">Ember · Storm · Cliff · Silk</div>
+          `
+              stack.appendChild(card)
+              btn.textContent = '✓ Solved'
+            }, 500)
+          }, 700)
+        }, 800)
+      }
+
+      function resetD() {
+        const stack = document.getElementById('d-solved-stack')
+        stack.querySelectorAll('.orange').forEach((el) => el.remove())
+
+        SEL_IDS_D.forEach((id) => {
+          const t = document.getElementById(id)
+          t.style.cssText = ''
+          t.className = 'tile sel'
+        })
+
+        document.getElementById('d-one-away').style.display = ''
+
+        const btn = document.getElementById('d-solve-btn')
+        btn.disabled = false
+        btn.textContent = '→ Solve “Cave Dwellers”'
+      }
+    </script>
+  </body>
+</html>

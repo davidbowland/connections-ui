@@ -29,18 +29,21 @@ export const GameSelection = ({ gameId }: GameSelectionProps): React.ReactNode =
   return (
     <>
       {!isLoading && (
-        <select
-          aria-label="Select game"
-          className="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800"
-          onChange={(e) => router.push(`/g/${e.target.value}`)}
-          value={gameId}
-        >
-          {formattedGameIds.map(({ id, label }) => (
-            <option key={id} value={id}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <div>
+          <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-black/22 dark:text-white/22">Browse puzzles</p>
+          <select
+            aria-label="Select game"
+            className="w-full appearance-none rounded-xl border border-black/8 bg-black/[0.03] px-4 py-3 text-sm text-black/55 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55"
+            onChange={(e) => router.push(`/g/${e.target.value}`)}
+            value={gameId}
+          >
+            {formattedGameIds.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
       {errorMessage && <div role="alert">{errorMessage}</div>}
     </>

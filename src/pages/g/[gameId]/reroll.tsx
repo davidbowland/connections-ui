@@ -1,4 +1,3 @@
-import { Button, CardContent, CardHeader, CardRoot, CardTitle, Input, Spinner } from '@heroui/react'
 import type { GetStaticPaths, GetStaticProps } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -46,33 +45,42 @@ const RerollPage = (): React.ReactNode => {
       <Head>
         <title>Reroll Game</title>
       </Head>
-      <main className="flex min-h-[90vh] items-center justify-center px-4 py-10">
-        <CardRoot className="w-full max-w-[400px]">
-          <CardHeader>
-            <CardTitle>Reroll Game</CardTitle>
-            <p className="mt-1 font-mono text-xs tracking-widest text-gray-400 uppercase dark:text-gray-500">
+      <main className="flex min-h-[100dvh] items-center justify-center px-4 py-10">
+        {/* outer shell */}
+        <div className="w-full max-w-[400px] rounded-3xl border border-black/6 bg-black/[0.04] p-[2px] shadow-xl dark:border-white/8 dark:bg-white/[0.04] dark:shadow-none">
+          {/* inner core */}
+          <div className="rounded-[22px] bg-white px-8 py-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] dark:bg-[#0a0a0c]">
+            <h1 className="mb-1 text-2xl font-light uppercase tracking-[0.2em] text-black/88 dark:text-white/88">
+              Reroll Game
+            </h1>
+            <p className="mb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-black/22 dark:text-white/22">
               {gameId}
             </p>
-          </CardHeader>
-          <CardContent>
+
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              <Input
+              <input
                 aria-label="Password"
                 autoComplete="off"
+                className="w-full rounded-xl border border-black/8 bg-black/[0.03] px-4 py-3 text-black/80 outline-none placeholder:text-black/20 focus:border-violet-400/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80 dark:placeholder:text-white/20"
                 disabled={isLoading}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
                 required
                 type="password"
                 value={password}
-                variant="secondary"
               />
-              <Button isDisabled={isLoading || !password} type="submit" variant="primary">
-                {isLoading ? <Spinner size="sm" /> : 'Reroll'}
-              </Button>
+              <button
+                className="w-full rounded-full bg-black/88 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-opacity disabled:opacity-40 dark:bg-white/95 dark:text-[#060608]"
+                disabled={isLoading || !password}
+                type="submit"
+              >
+                {isLoading ? '…' : 'Reroll'}
+              </button>
             </form>
+
             {feedback && <FeedbackMessage isError={isError} message={feedback} />}
-          </CardContent>
-        </CardRoot>
+          </div>
+        </div>
       </main>
     </>
   )

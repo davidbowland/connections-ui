@@ -9,11 +9,14 @@ import { rerollGame } from '@services/connections'
 jest.mock('@services/connections')
 jest.mock('next/head', () => {
   const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.forEach(children, (child) => {
-      if (React.isValidElement(child) && child.type === 'title') {
-        document.title = (child.props as { children: string }).children
-      }
-    })
+    React.Children.toArray(children)
+      .filter(
+        (child): child is React.ReactElement<{ children: string }> =>
+          React.isValidElement(child) && child.type === 'title',
+      )
+      .forEach((child) => {
+        document.title = child.props.children
+      })
     return null
   }
   MockHead.displayName = 'MockHead'
@@ -25,13 +28,16 @@ jest.mock('next/router', () => ({
 }))
 
 describe('RerollPage', () => {
-  beforeEach(() => {
+  beforeAll(() => {
     jest.mocked(rerollGame).mockResolvedValue('Game is being regenerated')
+  })
+
+  const setup = () => {
     Object.defineProperty(window, 'location', {
       value: { ...window.location, pathname: '/g/2024-01-01/reroll' },
       writable: true,
     })
-  })
+  }
 
   it('returns null when gameId is undefined', () => {
     Object.defineProperty(window, 'location', {
@@ -43,6 +49,7 @@ describe('RerollPage', () => {
   })
 
   it('renders the page with title and gameId', () => {
+    setup()
     render(<RerollPage />)
 
     expect(screen.getByText('Reroll Game')).toBeInTheDocument()
@@ -50,6 +57,7 @@ describe('RerollPage', () => {
   })
 
   it('renders a password input and submit button', () => {
+    setup()
     render(<RerollPage />)
 
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
@@ -57,12 +65,14 @@ describe('RerollPage', () => {
   })
 
   it('disables submit button when password is empty', () => {
+    setup()
     render(<RerollPage />)
 
     expect(screen.getByRole('button', { name: /reroll/i })).toBeDisabled()
   })
 
   it('calls rerollGame on submit and shows success message', async () => {
+    setup()
     const user = userEvent.setup()
     render(<RerollPage />)
 
@@ -76,6 +86,7 @@ describe('RerollPage', () => {
   })
 
   it('shows error message on failure', async () => {
+    setup()
     jest.mocked(rerollGame).mockRejectedValueOnce(new Error('Forbidden: wrong password'))
     const user = userEvent.setup()
     render(<RerollPage />)
@@ -89,6 +100,7 @@ describe('RerollPage', () => {
   })
 
   it('shows generic error message on non-Error rejection', async () => {
+    setup()
     jest.mocked(rerollGame).mockRejectedValueOnce('string error')
     const user = userEvent.setup()
     render(<RerollPage />)
@@ -102,6 +114,7 @@ describe('RerollPage', () => {
   })
 
   it('renders title in document', () => {
+    setup()
     render(<RerollPage />)
 
     expect(document.title).toEqual('Reroll Game')

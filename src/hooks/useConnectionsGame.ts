@@ -40,7 +40,7 @@ export interface UseConnectionsGameResult {
   words: string[]
 }
 
-export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => {
+export const useConnectionsGame = (gameId: string, random = Math.random): UseConnectionsGameResult => {
   const [categories, setCategories] = useState<CategoryObject>({})
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -110,7 +110,7 @@ export const useConnectionsGame = (gameId: string): UseConnectionsGameResult => 
     )
 
     if (unsolvedCategories.length > 0) {
-      const randomIndex = Math.floor(Math.random() * unsolvedCategories.length)
+      const randomIndex = Math.floor(random() * unsolvedCategories.length)
       const [categoryName, category] = unsolvedCategories[randomIndex]
       setRevealedHints((prev) => ({ ...prev, [categoryName]: category.hint }))
       setHintsUsed((prev) => prev + 1)

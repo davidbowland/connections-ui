@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -12,7 +13,7 @@ import {
   HintCard,
   HintsContainer,
   LoadingState,
-  OneAwayMessage,
+  OneAwayToast,
   SolvedCategoryCard,
   StatLine,
   WordGrid,
@@ -22,6 +23,8 @@ import { GameSelection } from '@components/game-selection'
 import { GAME_COLORS } from '@config/colors'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { CategoryColors, GameId } from '@types'
+
+const ease = [0.32, 0.72, 0, 1] as const
 
 const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
 
@@ -64,25 +67,17 @@ export const ConnectionsGame = ({
 
   const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [showToast, setShowToast] = useState(false)
 
   const boardRef = useRef<HTMLDivElement>(null)
   const hintsRef = useRef<HTMLDivElement>(null)
-  const oneAwayRef = useRef<HTMLDivElement>(null)
+  const toastTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const scrollToBoard = () => {
     setTimeout(() => boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
   const scrollToHints = () => {
     setTimeout(() => hintsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
-  }
-  const scrollToOneAway = () => {
-    setTimeout(() => {
-      if (oneAwayRef.current) {
-        oneAwayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      } else {
-        boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 100)
   }
 
   const displayGameId = useMemo(() => {
@@ -130,6 +125,22 @@ export const ConnectionsGame = ({
     }
   }, [gameId, isLoading])
 
+  useEffect(() => {
+    if (isOneAway) {
+      const delayTimer = setTimeout(() => {
+        setShowToast(true)
+        toastTimer.current = setTimeout(() => setShowToast(false), 4000)
+      }, 450)
+      return () => {
+        clearTimeout(delayTimer)
+        clearTimeout(toastTimer.current)
+      }
+    } else {
+      clearTimeout(toastTimer.current)
+      setShowToast(false)
+    }
+  }, [isOneAway])
+
   const handleSubmit = () => {
     const success = submitWords()
     if (!success && shakingTimeout === undefined) {
@@ -138,8 +149,6 @@ export const ConnectionsGame = ({
     }
     if (success) {
       scrollToBoard()
-    } else {
-      scrollToOneAway()
     }
   }
 
@@ -173,38 +182,47 @@ export const ConnectionsGame = ({
       <GameSubtitle>{displayGameId}</GameSubtitle>
 
       <BoardContainer ref={boardRef}>
+        <AnimatePresence initial={false}>
+          {solvedCategories.map((category) => (
+            <motion.div
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.32, ease } }}
+              initial={{ opacity: 0, scale: 0.97, y: -16 }}
+              key={category.description}
+              transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            >
+              <SolvedCategoryCard
+                color={categoryColors[category.description]}
+                description={category.description}
+                words={category.words}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        <WordGrid>
+          <AnimatePresence>
+            {words.map((word) => {
+              const isSelected = selectedWords.includes(word)
+              return (
+                <WordTile
+                  isSelected={isSelected}
+                  isShaking={!!shakingTimeout && isSelected}
+                  key={word}
+                  onPress={() => (isSelected ? unselectWord(word) : selectWord(word))}
+                  selectedColor={selectedWordColor}
+                  word={word}
+                />
+              )
+            })}
+          </AnimatePresence>
+        </WordGrid>
+
         <HintsContainer ref={hintsRef}>
           {hints.map((hint, index) => (
             <HintCard hint={hint} key={index} />
           ))}
         </HintsContainer>
-
-        {isOneAway && <OneAwayMessage ref={oneAwayRef} />}
-
-        {solvedCategories.map((category, index) => (
-          <SolvedCategoryCard
-            color={categoryColors[category.description]}
-            description={category.description}
-            key={index}
-            words={category.words}
-          />
-        ))}
-
-        <WordGrid>
-          {words.map((word, index) => {
-            const isSelected = selectedWords.includes(word)
-            return (
-              <WordTile
-                isSelected={isSelected}
-                isShaking={!!shakingTimeout && isSelected}
-                key={index}
-                onPress={() => (isSelected ? unselectWord(word) : selectWord(word))}
-                selectedColor={selectedWordColor}
-                word={word}
-              />
-            )
-          })}
-        </WordGrid>
 
         <ActionsContainer>
           {selectedWords.length > 0 && (
@@ -235,18 +253,28 @@ export const ConnectionsGame = ({
           )}
         </ActionsContainer>
 
-        <StatLine first>Incorrect guesses: {incorrectGuesses.toLocaleString()}</StatLine>
-        {hintsUsed > 0 && (
-          <StatLine>
-            Hints received: {hintsUsed}/{categoriesCount}
-          </StatLine>
-        )}
-        <StatLine>Time: {formatTime(elapsedSeconds)}</StatLine>
+        <StatLine>
+          {`${incorrectGuesses} wrong${hintsUsed > 0 ? ` · ${hintsUsed}/${categoriesCount} hints` : ''} · ${formatTime(elapsedSeconds)}`}
+        </StatLine>
 
         <GameSelectionWrapper>
           <GameSelection gameId={gameId} />
         </GameSelectionWrapper>
       </BoardContainer>
+
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+            exit={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.3, ease }}
+          >
+            <OneAwayToast />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </GameWrapper>
   )
 }

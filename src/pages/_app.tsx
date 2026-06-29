@@ -1,4 +1,4 @@
-import '@fontsource/nunito'
+import '@fontsource/space-grotesk'
 import type { AppProps } from 'next/app'
 import React from 'react'
 

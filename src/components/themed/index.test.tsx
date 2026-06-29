@@ -3,9 +3,6 @@ import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 import Themed from './index'
-import Disclaimer from '@components/disclaimer'
-
-jest.mock('@components/disclaimer')
 
 const mockMatchMedia = (matches: boolean) => {
   window.matchMedia = jest.fn().mockReturnValue({
@@ -19,7 +16,6 @@ describe('Themed component', () => {
   const children = <>fnord</>
 
   beforeAll(() => {
-    jest.mocked(Disclaimer).mockReturnValue(<>Disclaimer</>)
     mockMatchMedia(false)
   })
 
@@ -27,12 +23,6 @@ describe('Themed component', () => {
     render(<Themed>{children}</Themed>)
 
     expect(await screen.findByText(/fnord/)).toBeInTheDocument()
-  })
-
-  test('renders Disclaimer', async () => {
-    render(<Themed>{children}</Themed>)
-
-    expect(Disclaimer).toHaveBeenCalled()
   })
 
   test('adds dark class to documentElement when prefers-color-scheme is dark', () => {

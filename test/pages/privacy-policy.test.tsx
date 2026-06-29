@@ -9,11 +9,14 @@ jest.mock('@components/privacy-policy')
 
 jest.mock('next/head', () => {
   const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.forEach(children, (child) => {
-      if (React.isValidElement(child) && child.type === 'title') {
-        document.title = (child.props as { children: string }).children
-      }
-    })
+    React.Children.toArray(children)
+      .filter(
+        (child): child is React.ReactElement<{ children: string }> =>
+          React.isValidElement(child) && child.type === 'title',
+      )
+      .forEach((child) => {
+        document.title = child.props.children
+      })
     return null
   }
   MockHead.displayName = 'MockHead'

@@ -6,13 +6,10 @@ import { connectionsGame, gameId, wordList } from '@test/__mocks__'
 
 jest.mock('@services/connections')
 
-// Mock crypto.getRandomValues
 Object.defineProperty(window, 'crypto', {
   value: {
     getRandomValues: jest.fn((arr: Uint32Array) => {
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.floor(Math.random() * 0xffffffff)
-      }
+      arr.fill(0)
       return arr
     }),
   },
@@ -27,7 +24,6 @@ describe('useConnectionsGame', () => {
   beforeAll(() => {
     jest.mocked(connections).fetchConnectionsGame.mockResolvedValue({ data: connectionsGame, isGenerating: false })
 
-    Math.random = jest.fn().mockReturnValue(0)
     console.error = jest.fn()
     jest.useFakeTimers()
   })
@@ -37,7 +33,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('loads game data and shuffles words', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     expect(result.current.isLoading).toBe(true)
 
@@ -53,7 +49,7 @@ describe('useConnectionsGame', () => {
   it('handles API errors', async () => {
     jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error('API Error'))
 
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.errorMessage).toBe('Failed to load game. Please refresh the page to try again.')
@@ -70,7 +66,7 @@ describe('useConnectionsGame', () => {
       .fetchConnectionsGame.mockResolvedValueOnce({ data: connectionsGame, isGenerating: true })
       .mockResolvedValueOnce({ data: connectionsGame, isGenerating: false })
 
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     expect(result.current.isLoading).toBe(true)
 
@@ -92,7 +88,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('selects and unselects words', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -112,7 +108,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('submits correct words and solves category', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -137,7 +133,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('handles incorrect submissions and tracks guesses', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -159,7 +155,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('enables reveal solution after 4 incorrect guesses', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -180,7 +176,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('reveals all solutions', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -200,7 +196,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('limits selection to 4 words', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -217,7 +213,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('does not select already selected words', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -230,7 +226,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('returns false when submitting less than 4 words', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -244,7 +240,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('sets isOneAway when 3 out of 4 words are in same category', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -264,7 +260,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('resets isOneAway when selecting words', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -283,7 +279,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('enables hints when categories are available', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -293,7 +289,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('provides hints for unsolved categories', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -307,7 +303,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('removes hints when category is solved', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -328,7 +324,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('disables hints when no more categories available', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -344,7 +340,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('tracks the number of hints received', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -360,7 +356,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('returns the correct categories count', async () => {
-    const { result } = renderHook(() => useConnectionsGame(gameId))
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)

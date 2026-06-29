@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react'
 
-import Disclaimer from '@components/disclaimer'
-
 export interface ThemedProps {
   children: React.ReactNode | React.ReactNode[]
 }
@@ -15,12 +13,7 @@ const Themed = ({ children }: ThemedProps): React.ReactNode => {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  return (
-    <>
-      {children}
-      <Disclaimer />
-    </>
-  )
+  return <>{children}</>
 }
 
 export default Themed

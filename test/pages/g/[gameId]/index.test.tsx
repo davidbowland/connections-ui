@@ -16,11 +16,14 @@ jest.mock('next/router', () => ({
 }))
 jest.mock('next/head', () => {
   const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.forEach(children, (child) => {
-      if (React.isValidElement(child) && child.type === 'title') {
-        document.title = (child.props as { children: string }).children
-      }
-    })
+    React.Children.toArray(children)
+      .filter(
+        (child): child is React.ReactElement<{ children: string }> =>
+          React.isValidElement(child) && child.type === 'title',
+      )
+      .forEach((child) => {
+        document.title = child.props.children
+      })
     return null
   }
   MockHead.displayName = 'MockHead'
@@ -28,14 +31,17 @@ jest.mock('next/head', () => {
 })
 
 describe('GamePage', () => {
-  beforeEach(() => {
+  beforeAll(() => {
     jest.mocked(ConnectionsGame).mockReturnValue(<>ConnectionsGame</>)
     jest.mocked(PrivacyLink).mockReturnValue(<>PrivacyLink</>)
+  })
+
+  const setup = () => {
     Object.defineProperty(window, 'location', {
       value: { ...window.location, pathname: '/g/2024-01-01' },
       writable: true,
     })
-  })
+  }
 
   it('shows loading skeleton before effect fires', () => {
     Object.defineProperty(window, 'location', {
@@ -48,6 +54,7 @@ describe('GamePage', () => {
   })
 
   it('renders ConnectionsGame with gameId after mount', () => {
+    setup()
     render(<GamePage />)
 
     act(() => {}) // flush useEffect
@@ -56,12 +63,14 @@ describe('GamePage', () => {
   })
 
   it('renders PrivacyLink', () => {
+    setup()
     render(<GamePage />)
 
     expect(PrivacyLink).toHaveBeenCalled()
   })
 
   it('renders title in document', () => {
+    setup()
     render(<GamePage />)
 
     expect(document.title).toEqual('Connections')

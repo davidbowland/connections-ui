@@ -10,11 +10,14 @@ jest.mock('next/router', () => ({
 
 jest.mock('next/head', () => {
   const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.forEach(children, (child) => {
-      if (React.isValidElement(child) && child.type === 'title') {
-        document.title = (child.props as { children: string }).children
-      }
-    })
+    React.Children.toArray(children)
+      .filter(
+        (child): child is React.ReactElement<{ children: string }> =>
+          React.isValidElement(child) && child.type === 'title',
+      )
+      .forEach((child) => {
+        document.title = child.props.children
+      })
     return null
   }
   MockHead.displayName = 'MockHead'
@@ -22,14 +25,12 @@ jest.mock('next/head', () => {
 })
 
 describe('Index page', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    // Mock current date to ensure consistent test results
+  beforeAll(() => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2025-01-15T10:00:00Z'))
   })
 
-  afterEach(() => {
+  afterAll(() => {
     jest.useRealTimers()
   })
 
@@ -40,7 +41,7 @@ describe('Index page', () => {
 
   it('redirects to current date game page', () => {
     const mockReplace = jest.fn()
-    ;(useRouter as jest.Mock).mockReturnValue({ replace: mockReplace })
+    ;(useRouter as jest.Mock).mockReturnValueOnce({ replace: mockReplace })
 
     render(<Index />)
 
