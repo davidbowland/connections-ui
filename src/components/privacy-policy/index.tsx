@@ -32,7 +32,7 @@ const PrivacyPolicy = (): React.ReactNode => (
     </Section>
 
     <Section heading="Why we collect it">
-      We process server log data under legitimate interests — operating a secure, functional website. We don&apos;t rely
+      We collect server logs to keep the site running and detect abuse — that&apos;s the only reason. We don&apos;t rely
       on your consent, and we don&apos;t use your data for advertising or profiling.
     </Section>
 
@@ -47,9 +47,7 @@ const PrivacyPolicy = (): React.ReactNode => (
       request.
     </Section>
 
-    <Section heading="Data retention">
-      We may maintain server logs for up to 90 days, after which they are permanently deleted.
-    </Section>
+    <Section heading="Data retention">We keep server logs for up to 90 days, then we delete them.</Section>
 
     <Section heading="Your rights">
       If you are a European resident, you have the right to access personal information we hold about you and to ask

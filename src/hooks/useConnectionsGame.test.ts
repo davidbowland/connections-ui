@@ -120,8 +120,7 @@ describe('useConnectionsGame', () => {
     await selectWord(result, 'WORD04')
     expect(result.current.selectedWords).toHaveLength(4)
 
-    const success = result.current.submitWords()
-    expect(success).toBe(true)
+    expect(result.current.submitWords()).toBe('correct')
 
     await waitFor(() => expect(result.current.solvedCategories).toHaveLength(1))
     expect(result.current.solvedCategories[0]).toEqual({
@@ -146,8 +145,7 @@ describe('useConnectionsGame', () => {
 
     await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
 
-    const success = result.current.submitWords()
-    expect(success).toBe(false)
+    expect(result.current.submitWords()).toBe('wrong')
 
     await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
     expect(result.current.selectedWords).toEqual(['WORD01', 'WORD02', 'WORD05', 'WORD06'])
@@ -161,15 +159,22 @@ describe('useConnectionsGame', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    // Make 4 incorrect guesses
-    for (let i = 0; i < 4; i++) {
-      await selectWord(result, 'WORD01')
-      await selectWord(result, 'WORD02')
-      await selectWord(result, 'WORD05')
-      await selectWord(result, 'WORD06')
+    const wrongCombos = [
+      ['WORD01', 'WORD02', 'WORD05', 'WORD06'],
+      ['WORD01', 'WORD02', 'WORD09', 'WORD10'],
+      ['WORD01', 'WORD02', 'WORD13', 'WORD14'],
+      ['WORD05', 'WORD06', 'WORD09', 'WORD10'],
+    ]
+
+    for (let i = 0; i < wrongCombos.length; i++) {
+      for (const word of wrongCombos[i]) {
+        await selectWord(result, word)
+      }
       await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
       result.current.submitWords()
       await waitFor(() => expect(result.current.incorrectGuesses).toBe(i + 1))
+      result.current.clearSelectedWords()
+      await waitFor(() => expect(result.current.selectedWords).toHaveLength(0))
     }
 
     expect(result.current.isRevealSolutionAvailable).toBe(true)
@@ -225,7 +230,7 @@ describe('useConnectionsGame', () => {
     await waitFor(() => expect(result.current.selectedWords).toEqual(['WORD01']))
   })
 
-  it('returns false when submitting less than 4 words', async () => {
+  it('returns wrong when submitting less than 4 words', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
@@ -234,12 +239,11 @@ describe('useConnectionsGame', () => {
 
     await selectWord(result, 'WORD01')
 
-    const success = result.current.submitWords()
-    expect(success).toBe(false)
+    expect(result.current.submitWords()).toBe('wrong')
     expect(result.current.incorrectGuesses).toBe(0)
   })
 
-  it('sets isOneAway when 3 out of 4 words are in same category', async () => {
+  it('returns one-away when 3 of 4 selected words are in the same category', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
@@ -253,13 +257,10 @@ describe('useConnectionsGame', () => {
 
     await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
 
-    const success = result.current.submitWords()
-    expect(success).toBe(false)
-
-    await waitFor(() => expect(result.current.isOneAway).toBe(true))
+    expect(result.current.submitWords()).toBe('one-away')
   })
 
-  it('resets isOneAway when selecting words', async () => {
+  it('blocks duplicate submissions without counting as a guess', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 
     await waitFor(() => {
@@ -268,14 +269,15 @@ describe('useConnectionsGame', () => {
 
     await selectWord(result, 'WORD01')
     await selectWord(result, 'WORD02')
-    await selectWord(result, 'WORD03')
     await selectWord(result, 'WORD05')
+    await selectWord(result, 'WORD06')
     await waitFor(() => expect(result.current.selectedWords).toHaveLength(4))
-    result.current.submitWords()
-    await waitFor(() => expect(result.current.isOneAway).toBe(true))
 
-    result.current.clearSelectedWords()
-    await waitFor(() => expect(result.current.isOneAway).toBe(false))
+    expect(result.current.submitWords()).toBe('wrong')
+    await waitFor(() => expect(result.current.incorrectGuesses).toBe(1))
+
+    expect(result.current.submitWords()).toBe('duplicate')
+    expect(result.current.incorrectGuesses).toBe(1)
   })
 
   it('enables hints when categories are available', async () => {

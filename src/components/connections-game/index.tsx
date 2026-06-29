@@ -6,6 +6,7 @@ import {
   ActionRow,
   ActionsContainer,
   BoardContainer,
+  GameInstructions,
   GameSelectionWrapper,
   GameSubtitle,
   GameTitle,
@@ -13,9 +14,9 @@ import {
   HintCard,
   HintsContainer,
   LoadingState,
-  OneAwayToast,
   SolvedCategoryCard,
   StatLine,
+  Toast,
   WordGrid,
   WordTile,
 } from './elements'
@@ -45,7 +46,6 @@ export const ConnectionsGame = ({
 }: ConnectionsGameProps): React.ReactNode => {
   const {
     categories,
-    categoriesCount,
     clearSelectedWords,
     errorMessage,
     getHint,
@@ -54,7 +54,6 @@ export const ConnectionsGame = ({
     incorrectGuesses,
     isHintAvailable,
     isLoading,
-    isOneAway,
     isRevealSolutionAvailable,
     revealSolution,
     selectedWords,
@@ -67,10 +66,11 @@ export const ConnectionsGame = ({
 
   const [shakingTimeout, setShakingTimeout] = useState<NodeJS.Timeout>()
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [showToast, setShowToast] = useState(false)
+  const [toast, setToast] = useState<{ key: number; message: string } | null>(null)
 
   const boardRef = useRef<HTMLDivElement>(null)
   const hintsRef = useRef<HTMLDivElement>(null)
+  const toastDelayTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const toastTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const scrollToBoard = () => {
@@ -125,30 +125,26 @@ export const ConnectionsGame = ({
     }
   }, [gameId, isLoading])
 
-  useEffect(() => {
-    if (isOneAway) {
-      const delayTimer = setTimeout(() => {
-        setShowToast(true)
-        toastTimer.current = setTimeout(() => setShowToast(false), 4000)
-      }, 450)
-      return () => {
-        clearTimeout(delayTimer)
-        clearTimeout(toastTimer.current)
-      }
-    } else {
-      clearTimeout(toastTimer.current)
-      setShowToast(false)
-    }
-  }, [isOneAway])
+  const showToastMessage = (message: string) => {
+    clearTimeout(toastDelayTimer.current)
+    clearTimeout(toastTimer.current)
+    toastDelayTimer.current = setTimeout(() => {
+      setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message }))
+      toastTimer.current = setTimeout(() => setToast(null), 4000)
+    }, 450)
+  }
 
   const handleSubmit = () => {
-    const success = submitWords()
-    if (!success && shakingTimeout === undefined) {
-      const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
-      setShakingTimeout(timeout)
-    }
-    if (success) {
+    const result = submitWords()
+    if (result === 'correct') {
       scrollToBoard()
+    } else {
+      if (shakingTimeout === undefined) {
+        const timeout = setTimeout(() => setShakingTimeout(undefined), 500)
+        setShakingTimeout(timeout)
+      }
+      if (result === 'one-away') showToastMessage('One away')
+      if (result === 'duplicate') showToastMessage('Already tried')
     }
   }
 
@@ -180,6 +176,7 @@ export const ConnectionsGame = ({
     <GameWrapper>
       <GameTitle />
       <GameSubtitle>{displayGameId}</GameSubtitle>
+      <GameInstructions />
 
       <BoardContainer ref={boardRef}>
         <AnimatePresence initial={false}>
@@ -254,7 +251,7 @@ export const ConnectionsGame = ({
         </ActionsContainer>
 
         <StatLine>
-          {`${incorrectGuesses} wrong${hintsUsed > 0 ? ` · ${hintsUsed}/${categoriesCount} hints` : ''} · ${formatTime(elapsedSeconds)}`}
+          {`${incorrectGuesses} wrong${hintsUsed > 0 ? ` · ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} used` : ''} · ${formatTime(elapsedSeconds)}`}
         </StatLine>
 
         <GameSelectionWrapper>
@@ -263,15 +260,16 @@ export const ConnectionsGame = ({
       </BoardContainer>
 
       <AnimatePresence>
-        {showToast && (
+        {toast && (
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
-            exit={{ opacity: 0, y: 8 }}
-            initial={{ opacity: 0, y: 8 }}
+            className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
+            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -8 }}
+            key={toast.key}
             transition={{ duration: 0.3, ease }}
           >
-            <OneAwayToast />
+            <Toast message={toast.message} />
           </motion.div>
         )}
       </AnimatePresence>

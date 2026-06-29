@@ -30,7 +30,9 @@ export const GameSelection = ({ gameId }: GameSelectionProps): React.ReactNode =
     <>
       {!isLoading && (
         <div>
-          <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-black/22 dark:text-white/22">Browse puzzles</p>
+          <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-black/22 dark:text-white/22">
+            Play another date
+          </p>
           <select
             aria-label="Select game"
             className="w-full appearance-none rounded-xl border border-black/8 bg-black/[0.03] px-4 py-3 text-sm text-black/55 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55"

@@ -18,6 +18,10 @@ const shuffleArray = (array: string[]): string[] => {
   return shuffled
 }
 
+export type SubmitResult = 'correct' | 'duplicate' | 'one-away' | 'wrong'
+
+export const dedupeKey = (words: string[]): string => words.toSorted().join('-')
+
 export interface UseConnectionsGameResult {
   categories: CategoryObject
   categoriesCount: number
@@ -29,13 +33,13 @@ export interface UseConnectionsGameResult {
   incorrectGuesses: number
   isHintAvailable: boolean
   isLoading: boolean
-  isOneAway: boolean
   isRevealSolutionAvailable: boolean
+  pastGuesses: Set<string>
   revealSolution: () => void
   selectedWords: string[]
   selectWord: (word: string) => void
   solvedCategories: SolvedCategory[]
-  submitWords: () => boolean
+  submitWords: () => SubmitResult
   unselectWord: (word: string) => void
   words: string[]
 }
@@ -45,7 +49,7 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [incorrectGuesses, setIncorrectGuesses] = useState(0)
-  const [isOneAway, setIsOneAway] = useState(false)
+  const [pastGuesses, setPastGuesses] = useState<Set<string>>(new Set())
   const [hintsUsed, setHintsUsed] = useState(0)
   const [revealedHints, setRevealedHints] = useState<Record<string, string>>({})
   const [selectedWords, setSelectedWords] = useState<string[]>([])
@@ -74,8 +78,11 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
     setSelectedWords([])
   }, [])
 
-  const submitWords = useCallback((): boolean => {
-    if (selectedWords.length !== 4) return false
+  const submitWords = useCallback((): SubmitResult => {
+    if (selectedWords.length !== 4) return 'wrong'
+
+    const key = dedupeKey(selectedWords)
+    if (pastGuesses.has(key)) return 'duplicate'
 
     const categoryEntry = Object.entries(categories).find(([, category]) =>
       selectedWords.every((selectedWord) => category.words.includes(selectedWord)),
@@ -90,18 +97,18 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
         const { [categoryName]: _, ...rest } = prev
         return rest
       })
-      return true
+      return 'correct'
     } else {
-      const isOneAwayResult = Object.values(categories).some((category) => {
+      const isOneAway = Object.values(categories).some((category) => {
         const matchCount = selectedWords.filter((word) => category.words.includes(word)).length
         return matchCount === 3
       })
 
-      setIsOneAway(isOneAwayResult)
+      setPastGuesses((prev) => new Set([...prev, key]))
       setIncorrectGuesses((prev) => prev + 1)
-      return false
+      return isOneAway ? 'one-away' : 'wrong'
     }
-  }, [categories, selectedWords])
+  }, [categories, pastGuesses, selectedWords])
 
   const getHint = useCallback(() => {
     const unsolvedCategories = Object.entries(categories).filter(
@@ -135,17 +142,13 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
   }, [categories, solvedCategories])
 
   useEffect(() => {
-    setIsOneAway(false)
-  }, [selectedWords])
-
-  useEffect(() => {
     setIsLoading(true)
     setErrorMessage(null)
 
     setCategories({})
     setHintsUsed(0)
     setIncorrectGuesses(0)
-    setIsOneAway(false)
+    setPastGuesses(new Set())
     setRevealedHints({})
     setSelectedWords([])
     setSolvedCategories([])
@@ -188,8 +191,8 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
     incorrectGuesses,
     isHintAvailable,
     isLoading,
-    isOneAway,
     isRevealSolutionAvailable: solvedCategories.length < 4,
+    pastGuesses,
     revealSolution,
     selectedWords,
     selectWord,

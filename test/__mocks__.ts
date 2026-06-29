@@ -1,5 +1,5 @@
 /* eslint-disable sort-keys */
-import { UseConnectionsGameResult } from '@hooks/useConnectionsGame'
+import { SubmitResult, UseConnectionsGameResult } from '@hooks/useConnectionsGame'
 import { CategoryObject, ConnectionsGame, GameId } from '@types'
 
 // Connections
@@ -49,13 +49,13 @@ export const useConnectionsGameResult: UseConnectionsGameResult = {
   incorrectGuesses: 0,
   isHintAvailable: false,
   isLoading: false,
-  isOneAway: false,
   isRevealSolutionAvailable: false,
+  pastGuesses: new Set<string>(),
   revealSolution: jest.fn(),
   selectedWords: [],
   selectWord: jest.fn(),
   solvedCategories: [],
-  submitWords: jest.fn(),
+  submitWords: jest.fn() as jest.MockedFunction<() => SubmitResult>,
   unselectWord: jest.fn(),
   words: wordList,
 }

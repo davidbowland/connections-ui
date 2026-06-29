@@ -17,10 +17,7 @@ const NotFound = (): React.ReactNode => {
       <Head>
         <title>Connections | 404: Not Found</title>
       </Head>
-      <ServerErrorMessage title="404: Not Found">
-        The resource you requested is unavailable. If you feel you have reached this page in error, please contact the
-        webmaster.
-      </ServerErrorMessage>
+      <ServerErrorMessage title="404: Not Found">That page doesn&apos;t exist.</ServerErrorMessage>
     </>
   )
 }

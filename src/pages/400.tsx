@@ -10,8 +10,7 @@ const BadRequest = (): React.ReactNode => {
         <title>Connections | 400: Bad Request</title>
       </Head>
       <ServerErrorMessage title="400: Bad Request">
-        Your request was malformed or otherwise could not be understood by the server. Please modify your request before
-        retrying.
+        Something went wrong with that link. Try going home and starting fresh.
       </ServerErrorMessage>
     </>
   )

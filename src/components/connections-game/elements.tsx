@@ -24,11 +24,17 @@ export const GameTitle = (): React.ReactNode => (
 )
 
 export const GameSubtitle = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="mb-10 flex justify-center">
+  <div className="mb-4 flex justify-center">
     <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/35 dark:bg-white/[0.06] dark:text-white/30">
       {children}
     </span>
   </div>
+)
+
+export const GameInstructions = (): React.ReactNode => (
+  <p className="mb-8 text-center text-[11px] tracking-wide text-black/35 dark:text-white/30">
+    Group four words that share something in common
+  </p>
 )
 
 export const BoardContainer = ({
@@ -133,12 +139,12 @@ export const WordTile = ({
   </motion.div>
 )
 
-export const OneAwayToast = (): React.ReactNode => (
+export const Toast = ({ message }: { message: string }): React.ReactNode => (
   <span
-    className="inline-block rounded-full border border-amber-400/25 bg-amber-500/[0.1] px-5 py-2 text-[11px] uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300/85"
+    className="inline-block rounded-full bg-neutral-800 px-5 py-2 text-[11px] uppercase tracking-[0.18em] text-white shadow-lg dark:bg-neutral-100 dark:text-neutral-900"
     role="status"
   >
-    One away
+    {message}
   </span>
 )
 

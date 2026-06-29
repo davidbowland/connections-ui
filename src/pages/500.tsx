@@ -10,8 +10,7 @@ const InternalServerError = (): React.ReactNode => {
         <title>Connections | 500: Internal Server Error</title>
       </Head>
       <ServerErrorMessage title="500: Internal Server Error">
-        An internal server error has occurred trying to serve your request. If you continue to experience this error,
-        please contact the webmaster.
+        Something broke on our end. Try again in a moment.
       </ServerErrorMessage>
     </>
   )

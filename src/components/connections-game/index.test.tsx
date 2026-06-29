@@ -114,25 +114,60 @@ describe('ConnectionsGame', () => {
     expect(GameSelection).toHaveBeenCalled()
   })
 
-  it('shows one away toast 450ms after isOneAway becomes true', () => {
-    setup({ isOneAway: true })
+  it('shows one away toast 450ms after submitting a one-away guess', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const submitWords = jest.fn().mockReturnValue('one-away')
+    setup({ selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], submitWords })
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
     expect(screen.queryByText('One away')).not.toBeInTheDocument()
     act(() => jest.advanceTimersByTime(500))
     expect(screen.getByText('One away')).toBeInTheDocument()
   })
 
-  it('auto-dismisses one away toast after 4 seconds', () => {
-    setup({ isOneAway: true })
+  it('auto-dismisses one away toast after 4 seconds', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const submitWords = jest.fn().mockReturnValue('one-away')
+    setup({ selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], submitWords })
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
     act(() => jest.advanceTimersByTime(500))
     expect(screen.getByText('One away')).toBeInTheDocument()
     act(() => jest.advanceTimersByTime(4000))
     expect(screen.queryByText('One away')).not.toBeInTheDocument()
   })
 
-  it('does not show one away toast when isOneAway is false', () => {
-    setup()
+  it('does not show toast when submit returns wrong', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const submitWords = jest.fn().mockReturnValue('wrong')
+    setup({ selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], submitWords })
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
     act(() => jest.advanceTimersByTime(500))
-    expect(screen.queryByText('One away')).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('shows already tried toast when submitting a duplicate guess', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const submitWords = jest.fn().mockReturnValue('duplicate')
+    setup({ selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], submitWords })
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
+    act(() => jest.advanceTimersByTime(500))
+    expect(screen.getByText('Already tried')).toBeInTheDocument()
+  })
+
+  it('reshows already tried toast on each repeated duplicate submission', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const submitWords = jest.fn().mockReturnValue('duplicate')
+    setup({ selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], submitWords })
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
+    act(() => jest.advanceTimersByTime(500))
+    expect(screen.getByText('Already tried')).toBeInTheDocument()
+
+    act(() => jest.advanceTimersByTime(4000))
+    expect(screen.queryByText('Already tried')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
+    act(() => jest.advanceTimersByTime(500))
+    expect(screen.getByText('Already tried')).toBeInTheDocument()
   })
 
   it('shows get hint button when hint is available and threshold reached', () => {
@@ -201,7 +236,7 @@ describe('ConnectionsGame', () => {
 
   it('shows hints count in stat line when hints have been used', () => {
     setup({ categoriesCount: 4, hintsUsed: 2 })
-    expect(screen.getByText(/2\/4 hints/)).toBeInTheDocument()
+    expect(screen.getByText(/2 hints used/)).toBeInTheDocument()
   })
 
   it('omits hints count from stat line when no hints used', () => {
