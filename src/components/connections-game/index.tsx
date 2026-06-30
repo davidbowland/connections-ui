@@ -27,7 +27,7 @@ import { CategoryColors, GameId } from '@types'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
-const getRandomValue = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
+const getRandomValue = <T,>(arr: T[], random = Math.random): T => arr[Math.floor(random() * arr.length)]
 
 export interface ConnectionsGameProps {
   gameId: GameId

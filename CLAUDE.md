@@ -1,12 +1,10 @@
-# connections-ui
-
-## General
+# Project Guidelines
 
 **Always commit changes** after completing work unless explicitly told not to.
 
 ## Testing Standards
 
-**Jest clears all mocks automatically** (`clearMocks: true` in jest.config.ts). Never manually clear mocks.
+**Jest clears all mocks automatically** (`clearMocks: true` in jest.config.js). Never manually clear mocks.
 
 **Mock state:** Set shared defaults in `beforeAll`. Override per-test with `mockReturnValueOnce` / `mockResolvedValueOnce` / `mockRejectedValueOnce`. Never use `beforeEach` — write a named `setup()` function if repeated arrangement is needed and call it explicitly.
 
@@ -30,24 +28,10 @@ it('sets createdAt', () => {
 
 **Deterministic above all.** A test that passes today and fails tomorrow is broken.
 
-## Module Aliases
+## Accessibility
 
-| Alias           | Path               |
-| --------------- | ------------------ |
-| `@components/*` | `src/components/*` |
-| `@config/*`     | `src/config/*`     |
-| `@hooks/*`      | `src/hooks/*`      |
-| `@pages/*`      | `src/pages/*`      |
-| `@services/*`   | `src/services/*`   |
-| `@test/*`       | `test/*`           |
-| `@types`        | `src/types`        |
-| `@utils/*`      | `src/utils/*`      |
+**All designs must meet WCAG AA.** This includes: sufficient color contrast (4.5:1 for normal text, 3:1 for large text), full keyboard navigability, visible focus indicators, appropriate ARIA roles/labels, and no content that relies on color alone. Run an accessibility audit before marking UI work complete.
 
-## Commands
+## Copy and UX Writing
 
-- `npm test` — run tests with coverage
-- `npm run typecheck` — TypeScript check
-- `npm run lint` — format + lint
-- `npm start` — run locally via Next.js dev server
-- `npm run build` — production build
-- `npm run serve` — build and serve the static output
+**All user-facing copy, CTAs, labels, and error messages must be reviewed by a UX expert and by Steven Pinker's principles** (plain language, active voice, concrete nouns, no jargon, no weasel words). Apply the suggested changes unless they conflict with technical constraints.
