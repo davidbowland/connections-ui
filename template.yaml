@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Infrastructure for Connections UI
+  Infrastructure for Common Threads UI
 
 Parameters:
   Environment:

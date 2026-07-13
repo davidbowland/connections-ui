@@ -38,6 +38,6 @@ describe('400 error page', () => {
 
   it('renders title', () => {
     render(<BadRequest />)
-    expect(document.title).toEqual('Connections | 400: Bad Request')
+    expect(document.title).toEqual('Common Threads | 400: Bad Request')
   })
 })

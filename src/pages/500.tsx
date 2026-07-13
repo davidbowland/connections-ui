@@ -7,7 +7,7 @@ const InternalServerError = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>Connections | 500: Internal Server Error</title>
+        <title>Common Threads | 500: Internal Server Error</title>
       </Head>
       <ServerErrorMessage title="500: Internal Server Error">
         Something broke on our end. Try again in a moment.

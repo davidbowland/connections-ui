@@ -56,6 +56,6 @@ describe('404 error page', () => {
   it('renders title', () => {
     window.location.pathname = '/an-invalid-page'
     render(<NotFound />)
-    expect(document.title).toEqual('Connections | 404: Not Found')
+    expect(document.title).toEqual('Common Threads | 404: Not Found')
   })
 })

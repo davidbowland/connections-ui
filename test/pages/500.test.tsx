@@ -38,6 +38,6 @@ describe('500 error page', () => {
 
   it('renders title', () => {
     render(<InternalServerError />)
-    expect(document.title).toEqual('Connections | 500: Internal Server Error')
+    expect(document.title).toEqual('Common Threads | 500: Internal Server Error')
   })
 })

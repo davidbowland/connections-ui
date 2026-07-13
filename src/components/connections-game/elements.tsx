@@ -2,6 +2,7 @@ import { Button, Skeleton } from '@heroui/react'
 import { motion } from 'framer-motion'
 import React from 'react'
 
+import { BrandMark } from '@components/brand-mark'
 import { GameColor } from '@types'
 
 const ease = [0.32, 0.72, 0, 1] as const
@@ -18,8 +19,9 @@ export const GameWrapper = ({ children }: { children: React.ReactNode }): React.
 )
 
 export const GameTitle = (): React.ReactNode => (
-  <h1 className="mb-3 text-center text-2xl font-light uppercase tracking-[0.2em] text-black/[0.88] dark:text-white/90 sm:text-3xl sm:tracking-[0.3em] md:text-5xl">
-    Connections
+  <h1 className="mb-3 flex items-center justify-center gap-3 text-center text-2xl font-light uppercase tracking-[0.2em] text-black/[0.88] dark:text-white/90 sm:text-3xl sm:tracking-[0.3em] md:text-5xl">
+    <BrandMark className="h-6 w-6 sm:h-8 sm:w-8 md:h-11 md:w-11" />
+    Common Threads
   </h1>
 )
 
@@ -167,14 +169,12 @@ export const StatLine = ({ children }: { children: React.ReactNode }): React.Rea
 )
 
 export const GameSelectionWrapper = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="mx-auto mb-12 max-w-[300px] pt-12">{children}</div>
+  <div className="mx-auto mb-16 max-w-[300px] md:mb-20">{children}</div>
 )
 
 export const LoadingState = ({ displayGameId }: { displayGameId: string }): React.ReactNode => (
   <div className="px-4 pb-16 pt-8 md:pb-20 md:pt-14" data-testid="loading-skeleton">
-    <h1 className="mb-3 text-center text-2xl font-light uppercase tracking-[0.2em] text-black/[0.88] dark:text-white/90 sm:text-3xl sm:tracking-[0.3em] md:text-5xl">
-      Connections
-    </h1>
+    <GameTitle />
     <div className="mb-10 flex justify-center">
       <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/35 dark:bg-white/[0.06] dark:text-white/30">
         {displayGameId}

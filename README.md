@@ -1,4 +1,4 @@
-# Connections UI
+# Common Threads
 
 Gatsby implementation of connections-api and connections-infrastructure. Example: <https://connections.dbowland.com/>
 

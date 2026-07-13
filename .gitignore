@@ -7,8 +7,15 @@ coverage/
 out/
 .next/
 
-# Generated artifacts
-public/
+# Generated artifacts (next-sitemap output) — the Common Threads brand assets
+# below are checked in on purpose, see scripts/generate-favicons.js
+public/*
+!public/icon.svg
+!public/site.webmanifest
+!public/favicon-16x16.png
+!public/favicon-32x32.png
+!public/apple-touch-icon.png
+!public/og-image.png
 
 # Compiled Java class files
 *.class

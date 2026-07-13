@@ -7,7 +7,7 @@ const PrivacyPage = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>Connections | Privacy Policy</title>
+        <title>Common Threads | Privacy Policy</title>
       </Head>
       <main>
         <div className="mx-auto max-w-[900px] shadow-md">

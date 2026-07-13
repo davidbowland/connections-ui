@@ -36,6 +36,6 @@ describe('Privacy page', () => {
 
   it('renders title', () => {
     render(<PrivacyPage />)
-    expect(document.title).toEqual('Connections | Privacy Policy')
+    expect(document.title).toEqual('Common Threads | Privacy Policy')
   })
 })

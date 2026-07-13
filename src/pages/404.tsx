@@ -15,7 +15,7 @@ const NotFound = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>Connections | 404: Not Found</title>
+        <title>Common Threads | 404: Not Found</title>
       </Head>
       <ServerErrorMessage title="404: Not Found">That page doesn&apos;t exist.</ServerErrorMessage>
     </>

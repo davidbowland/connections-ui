@@ -7,7 +7,6 @@ import {
   ActionsContainer,
   BoardContainer,
   GameInstructions,
-  GameSelectionWrapper,
   GameSubtitle,
   GameTitle,
   GameWrapper,
@@ -20,7 +19,6 @@ import {
   WordGrid,
   WordTile,
 } from './elements'
-import { GameSelection } from '@components/game-selection'
 import { GAME_COLORS } from '@config/colors'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { CategoryColors, GameId } from '@types'
@@ -253,10 +251,6 @@ export const ConnectionsGame = ({
         <StatLine>
           {`${incorrectGuesses} wrong${hintsUsed > 0 ? ` · ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} used` : ''} · ${formatTime(elapsedSeconds)}`}
         </StatLine>
-
-        <GameSelectionWrapper>
-          <GameSelection gameId={gameId} />
-        </GameSelectionWrapper>
       </BoardContainer>
 
       <AnimatePresence>

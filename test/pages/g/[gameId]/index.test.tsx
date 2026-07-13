@@ -4,9 +4,11 @@ import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 
 import { ConnectionsGame } from '@components/connections-game'
+import { GameSelection } from '@components/game-selection'
 import PrivacyLink from '@components/privacy-link'
 
 jest.mock('@components/connections-game')
+jest.mock('@components/game-selection')
 jest.mock('@components/privacy-link')
 jest.mock('@heroui/react', () => ({
   Skeleton: ({ className }: { className: string }) => <div className={className} data-testid="skeleton" />,
@@ -16,14 +18,19 @@ jest.mock('next/router', () => ({
 }))
 jest.mock('next/head', () => {
   const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.toArray(children)
-      .filter(
-        (child): child is React.ReactElement<{ children: string }> =>
-          React.isValidElement(child) && child.type === 'title',
-      )
-      .forEach((child) => {
-        document.title = child.props.children
-      })
+    document.querySelectorAll('meta[data-mock-head]').forEach((el) => el.remove())
+    React.Children.toArray(children).forEach((child) => {
+      if (!React.isValidElement(child)) return
+      if (child.type === 'title') {
+        document.title = (child.props as { children: string }).children
+      }
+      if (child.type === 'meta') {
+        const meta = document.createElement('meta')
+        Object.entries(child.props as Record<string, string>).forEach(([key, value]) => meta.setAttribute(key, value))
+        meta.setAttribute('data-mock-head', 'true')
+        document.head.appendChild(meta)
+      }
+    })
     return null
   }
   MockHead.displayName = 'MockHead'
@@ -33,6 +40,7 @@ jest.mock('next/head', () => {
 describe('GamePage', () => {
   beforeAll(() => {
     jest.mocked(ConnectionsGame).mockReturnValue(<>ConnectionsGame</>)
+    jest.mocked(GameSelection).mockReturnValue(<>GameSelection</>)
     jest.mocked(PrivacyLink).mockReturnValue(<>PrivacyLink</>)
   })
 
@@ -62,6 +70,15 @@ describe('GamePage', () => {
     expect(ConnectionsGame).toHaveBeenCalledWith({ gameId: '2024-01-01' }, undefined)
   })
 
+  it('renders GameSelection with gameId after mount, independent of ConnectionsGame', () => {
+    setup()
+    render(<GamePage />)
+
+    act(() => {}) // flush useEffect
+
+    expect(GameSelection).toHaveBeenCalledWith({ gameId: '2024-01-01' }, undefined)
+  })
+
   it('renders PrivacyLink', () => {
     setup()
     render(<GamePage />)
@@ -73,7 +90,22 @@ describe('GamePage', () => {
     setup()
     render(<GamePage />)
 
-    expect(document.title).toEqual('Connections')
+    expect(document.title).toEqual('Common Threads')
+  })
+
+  it('renders Open Graph metadata', () => {
+    setup()
+    render(<GamePage />)
+
+    expect(document.head.querySelector('meta[property="og:title"]')).toHaveAttribute('content', 'Common Threads')
+    expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      'https://connections.dbowland.com/og-image.png',
+    )
+    expect(document.head.querySelector('meta[property="og:url"]')).toHaveAttribute(
+      'content',
+      'https://connections.dbowland.com/',
+    )
   })
 
   describe('getStaticPaths', () => {

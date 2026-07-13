@@ -1,7 +1,7 @@
 {
   "name": "connections-ui",
   "version": "1.20.0",
-  "description": "UI for Connections",
+  "description": "UI for Common Threads",
   "author": "David Bowland",
   "engines": {
     "node": "^24.0.0"
@@ -20,6 +20,7 @@
     "postbuild": "node scripts/generate-dynamic-pages.js && next-sitemap",
     "clean": "rm -rf .next coverage out && npm ci --legacy-peer-deps",
     "deploy": "DEVELOPMENT=true npm run build && ./scripts/deploy.sh",
+    "generate:favicons": "node scripts/generate-favicons.js",
     "lint": "prettier --write . && eslint --fix .",
     "prepare": "husky",
     "start": "next dev",
@@ -64,6 +65,7 @@
     "lint-staged": "^15.5.2",
     "prettier": "^3.9.1",
     "react-test-renderer": "^19.2.7",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.3.1",
     "ts-node": "^10.9.2",
     "undici": "^6.27.0"

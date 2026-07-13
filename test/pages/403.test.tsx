@@ -56,6 +56,6 @@ describe('403 error page', () => {
   it('renders title', () => {
     window.location.pathname = '/an-invalid-page'
     render(<Forbidden />)
-    expect(document.title).toEqual('Connections | 403: Forbidden')
+    expect(document.title).toEqual('Common Threads | 403: Forbidden')
   })
 })

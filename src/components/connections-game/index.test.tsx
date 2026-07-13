@@ -4,12 +4,10 @@ import userEvent from '@testing-library/user-event'
 import React, { act } from 'react'
 
 import { ConnectionsGame } from './index'
-import { GameSelection } from '@components/game-selection'
 import { useConnectionsGame } from '@hooks/useConnectionsGame'
 import { gameId, useConnectionsGameResult, wordList } from '@test/__mocks__'
 
 jest.mock('@hooks/useConnectionsGame')
-jest.mock('@components/game-selection')
 
 describe('ConnectionsGame', () => {
   const setup = (overrides: Partial<ReturnType<typeof useConnectionsGame>> = {}) => {
@@ -39,7 +37,7 @@ describe('ConnectionsGame', () => {
 
   it('displays game grid with words', () => {
     setup()
-    expect(screen.getByText('Connections')).toBeInTheDocument()
+    expect(screen.getByText('Common Threads')).toBeInTheDocument()
     wordList.forEach((word) => {
       expect(screen.getByRole('button', { name: word.toUpperCase() })).toBeInTheDocument()
     })
@@ -107,11 +105,6 @@ describe('ConnectionsGame', () => {
   it('shows incorrect guess count in stat line', () => {
     setup({ incorrectGuesses: 2 })
     expect(screen.getByText(/2 wrong/)).toBeInTheDocument()
-  })
-
-  it('renders GameSelection component', () => {
-    setup()
-    expect(GameSelection).toHaveBeenCalled()
   })
 
   it('shows one away toast 450ms after submitting a one-away guess', async () => {

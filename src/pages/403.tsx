@@ -15,7 +15,7 @@ const Forbidden = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>Connections | 403: Forbidden</title>
+        <title>Common Threads | 403: Forbidden</title>
       </Head>
       <ServerErrorMessage title="403: Forbidden">You don&apos;t have permission to view that page.</ServerErrorMessage>
     </>

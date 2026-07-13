@@ -10,14 +10,19 @@ jest.mock('next/router', () => ({
 
 jest.mock('next/head', () => {
   const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.toArray(children)
-      .filter(
-        (child): child is React.ReactElement<{ children: string }> =>
-          React.isValidElement(child) && child.type === 'title',
-      )
-      .forEach((child) => {
-        document.title = child.props.children
-      })
+    document.querySelectorAll('meta[data-mock-head]').forEach((el) => el.remove())
+    React.Children.toArray(children).forEach((child) => {
+      if (!React.isValidElement(child)) return
+      if (child.type === 'title') {
+        document.title = (child.props as { children: string }).children
+      }
+      if (child.type === 'meta') {
+        const meta = document.createElement('meta')
+        Object.entries(child.props as Record<string, string>).forEach(([key, value]) => meta.setAttribute(key, value))
+        meta.setAttribute('data-mock-head', 'true')
+        document.head.appendChild(meta)
+      }
+    })
     return null
   }
   MockHead.displayName = 'MockHead'
@@ -36,7 +41,20 @@ describe('Index page', () => {
 
   it('renders title correctly', () => {
     render(<Index />)
-    expect(document.title).toEqual('Connections | dbowland.com')
+    expect(document.title).toEqual('Common Threads | dbowland.com')
+  })
+
+  it('renders Open Graph metadata', () => {
+    render(<Index />)
+    expect(document.head.querySelector('meta[property="og:title"]')).toHaveAttribute('content', 'Common Threads')
+    expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      'https://connections.dbowland.com/og-image.png',
+    )
+    expect(document.head.querySelector('meta[property="og:url"]')).toHaveAttribute(
+      'content',
+      'https://connections.dbowland.com/',
+    )
   })
 
   it('redirects to current date game page', () => {

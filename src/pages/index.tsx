@@ -14,7 +14,16 @@ const Index = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>Connections | dbowland.com</title>
+        <title>Common Threads | dbowland.com</title>
+        <meta content="Common Threads" property="og:title" />
+        <meta content="Find the common thread. A new puzzle every day." property="og:description" />
+        <meta content="https://connections.dbowland.com/og-image.png" property="og:image" />
+        <meta content="website" property="og:type" />
+        <meta content="https://connections.dbowland.com/" property="og:url" />
+        <meta content="summary_large_image" name="twitter:card" />
+        <meta content="Common Threads" name="twitter:title" />
+        <meta content="Find the common thread. A new puzzle every day." name="twitter:description" />
+        <meta content="https://connections.dbowland.com/og-image.png" name="twitter:image" />
       </Head>
     </>
   )
