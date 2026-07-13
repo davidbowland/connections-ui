@@ -19,7 +19,7 @@ export const GameWrapper = ({ children }: { children: React.ReactNode }): React.
 )
 
 export const GameTitle = (): React.ReactNode => (
-  <h1 className="mb-3 flex items-center justify-center gap-3 text-center text-2xl font-light uppercase tracking-[0.2em] text-black/[0.88] dark:text-white/90 sm:text-3xl sm:tracking-[0.3em] md:text-5xl">
+  <h1 className="mb-3 flex flex-col items-center justify-center gap-2 text-center text-2xl font-light uppercase tracking-[0.2em] text-black/[0.88] dark:text-white/90 min-[380px]:flex-row min-[380px]:gap-3 sm:text-3xl sm:tracking-[0.3em] md:text-5xl">
     <BrandMark className="h-6 w-6 sm:h-8 sm:w-8 md:h-11 md:w-11" />
     Common Threads
   </h1>

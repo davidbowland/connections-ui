@@ -1,6 +1,8 @@
 # Common Threads
 
-Gatsby implementation of connections-api and connections-infrastructure. Example: <https://connections.dbowland.com/>
+![Common Threads](public/og-image.png)
+
+Next.js implementation of [connections-api](https://github.com/davidbowland/connections-api) and connections-infrastructure. Find the common thread — a new puzzle every day. Example: <https://connections.dbowland.com/>
 
 ## Static Site
 
@@ -11,7 +13,7 @@ Gatsby implementation of connections-api and connections-infrastructure. Example
 
 ### Local Development
 
-The Gatsby development server automatically rerenders in the browser when the source code changes. Start the local development server with:
+The Next.js development server automatically rerenders in the browser when the source code changes. Start the local development server with:
 
 ```bash
 npm run start
@@ -43,6 +45,22 @@ Both [Prettier](https://prettier.io/) and [ESLint](https://eslint.org/) are exec
 npm run lint
 ```
 
+### Type Checking
+
+Manually check TypeScript types with:
+
+```bash
+npm run typecheck
+```
+
+### Brand Assets
+
+The favicons, `public/icon.svg`, and `public/og-image.png` are all generated from a single source of truth in `scripts/generate-favicons.js`. Regenerate them after changing the brand mark or colors with:
+
+```bash
+npm run generate:favicons
+```
+
 ### Deploying to Production
 
 This project automatically deploys to production when a merge to `master` is made via a pull request.
@@ -65,40 +83,32 @@ Use [act](https://github.com/nektos/act) to test the GitHub workflow. Install it
 brew install act
 ```
 
-When running locally, workflow needs some secret values specified. If the necessary environment variables are declared, the secrets can be specified with:
+When running locally, the workflow needs some secret values specified. Provide them with the `-s` flag (or a `--secret-file`), for example:
 
 ```bash
-npm run workflow
+act -s AWS_ACCOUNT_ID=<value> -s AWS_ACCESS_KEY_ID=<value> -s AWS_SECRET_ACCESS_KEY=<value>
 ```
 
 ## Additional Documentation
 
-### Additional Gatsby Documentation
+### Additional Next.js Documentation
 
-- [Documentation](https://www.gatsbyjs.com/docs/)
+- [Documentation](https://nextjs.org/docs)
 
-- [Tutorials](https://www.gatsbyjs.com/tutorial/)
+- [Learn Next.js](https://nextjs.org/learn)
 
-- [Guides](https://www.gatsbyjs.com/docs/guides/)
-
-- [API Reference](https://www.gatsbyjs.com/docs/api-reference/)
-
-- [Plugin Library](https://www.gatsbyjs.com/plugins)
-
-- [Cheat Sheet](https://www.gatsbyjs.com/docs/cheat-sheet/)
+- [API Reference](https://nextjs.org/docs/app/api-reference)
 
 ### Additional Deploy Documentation
 
-- [SSH2 module](https://www.npmjs.com/package/ssh2)
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli.html)
 
-- [SFTP stream methods](https://github.com/mscdex/ssh2-streams/blob/master/SFTPStream.md#sftpstream-methods)
+- [AWS CLI S3 sync](https://docs.aws.amazon.com/cli/latest/reference/s3/sync.html)
 
 ### Additional Workflow Documentation
 
 - [Workflow Syntax for GitHub Actions](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)
 
-- [actions/setup_node](https://github.com/actions/setup-node)
+- [actions/setup-node](https://github.com/actions/setup-node)
 
 - [actions/checkout](https://github.com/actions/checkout)
-
-- [ad-m/github-push-action](https://github.com/ad-m/github-push-action)
