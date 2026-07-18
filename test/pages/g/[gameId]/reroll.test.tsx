@@ -1,9 +1,9 @@
-import RerollPage, { getStaticPaths, getStaticProps } from '@pages/g/[gameId]/reroll'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 
+import RerollPage, { getStaticPaths, getStaticProps } from '@pages/g/[gameId]/reroll'
 import { rerollGame } from '@services/connections'
 
 jest.mock('@services/connections')

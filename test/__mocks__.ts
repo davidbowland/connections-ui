@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 import { SubmitResult, UseConnectionsGameResult } from '@hooks/useConnectionsGame'
 import { CategoryObject, ConnectionsGame, GameId } from '@types'
 

@@ -9,7 +9,7 @@ const Index = (): React.ReactNode => {
     const today = new Date()
     const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
     router.replace(`/g/${dateString}`)
-  }, []) // eslint-disable-line
+  }, [])
 
   return (
     <>

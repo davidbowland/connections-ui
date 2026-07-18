@@ -1,4 +1,3 @@
-import GamePage, { getStaticPaths, getStaticProps } from '@pages/g/[gameId]/index'
 import '@testing-library/jest-dom'
 import { act, render, screen } from '@testing-library/react'
 import React from 'react'
@@ -6,6 +5,7 @@ import React from 'react'
 import { ConnectionsGame } from '@components/connections-game'
 import { GameSelection } from '@components/game-selection'
 import PrivacyLink from '@components/privacy-link'
+import GamePage, { getStaticPaths, getStaticProps } from '@pages/g/[gameId]/index'
 
 jest.mock('@components/connections-game')
 jest.mock('@components/game-selection')

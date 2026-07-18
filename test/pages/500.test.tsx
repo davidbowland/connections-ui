@@ -1,9 +1,9 @@
-import InternalServerError from '@pages/500'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 import React from 'react'
 
 import ServerErrorMessage from '@components/server-error-message'
+import InternalServerError from '@pages/500'
 
 jest.mock('@components/server-error-message')
 

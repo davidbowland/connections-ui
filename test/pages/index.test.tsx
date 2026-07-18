@@ -1,8 +1,9 @@
-import Index from '@pages/index'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 import { useRouter } from 'next/router'
 import React from 'react'
+
+import Index from '@pages/index'
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn().mockReturnValue({ replace: jest.fn() }),

@@ -1,9 +1,9 @@
-import Forbidden from '@pages/403'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 import React from 'react'
 
 import ServerErrorMessage from '@components/server-error-message'
+import Forbidden from '@pages/403'
 
 jest.mock('@components/server-error-message')
 
