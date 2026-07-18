@@ -59,9 +59,12 @@ Thumbs.db
 *.wmv
 
 .claude/
-.kiro/specs/
 .superpowers/
 .vscode
 .worktrees/
 docs/
 tsconfig.tsbuildinfo
+
+# AWS SAM / SWC build caches
+.aws-sam/
+.swc/
