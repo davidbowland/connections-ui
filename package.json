@@ -35,7 +35,6 @@
     "axios": "^1.18.1",
     "framer-motion": "^12.42.0",
     "husky": "^9.1.7",
-    "lucide-react": "^1.22.0",
     "next": "^15.5.19",
     "next-sitemap": "^4.2.3",
     "react": "^19.2.7",
@@ -64,11 +63,9 @@
     "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.5.2",
     "prettier": "^3.9.1",
-    "react-test-renderer": "^19.2.7",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.1",
-    "ts-node": "^10.9.2",
-    "undici": "^6.27.0"
+    "ts-node": "^10.9.2"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
