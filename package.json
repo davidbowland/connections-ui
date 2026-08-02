@@ -22,7 +22,7 @@
     "deploy": "DEVELOPMENT=true npm run build && ./scripts/deploy.sh",
     "generate:favicons": "node scripts/generate-favicons.js",
     "lint": "prettier --write . && eslint --fix .",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "start": "next dev",
     "serve": "next build && npx serve out",
     "test": "jest --colors",
