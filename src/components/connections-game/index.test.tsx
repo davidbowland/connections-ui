@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import React, { act } from 'react'
 
 import { ConnectionsGame } from './index'
-import { useConnectionsGame } from '@hooks/useConnectionsGame'
+import { dedupeKey, useConnectionsGame } from '@hooks/useConnectionsGame'
 import { gameId, useConnectionsGameResult, wordList } from '@test/__mocks__'
 
 jest.mock('@hooks/useConnectionsGame')
@@ -33,6 +33,11 @@ describe('ConnectionsGame', () => {
     const errorMessage = 'Failed to load game'
     setup({ errorMessage })
     expect(screen.getByRole('alert')).toHaveTextContent(errorMessage)
+  })
+
+  it('states the whole task in the instructions', () => {
+    setup()
+    expect(screen.getByText('Find four groups of four words that belong together.')).toBeInTheDocument()
   })
 
   it('displays game grid with words', () => {
@@ -68,6 +73,13 @@ describe('ConnectionsGame', () => {
     expect(unselectWord).toHaveBeenCalledWith('WORD01')
   })
 
+  it('exposes which tiles are selected', () => {
+    setup({ selectedWords: ['WORD01'] })
+
+    expect(screen.getByRole('button', { name: 'WORD01' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'WORD02' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
   it('does not show submit button with fewer than 4 words selected', () => {
     setup({ selectedWords: ['WORD01', 'WORD02'] })
     expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
@@ -91,14 +103,14 @@ describe('ConnectionsGame', () => {
 
   it('shows reveal solution button when enough wrong guesses', () => {
     setup({ incorrectGuesses: 4, isRevealSolutionAvailable: true })
-    expect(screen.getByRole('button', { name: 'Reveal solution' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show the answers' })).toBeInTheDocument()
   })
 
   it('calls revealSolution when reveal solution button is clicked', async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     const revealSolution = jest.fn()
     setup({ incorrectGuesses: 4, isRevealSolutionAvailable: true, revealSolution })
-    await user.click(screen.getByRole('button', { name: 'Reveal solution' }))
+    await user.click(screen.getByRole('button', { name: 'Show the answers' }))
     expect(revealSolution).toHaveBeenCalled()
   })
 
@@ -134,7 +146,7 @@ describe('ConnectionsGame', () => {
     setup({ selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'], submitWords })
     await user.click(screen.getByRole('button', { name: 'Submit' }))
     act(() => jest.advanceTimersByTime(500))
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('toast')).not.toBeInTheDocument()
   })
 
   it('shows already tried toast when submitting a duplicate guess', async () => {
@@ -216,15 +228,15 @@ describe('ConnectionsGame', () => {
   it('shows reveal solution button after time threshold', () => {
     jest.mocked(useConnectionsGame).mockReturnValue({ ...useConnectionsGameResult, isRevealSolutionAvailable: true })
     render(<ConnectionsGame gameId={gameId} secondsUntilSolution={2} />)
-    expect(screen.queryByRole('button', { name: 'Reveal solution' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Show the answers' })).not.toBeInTheDocument()
     act(() => jest.advanceTimersByTime(5000))
-    expect(screen.getByRole('button', { name: 'Reveal solution' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show the answers' })).toBeInTheDocument()
   })
 
   it('hides hint and solution buttons when game is complete', () => {
     setup({ incorrectGuesses: 4, isHintAvailable: true, isRevealSolutionAvailable: true, words: [] })
     expect(screen.queryByRole('button', { name: 'Get hint' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Reveal solution' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Show the answers' })).not.toBeInTheDocument()
   })
 
   it('shows hints count in stat line when hints have been used', () => {
@@ -235,5 +247,181 @@ describe('ConnectionsGame', () => {
   it('omits hints count from stat line when no hints used', () => {
     setup({ categoriesCount: 4, hintsUsed: 0 })
     expect(screen.queryByText(/hints/)).not.toBeInTheDocument()
+  })
+
+  it('renders a row for each one-away guess', () => {
+    setup({
+      oneAwayGuesses: [
+        ['WORD01', 'WORD02', 'WORD03', 'WORD05'],
+        ['WORD01', 'WORD02', 'WORD03', 'WORD06'],
+      ],
+    })
+
+    expect(screen.getByRole('button', { name: 'Select WORD01 WORD02 WORD03 WORD05 again' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Select WORD01 WORD02 WORD03 WORD06 again' })).toBeInTheDocument()
+
+    expect(screen.getByRole('list')).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+  })
+
+  it('labels the one-away section for screen readers', () => {
+    setup({ oneAwayGuesses: [['WORD01', 'WORD02', 'WORD03', 'WORD05']] })
+
+    expect(screen.getByRole('region', { name: 'Guesses that were one away' })).toBeInTheDocument()
+    expect(screen.getByText('Tap a row to select those words again.')).toBeInTheDocument()
+  })
+
+  it('hides the one-away section when no guess was one away', () => {
+    setup({ oneAwayGuesses: [] })
+
+    expect(screen.queryByRole('region', { name: 'Guesses that were one away' })).not.toBeInTheDocument()
+  })
+
+  it('scrolls the board into view when a one-away row is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    setup({ oneAwayGuesses: [['WORD01', 'WORD02', 'WORD03', 'WORD05']] })
+
+    await user.click(screen.getByRole('button', { name: 'Select WORD01 WORD02 WORD03 WORD05 again' }))
+    act(() => jest.advanceTimersByTime(100))
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+  })
+
+  it('selects the words again when a one-away row is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const selectWords = jest.fn()
+    setup({ oneAwayGuesses: [['WORD01', 'WORD02', 'WORD03', 'WORD05']], selectWords })
+
+    await user.click(screen.getByRole('button', { name: 'Select WORD01 WORD02 WORD03 WORD05 again' }))
+
+    expect(selectWords).toHaveBeenCalledWith(['WORD01', 'WORD02', 'WORD03', 'WORD05'])
+  })
+
+  const REPEAT = ['WORD01', 'WORD02', 'WORD03', 'WORD05']
+
+  it('warns that a repeated selection was one away', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [REPEAT],
+      pastGuesses: new Set([dedupeKey(REPEAT)]),
+      selectedWords: REPEAT,
+    })
+
+    expect(screen.getByText('You already tried this — it was one away.')).toBeInTheDocument()
+  })
+
+  it('warns that a repeated selection was already tried', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [],
+      pastGuesses: new Set([dedupeKey(REPEAT)]),
+      selectedWords: REPEAT,
+    })
+
+    expect(screen.getByText('You already tried this.')).toBeInTheDocument()
+  })
+
+  it('does not warn about the guess that was just submitted', () => {
+    setup({
+      isSelectionSubmitted: true,
+      oneAwayGuesses: [REPEAT],
+      pastGuesses: new Set([dedupeKey(REPEAT)]),
+      selectedWords: REPEAT,
+    })
+
+    expect(screen.queryByText('You already tried this — it was one away.')).not.toBeInTheDocument()
+    expect(screen.queryByText('You already tried this.')).not.toBeInTheDocument()
+  })
+
+  it('does not warn about a fresh selection', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [],
+      pastGuesses: new Set<string>(),
+      selectedWords: REPEAT,
+    })
+
+    expect(screen.queryByText('You already tried this.')).not.toBeInTheDocument()
+    expect(screen.queryByText('You already tried this — it was one away.')).not.toBeInTheDocument()
+  })
+
+  it('does not warn about an incomplete selection', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [REPEAT],
+      pastGuesses: new Set([dedupeKey(REPEAT)]),
+      selectedWords: ['WORD01', 'WORD02', 'WORD03'],
+    })
+
+    expect(screen.queryByText('You already tried this — it was one away.')).not.toBeInTheDocument()
+  })
+
+  it('keeps submit enabled while the guard line is shown', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [REPEAT],
+      pastGuesses: new Set([dedupeKey(REPEAT)]),
+      selectedWords: REPEAT,
+    })
+
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled()
+  })
+
+  it('reserves an empty guard line slot for a fresh four-word selection', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [],
+      pastGuesses: new Set<string>(),
+      selectedWords: ['WORD01', 'WORD02', 'WORD03', 'WORD04'],
+    })
+
+    expect(screen.queryByText('You already tried this.')).not.toBeInTheDocument()
+    expect(screen.queryByText('You already tried this — it was one away.')).not.toBeInTheDocument()
+    expect(screen.getByTestId('guard-line')).toBeEmptyDOMElement()
+  })
+
+  it('reserves the guard line slot as soon as one word is selected', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [],
+      pastGuesses: new Set<string>(),
+      selectedWords: ['WORD01'],
+    })
+
+    expect(screen.getByTestId('guard-line')).toBeEmptyDOMElement()
+  })
+
+  it('renders no guard line slot when nothing is selected', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [],
+      pastGuesses: new Set<string>(),
+      selectedWords: [],
+    })
+
+    expect(screen.queryByTestId('guard-line')).toBeNull()
+  })
+
+  it('announces the guard line politely', () => {
+    setup({
+      isSelectionSubmitted: false,
+      oneAwayGuesses: [REPEAT],
+      pastGuesses: new Set([dedupeKey(REPEAT)]),
+      selectedWords: REPEAT,
+    })
+
+    expect(screen.getByRole('status')).toHaveTextContent('You already tried this — it was one away.')
+  })
+
+  it('keeps the one-away list below the action buttons so submit never moves', () => {
+    setup({
+      oneAwayGuesses: [REPEAT],
+      selectedWords: REPEAT,
+    })
+
+    const list = screen.getByRole('region', { name: 'Guesses that were one away' })
+    const submit = screen.getByRole('button', { name: 'Submit' })
+
+    expect(submit.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

@@ -87,7 +87,7 @@ describe('RerollPage', () => {
 
   it('shows error message on failure', async () => {
     setup()
-    jest.mocked(rerollGame).mockRejectedValueOnce(new Error('Forbidden: wrong password'))
+    jest.mocked(rerollGame).mockRejectedValueOnce(new Error('Wrong password.'))
     const user = userEvent.setup()
     render(<RerollPage />)
 
@@ -95,7 +95,7 @@ describe('RerollPage', () => {
     await user.click(screen.getByRole('button', { name: /reroll/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Forbidden: wrong password')).toBeInTheDocument()
+      expect(screen.getByText('Wrong password.')).toBeInTheDocument()
     })
   })
 
@@ -109,7 +109,7 @@ describe('RerollPage', () => {
     await user.click(screen.getByRole('button', { name: /reroll/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('An unexpected error occurred')).toBeInTheDocument()
+      expect(screen.getByText('Something went wrong. Try again.')).toBeInTheDocument()
     })
   })
 

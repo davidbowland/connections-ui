@@ -10,9 +10,11 @@ import {
   GameSubtitle,
   GameTitle,
   GameWrapper,
+  GuardLine,
   HintCard,
   HintsContainer,
   LoadingState,
+  OneAwayList,
   SolvedCategoryCard,
   StatLine,
   Toast,
@@ -20,7 +22,7 @@ import {
   WordTile,
 } from './elements'
 import { GAME_COLORS } from '@config/colors'
-import { useConnectionsGame } from '@hooks/useConnectionsGame'
+import { dedupeKey, useConnectionsGame } from '@hooks/useConnectionsGame'
 import { CategoryColors, GameId } from '@types'
 
 const ease = [0.32, 0.72, 0, 1] as const
@@ -53,9 +55,13 @@ export const ConnectionsGame = ({
     isHintAvailable,
     isLoading,
     isRevealSolutionAvailable,
+    isSelectionSubmitted,
+    oneAwayGuesses,
+    pastGuesses,
     revealSolution,
     selectedWords,
     selectWord,
+    selectWords,
     solvedCategories,
     submitWords,
     unselectWord,
@@ -107,6 +113,10 @@ export const ConnectionsGame = ({
     (incorrectGuesses >= incorrectGuessesUntilSolution || elapsedSeconds >= secondsUntilSolution)
   const isGameComplete = words.length === 0
 
+  const selectionKey = selectedWords.length === 4 ? dedupeKey(selectedWords) : null
+  const isRepeatSelection = selectionKey !== null && !isSelectionSubmitted && pastGuesses.has(selectionKey)
+  const wasRepeatOneAway = isRepeatSelection && oneAwayGuesses.some((guess) => dedupeKey(guess) === selectionKey)
+
   useEffect(() => {
     if (isLoading || isGameComplete) return
 
@@ -144,6 +154,11 @@ export const ConnectionsGame = ({
       if (result === 'one-away') showToastMessage('One away')
       if (result === 'duplicate') showToastMessage('Already tried')
     }
+  }
+
+  const handleSelectOneAway = (guess: string[]) => {
+    selectWords(guess)
+    scrollToBoard()
   }
 
   const handleGetHint = () => {
@@ -221,6 +236,15 @@ export const ConnectionsGame = ({
 
         <ActionsContainer>
           {selectedWords.length > 0 && (
+            <GuardLine>
+              {isRepeatSelection
+                ? wasRepeatOneAway
+                  ? 'You already tried this — it was one away.'
+                  : 'You already tried this.'
+                : null}
+            </GuardLine>
+          )}
+          {selectedWords.length > 0 && (
             <ActionRow>
               {selectedWords.length >= 4 && (
                 <ActionButton onPress={handleSubmit} variant="primary">
@@ -241,12 +265,14 @@ export const ConnectionsGame = ({
               )}
               {isSolutionEnabled && (
                 <ActionButton onPress={handleRevealSolution} variant="primary">
-                  Reveal solution
+                  Show the answers
                 </ActionButton>
               )}
             </ActionRow>
           )}
         </ActionsContainer>
+
+        {oneAwayGuesses.length > 0 && <OneAwayList guesses={oneAwayGuesses} onSelect={handleSelectOneAway} />}
 
         <StatLine>
           {`${incorrectGuesses} wrong${hintsUsed > 0 ? ` · ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} used` : ''} · ${formatTime(elapsedSeconds)}`}

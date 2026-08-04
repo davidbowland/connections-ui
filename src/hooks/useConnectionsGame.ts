@@ -34,10 +34,13 @@ export interface UseConnectionsGameResult {
   isHintAvailable: boolean
   isLoading: boolean
   isRevealSolutionAvailable: boolean
+  isSelectionSubmitted: boolean
+  oneAwayGuesses: string[][]
   pastGuesses: Set<string>
   revealSolution: () => void
   selectedWords: string[]
   selectWord: (word: string) => void
+  selectWords: (guess: string[]) => void
   solvedCategories: SolvedCategory[]
   submitWords: () => SubmitResult
   unselectWord: (word: string) => void
@@ -49,6 +52,8 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [incorrectGuesses, setIncorrectGuesses] = useState(0)
+  const [isSelectionSubmitted, setIsSelectionSubmitted] = useState(false)
+  const [oneAwayGuessLog, setOneAwayGuessLog] = useState<string[][]>([])
   const [pastGuesses, setPastGuesses] = useState<Set<string>>(new Set())
   const [hintsUsed, setHintsUsed] = useState(0)
   const [revealedHints, setRevealedHints] = useState<Record<string, string>>({})
@@ -61,25 +66,44 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
     [categories, revealedHints, solvedCategories],
   )
 
+  const oneAwayGuesses = useMemo(
+    () => oneAwayGuessLog.filter((guess) => guess.every((word) => words.includes(word))),
+    [oneAwayGuessLog, words],
+  )
+
   const selectWord = useCallback(
     (word: string) => {
       if (selectedWords.length < 4 && !selectedWords.includes(word)) {
         setSelectedWords((prev) => [...prev, word])
+        setIsSelectionSubmitted(false)
       }
     },
     [selectedWords],
   )
 
-  const unselectWord = useCallback((word: string) => {
-    setSelectedWords((prev) => prev.filter((w) => w !== word))
+  const selectWords = useCallback((guess: string[]) => {
+    setSelectedWords(guess.slice(0, 4))
+    setIsSelectionSubmitted(false)
   }, [])
+
+  const unselectWord = useCallback(
+    (word: string) => {
+      if (!selectedWords.includes(word)) return
+      setSelectedWords((prev) => prev.filter((w) => w !== word))
+      setIsSelectionSubmitted(false)
+    },
+    [selectedWords],
+  )
 
   const clearSelectedWords = useCallback(() => {
     setSelectedWords([])
+    setIsSelectionSubmitted(false)
   }, [])
 
   const submitWords = useCallback((): SubmitResult => {
     if (selectedWords.length !== 4) return 'wrong'
+
+    setIsSelectionSubmitted(true)
 
     const key = dedupeKey(selectedWords)
     if (pastGuesses.has(key)) return 'duplicate'
@@ -93,6 +117,7 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
       setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words.toSorted() }])
       setWords((prev) => prev.filter((w) => !category.words.includes(w)))
       setSelectedWords([])
+      setIsSelectionSubmitted(false)
       setRevealedHints((prev) => {
         const { [categoryName]: _, ...rest } = prev
         return rest
@@ -106,6 +131,9 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
 
       setPastGuesses((prev) => new Set([...prev, key]))
       setIncorrectGuesses((prev) => prev + 1)
+      if (isOneAway) {
+        setOneAwayGuessLog((prev) => [...prev, selectedWords.toSorted()])
+      }
       return isOneAway ? 'one-away' : 'wrong'
     }
   }, [categories, pastGuesses, selectedWords])
@@ -137,6 +165,7 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
 
     setRevealedHints({})
     setSelectedWords([])
+    setIsSelectionSubmitted(false)
     setSolvedCategories((prev) => [...prev, ...newSolved])
     setWords([])
   }, [categories, solvedCategories])
@@ -148,6 +177,8 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
     setCategories({})
     setHintsUsed(0)
     setIncorrectGuesses(0)
+    setIsSelectionSubmitted(false)
+    setOneAwayGuessLog([])
     setPastGuesses(new Set())
     setRevealedHints({})
     setSelectedWords([])
@@ -172,7 +203,7 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
         setIsLoading(false)
       } catch (error: unknown) {
         console.error('fetchConnectionsGame', { error })
-        setErrorMessage('Failed to load game. Please refresh the page to try again.')
+        setErrorMessage("We couldn't load this puzzle. Refresh the page to try again.")
         setIsLoading(false)
       }
     }
@@ -192,10 +223,13 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
     isHintAvailable,
     isLoading,
     isRevealSolutionAvailable: solvedCategories.length < 4,
+    isSelectionSubmitted,
+    oneAwayGuesses,
     pastGuesses,
     revealSolution,
     selectedWords,
     selectWord,
+    selectWords,
     solvedCategories,
     submitWords,
     unselectWord,

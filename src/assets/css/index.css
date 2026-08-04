@@ -40,3 +40,13 @@ body {
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-shake {
+    animation: none;
+  }
+}

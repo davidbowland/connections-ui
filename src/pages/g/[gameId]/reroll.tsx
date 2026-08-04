@@ -34,7 +34,7 @@ const RerollPage = (): React.ReactNode => {
       setFeedback(message)
     } catch (error: unknown) {
       setIsError(true)
-      setFeedback(error instanceof Error ? error.message : 'An unexpected error occurred')
+      setFeedback(error instanceof Error ? error.message : 'Something went wrong. Try again.')
     } finally {
       setIsLoading(false)
     }
@@ -53,22 +53,29 @@ const RerollPage = (): React.ReactNode => {
             <h1 className="mb-1 text-2xl font-light uppercase tracking-[0.2em] text-black/88 dark:text-white/88">
               Reroll Game
             </h1>
-            <p className="mb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-black/22 dark:text-white/22">
+            <p className="mb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-black/60 dark:text-white/55">
               {gameId}
             </p>
 
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              <input
-                aria-label="Password"
-                autoComplete="off"
-                className="w-full rounded-xl border border-black/8 bg-black/[0.03] px-4 py-3 text-black/80 outline-none placeholder:text-black/20 focus:border-violet-400/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80 dark:placeholder:text-white/20"
-                disabled={isLoading}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-                type="password"
-                value={password}
-              />
+              <div className="flex flex-col gap-2">
+                <label
+                  className="text-[10px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55"
+                  htmlFor="reroll-password"
+                >
+                  Password
+                </label>
+                <input
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-black/8 bg-black/[0.03] px-4 py-3 text-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80"
+                  disabled={isLoading}
+                  id="reroll-password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  type="password"
+                  value={password}
+                />
+              </div>
               <button
                 className="w-full rounded-full bg-black/88 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-opacity disabled:opacity-40 dark:bg-white/95 dark:text-[#060608]"
                 disabled={isLoading || !password}

@@ -30,7 +30,6 @@ export interface CategoryObject {
 
 export interface GameColor {
   background: string
-  text: string
 }
 
 export interface CategoryColors {

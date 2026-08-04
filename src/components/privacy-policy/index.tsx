@@ -76,7 +76,7 @@ const PrivacyPolicy = (): React.ReactNode => (
     </Section>
 
     <hr className="border-black/8 dark:border-white/8" />
-    <p className="pt-8 text-[13px] text-black/40 dark:text-white/40">Effective August 1, 2026</p>
+    <p className="pt-8 text-[13px] text-black/60 dark:text-white/55">Effective August 1, 2026</p>
   </div>
 )
 

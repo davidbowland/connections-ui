@@ -29,10 +29,10 @@ export const rerollGame = async (gameId: string, password: string): Promise<stri
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status
-      if (status === 403) throw new Error('Forbidden: wrong password')
-      if (status === 400) throw new Error(error.response?.data?.error ?? 'Bad request')
-      if (status === 500) throw new Error(error.response?.data?.message ?? 'Internal server error')
+      if (status === 403) throw new Error('Wrong password.')
+      if (status === 400) throw new Error(error.response?.data?.error ?? 'Something about that request was invalid.')
+      if (status === 500) throw new Error(error.response?.data?.message ?? 'Something broke on our end.')
     }
-    throw new Error('An unexpected error occurred')
+    throw new Error('Something went wrong. Try again.')
   }
 }

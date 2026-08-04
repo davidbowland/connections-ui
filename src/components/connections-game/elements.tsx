@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import React from 'react'
 
 import { BrandMark } from '@components/brand-mark'
+import { solvedCardInk } from '@config/contrast'
 import { GameColor } from '@types'
 
 const ease = [0.32, 0.72, 0, 1] as const
@@ -27,15 +28,15 @@ export const GameTitle = (): React.ReactNode => (
 
 export const GameSubtitle = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mb-4 flex justify-center">
-    <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/35 dark:bg-white/[0.06] dark:text-white/30">
+    <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/60 dark:bg-white/[0.06] dark:text-white/55">
       {children}
     </span>
   </div>
 )
 
 export const GameInstructions = (): React.ReactNode => (
-  <p className="mb-8 text-center text-[11px] tracking-wide text-black/35 dark:text-white/30">
-    Group four words that share something in common
+  <p className="mb-8 text-center text-[11px] tracking-wide text-black/60 dark:text-white/55">
+    Find four groups of four words that belong together.
   </p>
 )
 
@@ -59,24 +60,29 @@ export const SolvedCategoryCard = ({
   color: GameColor
   description: string
   words: string[]
-}): React.ReactNode => (
-  <div
-    className="mb-2 rounded-xl p-[2px]"
-    style={{ backgroundColor: `rgba(${rgb(color.background)},var(--card-bg-outer-a))` }}
-  >
+}): React.ReactNode => {
+  const ink = solvedCardInk(color.background)
+  return (
     <div
-      className="rounded-[10px] px-5 py-3 text-center"
-      style={{ backgroundColor: `rgba(${rgb(color.background)},var(--card-bg-inner-a))` }}
+      className="mb-2 rounded-xl p-[2px]"
+      style={{ backgroundColor: `rgba(${rgb(color.background)},var(--card-bg-outer-a))` }}
     >
-      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: color.text }}>
-        {description}
-      </p>
-      <p className="mt-1 text-xs font-light tracking-wide opacity-75" style={{ color: color.text }}>
-        {words.join(' · ')}
-      </p>
+      <div
+        className="rounded-[10px] px-5 py-3 text-center text-[var(--card-ink-light)] dark:text-[var(--card-ink-dark)]"
+        style={
+          {
+            '--card-ink-dark': ink.dark,
+            '--card-ink-light': ink.light,
+            backgroundColor: `rgba(${rgb(color.background)},var(--card-bg-inner-a))`,
+          } as React.CSSProperties
+        }
+      >
+        <p className="text-xs font-bold uppercase tracking-widest">{description}</p>
+        <p className="mt-1 text-xs font-light tracking-wide">{words.join(' · ')}</p>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 export const HintsContainer = ({
   children,
@@ -92,7 +98,10 @@ export const HintsContainer = ({
 
 export const HintCard = ({ hint }: { hint: string }): React.ReactNode => (
   <div className="mb-3 flex items-start gap-3 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] px-4 py-3">
-    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-violet-400/35 text-[10px] text-violet-600 dark:text-purple-200/70">
+    <span
+      aria-hidden="true"
+      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-violet-400/35 text-[10px] text-violet-600 dark:text-purple-200/70"
+    >
       ?
     </span>
     <p className="text-sm leading-relaxed text-violet-800 dark:text-purple-200/85">{hint}</p>
@@ -124,6 +133,7 @@ export const WordTile = ({
     transition={{ layout: { type: 'spring', stiffness: 280, damping: 28 } }}
   >
     <Button
+      aria-pressed={isSelected}
       className={`h-[68px] w-full rounded-xl border-black/8 bg-black/[0.03] text-[11px] font-semibold uppercase tracking-[0.06em] text-black/70 hover:border-black/18 hover:bg-black/[0.06] dark:border-white/8 dark:bg-white/[0.04] dark:text-white/65 dark:hover:border-white/18 dark:hover:bg-white/[0.07] md:h-[80px]${isShaking ? ' animate-shake' : ''}`}
       onPress={onPress}
       style={
@@ -144,10 +154,70 @@ export const WordTile = ({
 export const Toast = ({ message }: { message: string }): React.ReactNode => (
   <span
     className="inline-block rounded-full bg-neutral-800 px-5 py-2 text-[11px] uppercase tracking-[0.18em] text-white shadow-lg dark:bg-neutral-100 dark:text-neutral-900"
+    data-testid="toast"
     role="status"
   >
     {message}
   </span>
+)
+
+export const OneAwayRow = ({
+  onSelect,
+  words,
+}: {
+  onSelect: (guess: string[]) => void
+  words: string[]
+}): React.ReactNode => (
+  <li>
+    <Button
+      className="flex h-auto min-h-11 w-full flex-wrap items-center justify-start gap-1.5 whitespace-normal rounded-xl border border-black/20 bg-transparent px-2.5 py-2 hover:border-black/35 hover:bg-black/[0.03] dark:border-white/20 dark:hover:border-white/35 dark:hover:bg-white/[0.04]"
+      onPress={() => onSelect(words)}
+      variant="outline"
+    >
+      <span className="sr-only">Select</span>
+      {words.map((word) => (
+        <span
+          className="rounded-md bg-black/[0.04] px-2 py-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-black/70 dark:bg-white/[0.05] dark:text-white/70"
+          key={word}
+        >
+          {word}
+        </span>
+      ))}
+      <span className="sr-only">again</span>
+    </Button>
+  </li>
+)
+
+export const OneAwayList = ({
+  guesses,
+  onSelect,
+}: {
+  guesses: string[][]
+  onSelect: (guess: string[]) => void
+}): React.ReactNode => (
+  <section aria-label="Guesses that were one away" className="mt-6 flex flex-col gap-2">
+    <div>
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60 dark:text-white/55">
+        One away
+      </h2>
+      <p className="mt-0.5 text-[11.5px] text-black/60 dark:text-white/55">Tap a row to select those words again.</p>
+    </div>
+    <ul className="flex list-none flex-col gap-1.5 p-0">
+      {guesses.map((guess) => (
+        <OneAwayRow key={guess.join('\u0000')} onSelect={onSelect} words={guess} />
+      ))}
+    </ul>
+  </section>
+)
+
+export const GuardLine = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <p
+    className="min-h-5 text-center text-[12.5px] leading-5 text-black/60 dark:text-white/55"
+    data-testid="guard-line"
+    role="status"
+  >
+    {children}
+  </p>
 )
 
 export const ActionsContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
@@ -163,7 +233,7 @@ export const ActionButton = (props: React.ComponentProps<typeof Button>): React.
 )
 
 export const StatLine = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <p className="mt-8 text-center text-[11px] uppercase tracking-[0.15em] text-black/30 dark:text-white/28">
+  <p className="mt-8 text-center text-[11px] uppercase tracking-[0.15em] text-black/60 dark:text-white/55">
     {children}
   </p>
 )
@@ -176,7 +246,7 @@ export const LoadingState = ({ displayGameId }: { displayGameId: string }): Reac
   <div className="px-4 pb-16 pt-8 md:pb-20 md:pt-14" data-testid="loading-skeleton">
     <GameTitle />
     <div className="mb-10 flex justify-center">
-      <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/35 dark:bg-white/[0.06] dark:text-white/30">
+      <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/60 dark:bg-white/[0.06] dark:text-white/55">
         {displayGameId}
       </span>
     </div>

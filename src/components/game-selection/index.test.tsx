@@ -30,7 +30,7 @@ describe('GameSelection', () => {
   it('displays select with game options when not loading', () => {
     render(<GameSelection gameId="2025-01-02" />)
 
-    expect(screen.getByLabelText('Select game')).toBeInTheDocument()
+    expect(screen.getByLabelText('Pick another day')).toBeInTheDocument()
   })
 
   it('does not display select when loading', () => {
@@ -41,7 +41,7 @@ describe('GameSelection', () => {
 
     render(<GameSelection gameId="2025-01-02" />)
 
-    expect(screen.queryByLabelText('Select game')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Pick another day')).not.toBeInTheDocument()
   })
 
   it('displays error message when present', () => {
@@ -60,7 +60,7 @@ describe('GameSelection', () => {
     const user = userEvent.setup()
     render(<GameSelection gameId="2025-01-02" />)
 
-    const select = screen.getByLabelText('Select game')
+    const select = screen.getByLabelText('Pick another day')
     await user.selectOptions(select, '2025-01-03')
 
     expect(mockPush).toHaveBeenCalledWith('/g/2025-01-03')
@@ -87,7 +87,7 @@ describe('GameSelection', () => {
 
     render(<GameSelection gameId="2025-01-02" />)
 
-    expect(screen.getByLabelText('Select game')).toBeInTheDocument()
+    expect(screen.getByLabelText('Pick another day')).toBeInTheDocument()
     expect(screen.getByText(errorMessage)).toBeInTheDocument()
   })
 
@@ -97,7 +97,7 @@ describe('GameSelection', () => {
 
     render(<GameSelection gameId="2025-01-02" />)
 
-    expect(screen.getByLabelText('Select game')).toBeInTheDocument()
+    expect(screen.getByLabelText('Pick another day')).toBeInTheDocument()
     Object.defineProperty(global, 'navigator', { value: originalNavigator, writable: true })
   })
 

@@ -61,7 +61,7 @@ describe('connections', () => {
         response: { status: 403 },
       })
 
-      await expect(rerollGame(gameId, 'wrong')).rejects.toThrow('Forbidden: wrong password')
+      await expect(rerollGame(gameId, 'wrong')).rejects.toThrow('Wrong password.')
     })
 
     it('throws on 400 with error message', async () => {
@@ -79,7 +79,7 @@ describe('connections', () => {
         response: { status: 400, data: {} },
       })
 
-      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Bad request')
+      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Something about that request was invalid.')
     })
 
     it('throws on 500 with message', async () => {
@@ -97,13 +97,13 @@ describe('connections', () => {
         response: { status: 500, data: {} },
       })
 
-      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Internal server error')
+      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Something broke on our end.')
     })
 
     it('throws generic error for non-axios errors', async () => {
       mockPost.mockRejectedValueOnce(new Error('network down'))
 
-      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('An unexpected error occurred')
+      await expect(rerollGame(gameId, 'pw')).rejects.toThrow('Something went wrong. Try again.')
     })
   })
 })

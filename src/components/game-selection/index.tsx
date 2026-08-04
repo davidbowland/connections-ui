@@ -30,12 +30,15 @@ export const GameSelection = ({ gameId }: GameSelectionProps): React.ReactNode =
     <>
       {!isLoading && (
         <div>
-          <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-black/22 dark:text-white/22">
-            Play another date
-          </p>
+          <label
+            className="mb-2 block text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55"
+            htmlFor="game-date"
+          >
+            Pick another day
+          </label>
           <select
-            aria-label="Select game"
             className="w-full appearance-none rounded-xl border border-black/8 bg-black/[0.03] px-4 py-3 text-sm text-black/55 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55"
+            id="game-date"
             onChange={(e) => router.push(`/g/${e.target.value}`)}
             value={gameId}
           >
