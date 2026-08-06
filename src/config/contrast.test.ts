@@ -56,7 +56,7 @@ describe('contrast', () => {
       expect(contrastRatio(BLACK, WHITE)).toBeCloseTo(21, 5)
     })
 
-    it('is 1 for a colour against itself', () => {
+    it('is 1 for a color against itself', () => {
       expect(contrastRatio(BLACK, BLACK)).toBeCloseTo(1, 5)
     })
 
@@ -85,7 +85,7 @@ describe('contrast', () => {
     })
   })
 
-  describe('every game colour', () => {
+  describe('every game color', () => {
     const themes: Theme[] = ['dark', 'light']
     const cases = GAME_COLORS.flatMap((color) => themes.map((theme): [string, Theme] => [color.background, theme]))
 

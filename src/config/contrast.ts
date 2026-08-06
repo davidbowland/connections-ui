@@ -2,10 +2,10 @@ export type Rgb = [number, number, number]
 
 export type Theme = 'dark' | 'light'
 
-// These must stay in step with src/assets/css/index.css: the page colour set on
+// These must stay in step with src/assets/css/index.css: the page color set on
 // html, and --card-bg-outer-a / --card-bg-inner-a. A solved category card paints
-// its colour twice at partial alpha, so the ink that reads against it depends on
-// what those layers composite to, not on the colour at full strength.
+// its color twice at partial alpha, so the ink that reads against it depends on
+// what those layers composite to, not on the color at full strength.
 const SOLVED_CARD_LAYERS: Record<Theme, { ground: string; inner: number; outer: number }> = {
   dark: { ground: '#060608', inner: 0.44, outer: 0.62 },
   light: { ground: '#f4f4f6', inner: 0.24, outer: 0.38 },
@@ -37,8 +37,8 @@ export const readableInk = (background: Rgb): string =>
 
 export const solvedCardBackground = (background: string, theme: Theme): Rgb => {
   const { ground, inner, outer } = SOLVED_CARD_LAYERS[theme]
-  const colour = hexToRgb(background)
-  return compositeOver(colour, inner, compositeOver(colour, outer, hexToRgb(ground)))
+  const color = hexToRgb(background)
+  return compositeOver(color, inner, compositeOver(color, outer, hexToRgb(ground)))
 }
 
 export const solvedCardInk = (background: string): Record<Theme, string> => ({
