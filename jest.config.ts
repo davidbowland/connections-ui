@@ -29,6 +29,7 @@ const config: Config = {
     '^@services/(.*)$': '<rootDir>/src/services/$1',
     '^@test/(.*)$': '<rootDir>/test/$1',
     '^@types$': '<rootDir>/src/types',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '@fontsource/(.*)$': '<rootDir>/__mocks__/file-mock.js',
     '^framer-motion$': '<rootDir>/__mocks__/framer-motion.js',
   },
