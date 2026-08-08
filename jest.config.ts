@@ -33,6 +33,9 @@ const config: Config = {
     '@fontsource/(.*)$': '<rootDir>/__mocks__/file-mock.js',
     '^framer-motion$': '<rootDir>/__mocks__/framer-motion.js',
   },
+  // clearMocks alone leaves jest.spyOn installed on the prototype for the rest of
+  // the file. restoreMocks puts the original back after every test.
+  restoreMocks: true,
   setupFiles: ['<rootDir>/jest.setup-test-env.js'],
   testEnvironment: 'jsdom',
   testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out/'],

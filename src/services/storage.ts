@@ -1,6 +1,7 @@
 import { ConnectionsGame, GameId } from '@types'
 
 const GAME_PREFIX = 'ct:game:'
+const GAME_ID_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const META_KEY = 'ct:meta'
 const VERSION = 1
 
@@ -10,7 +11,9 @@ export interface Meta {
   v: number
 }
 
-const EMPTY_META: Meta = { installDismissed: false, solved: [], v: VERSION }
+// A factory, not a constant. Handing out one shared object means the first caller
+// to push onto meta.solved corrupts every later read for the life of the page.
+const emptyMeta = (): Meta => ({ installDismissed: false, solved: [], v: VERSION })
 
 // Every write is best-effort. Storage can be full, disabled, or partitioned, and
 // none of those are worth showing the player an error over -- the app still works,
@@ -57,27 +60,39 @@ export const removeGame = (gameId: GameId): void => {
 // Derived, never stored. A stored index drifts: iOS evicts localStorage wholesale
 // after seven idle days, and a write that fails under quota pressure would leave
 // the index claiming a puzzle that is gone. The keys cannot lie.
-export const cachedGameIds = (): GameId[] =>
-  Object.keys(window.localStorage)
-    .filter((key) => key.startsWith(GAME_PREFIX))
-    .map((key) => key.slice(GAME_PREFIX.length))
-    .toSorted()
-    .toReversed()
+export const cachedGameIds = (): GameId[] => {
+  // The window.localStorage getter itself throws SecurityError when cookies are
+  // blocked, so the property access has to sit inside the try. This runs during
+  // render with no error boundary above it -- an escaping throw white-screens the app.
+  try {
+    return Object.keys(window.localStorage)
+      .filter((key) => key.startsWith(GAME_PREFIX))
+      .map((key) => key.slice(GAME_PREFIX.length))
+      .filter((id) => GAME_ID_PATTERN.test(id))
+      .toSorted()
+      .toReversed()
+  } catch (error: unknown) {
+    console.error('storage list failed', { error })
+    return []
+  }
+}
 
 export const readMeta = (): Meta => {
   const raw = safeRead(META_KEY)
-  if (raw === null) return EMPTY_META
+  if (raw === null) return emptyMeta()
   try {
     const parsed = JSON.parse(raw) as Partial<Meta>
-    if (parsed.v !== VERSION) return EMPTY_META
+    if (parsed.v !== VERSION) return emptyMeta()
     return {
       installDismissed: parsed.installDismissed === true,
-      solved: parsed.solved ?? [],
+      // Anything JSON can hold reaches this. A bare string would satisfy both
+      // includes() and the spread in markSolved, silently and wrongly.
+      solved: Array.isArray(parsed.solved) ? parsed.solved : [],
       v: VERSION,
     }
   } catch (error: unknown) {
     console.error('storage parse failed', { error, key: META_KEY })
-    return EMPTY_META
+    return emptyMeta()
   }
 }
 

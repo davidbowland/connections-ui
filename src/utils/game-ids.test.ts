@@ -85,5 +85,42 @@ describe('game-ids', () => {
         replay: true,
       })
     })
+
+    it('returns nothing when there are no puzzles at all', () => {
+      expect(nextUnplayed({ ids: [], solved: [] })).toBeUndefined()
+    })
+
+    it('returns nothing when the device holds no puzzles', () => {
+      expect(nextUnplayed({ available: [], ids, solved: [] })).toBeUndefined()
+    })
+
+    it('returns nothing when nothing on the device is playable today', () => {
+      expect(nextUnplayed({ available: ['2026-08-09', '2025-12-31'], ids, solved: [] })).toBeUndefined()
+    })
+
+    it('never names a puzzle the device does not hold', () => {
+      expect(nextUnplayed({ available: ['2026-08-07', '2026-08-05'], ids, solved: ['2026-08-07'] })).toEqual({
+        id: '2026-08-05',
+        replay: false,
+      })
+    })
+  })
+
+  describe('clock defaults', () => {
+    beforeAll(() => {
+      jest.useFakeTimers().setSystemTime(now())
+    })
+
+    afterAll(() => {
+      jest.useRealTimers()
+    })
+
+    it('allGameIds reads the system clock when given no source', () => {
+      expect(allGameIds()[0]).toBe('2026-08-08')
+    })
+
+    it('utcGameId reads the system clock when given no source', () => {
+      expect(utcGameId()).toBe('2026-08-08')
+    })
   })
 })

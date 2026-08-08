@@ -66,6 +66,15 @@ describe('storage', () => {
       expect(cachedGameIds()).toEqual([gameId])
     })
 
+    it('ignores keys that carry a suffix after the game id', () => {
+      setup()
+      writeGame(gameId, connectionsGame)
+      window.localStorage.setItem(`ct:game:${gameId}:progress`, 'x')
+      window.localStorage.setItem('ct:game:not-a-date', 'x')
+
+      expect(cachedGameIds()).toEqual([gameId])
+    })
+
     it('does not throw when the quota is exhausted', () => {
       setup()
       jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
@@ -73,6 +82,34 @@ describe('storage', () => {
       })
 
       expect(() => writeGame(gameId, connectionsGame)).not.toThrow()
+    })
+
+    it('returns null when reading throws', () => {
+      setup()
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+        throw new DOMException('denied', 'SecurityError')
+      })
+
+      expect(readGame(gameId)).toBeNull()
+    })
+
+    it('does not throw when removing throws', () => {
+      setup()
+      jest.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+        throw new DOMException('denied', 'SecurityError')
+      })
+
+      expect(() => removeGame(gameId)).not.toThrow()
+    })
+
+    it('returns an empty list when storage itself is unreachable', () => {
+      setup()
+      writeGame(gameId, connectionsGame)
+      jest.spyOn(window, 'localStorage', 'get').mockImplementationOnce(() => {
+        throw new DOMException('denied', 'SecurityError')
+      })
+
+      expect(cachedGameIds()).toEqual([])
     })
   })
 
@@ -112,6 +149,30 @@ describe('storage', () => {
       window.localStorage.setItem('ct:meta', JSON.stringify({ solved: ['2025-01-01'], v: 0 }))
 
       expect(readMeta()).toEqual({ installDismissed: false, solved: [], v: 1 })
+    })
+
+    it('discards corrupt metadata', () => {
+      setup()
+      window.localStorage.setItem('ct:meta', 'not json')
+
+      expect(readMeta()).toEqual({ installDismissed: false, solved: [], v: 1 })
+    })
+
+    it('discards a solved list that is not a list', () => {
+      setup()
+      window.localStorage.setItem('ct:meta', JSON.stringify({ solved: gameId, v: 1 }))
+
+      expect(readMeta().solved).toEqual([])
+      expect(isSolved(gameId)).toBe(false)
+      expect(isSolved('01-15')).toBe(false)
+    })
+
+    it('hands every caller its own copy', () => {
+      setup()
+      const first = readMeta()
+      first.solved.push(gameId)
+
+      expect(readMeta().solved).toEqual([])
     })
   })
 })

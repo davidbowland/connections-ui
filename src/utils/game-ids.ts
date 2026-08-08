@@ -30,14 +30,21 @@ export const nextUnplayed = ({
   current,
   ids,
   solved,
-}: NextUnplayedOptions): { id: GameId; replay: boolean } => {
-  const solvedSet = new Set(solved)
-  const pool = available === undefined ? ids : ids.filter((id) => available.includes(id))
+}: NextUnplayedOptions): { id: GameId; replay: boolean } | undefined => {
+  // A Set, not available.includes: the filter is O(n*m) otherwise, and both lists
+  // grow by one a day forever.
+  const availableSet = available === undefined ? undefined : new Set(available)
+  const pool = availableSet === undefined ? ids : ids.filter((id) => availableSet.has(id))
 
+  // Nothing playable. Say so, rather than naming a puzzle the device cannot open --
+  // an empty cache offline used to come back as "replay today", which was false twice.
+  if (pool.length === 0) return undefined
+
+  const solvedSet = new Set(solved)
   const unsolved = pool.find((id) => id !== current && !solvedSet.has(id))
   if (unsolved !== undefined) return { id: unsolved, replay: false }
 
   // Nothing left to hand over. Offer a replay instead of refusing -- the board
   // reshuffles on load, so "same words, new order" is literally true.
-  return { id: pool.find((id) => id !== current) ?? pool[0] ?? current ?? ids[0], replay: true }
+  return { id: pool.find((id) => id !== current) ?? pool[0], replay: true }
 }
