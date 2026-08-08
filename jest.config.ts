@@ -38,7 +38,10 @@ const config: Config = {
   restoreMocks: true,
   setupFiles: ['<rootDir>/jest.setup-test-env.js'],
   testEnvironment: 'jsdom',
-  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out/'],
+  // <rootDir>/.claude/ holds agent worktrees — full checkouts of this repo. Without
+  // this the suite discovers every worktree's copy of every test and reports failures
+  // from whatever commit that worktree happens to sit on.
+  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out/', '<rootDir>/\\.claude/'],
 }
 
 export default createJestConfig(config)
