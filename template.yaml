@@ -134,6 +134,14 @@ Resources:
           var request = event.request;
           var uri = request.uri;
 
+          // Client-side route data for the dynamic game routes, e.g.
+          // /_next/data/<buildId>/g/2026-08-08.json -> the exported placeholder payload
+          var dataMatch = uri.match(/^(\/_next\/data\/[^\/]+)\/g\/[^\/]+(\/reroll)?\.json$/);
+          if (dataMatch) {
+            request.uri = dataMatch[1] + '/g/__placeholder__' + (dataMatch[2] || '') + '.json';
+            return request;
+          }
+
           if (/^\/g\/[^\/]+\/reroll(\/)?$/.test(uri)) {
             request.uri = '/g/[gameId]/reroll/index.html';
             return request;

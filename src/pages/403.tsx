@@ -10,14 +10,17 @@ const Forbidden = (): React.ReactNode => {
     setDisplay403(window.location.pathname.match(/^\/c\/[^/]+$/) === null)
   }, [])
 
-  if (!display403) return <></>
-
   return (
     <>
       <Head>
         <title>Common Threads | 403: Forbidden</title>
+        <meta content="You don't have permission to view that page." name="description" />
       </Head>
-      <ServerErrorMessage title="403: Forbidden">You don&apos;t have permission to view that page.</ServerErrorMessage>
+      {display403 && (
+        <ServerErrorMessage title="403: Forbidden">
+          You don&apos;t have permission to view that page.
+        </ServerErrorMessage>
+      )}
     </>
   )
 }

@@ -26,10 +26,10 @@ export const GameTitle = (): React.ReactNode => (
   </h1>
 )
 
-export const GameSubtitle = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+export const GameSubtitle = ({ children }: { children?: React.ReactNode }): React.ReactNode => (
   <div className="mb-4 flex justify-center">
-    <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/60 dark:bg-white/[0.06] dark:text-white/55">
-      {children}
+    <span className="inline-block min-w-[200px] rounded-full bg-black/5 px-3 py-1 text-center text-[10px] uppercase tracking-[0.22em] text-black/60 dark:bg-white/[0.06] dark:text-white/55">
+      {children ?? '\u00a0'}
     </span>
   </div>
 )
@@ -128,6 +128,8 @@ export const WordTile = ({
   word: string
 }): React.ReactNode => (
   <motion.div
+    // flex, not block: the button is inline-flex, and a line box would add baseline slack per row
+    className="flex"
     exit={{ opacity: 0, scale: 0.9, y: -12, transition: { duration: 0.32, ease } }}
     layout
     transition={{ layout: { type: 'spring', stiffness: 280, damping: 28 } }}
@@ -242,24 +244,26 @@ export const GameSelectionWrapper = ({ children }: { children: React.ReactNode }
   <div className="mx-auto mb-16 max-w-[300px] md:mb-20">{children}</div>
 )
 
-export const LoadingState = ({ displayGameId }: { displayGameId: string }): React.ReactNode => (
-  <div className="px-4 pb-16 pt-8 md:pb-20 md:pt-14" data-testid="loading-skeleton">
-    <GameTitle />
-    <div className="mb-10 flex justify-center">
-      <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-black/60 dark:bg-white/[0.06] dark:text-white/55">
-        {displayGameId}
-      </span>
-    </div>
-    <div className="mx-auto mt-4 max-w-[560px] md:mt-6">
-      <div className="grid grid-cols-2 gap-1.5 md:grid-cols-4">
-        {Array.from({ length: 16 }).map((_, index) => (
-          <Skeleton className="h-[68px] rounded-xl md:h-[80px]" key={index} />
-        ))}
-      </div>
-      <div className="mt-5 flex flex-col items-center gap-3">
-        <Skeleton className="h-10 w-[140px] rounded-full" />
-      </div>
-      <Skeleton className="mx-auto mt-8 h-4 w-[240px] rounded-full" />
-    </div>
+// Mirrors the loaded board element for element so nothing moves when the puzzle arrives
+export const LoadingState = ({ displayGameId }: { displayGameId?: string }): React.ReactNode => (
+  <div data-testid="loading-skeleton">
+    <GameWrapper>
+      <GameTitle />
+      <GameSubtitle>{displayGameId}</GameSubtitle>
+      <GameInstructions />
+
+      <BoardContainer>
+        <WordGrid>
+          {Array.from({ length: 16 }).map((_, index) => (
+            <Skeleton className="h-[68px] rounded-xl md:h-[80px]" key={index} />
+          ))}
+        </WordGrid>
+
+        <HintsContainer>{null}</HintsContainer>
+        <ActionsContainer>{null}</ActionsContainer>
+
+        <StatLine>0 wrong · 0:00</StatLine>
+      </BoardContainer>
+    </GameWrapper>
   </div>
 )

@@ -8,6 +8,7 @@ const BadRequest = (): React.ReactNode => {
     <>
       <Head>
         <title>Common Threads | 400: Bad Request</title>
+        <meta content="Something went wrong with that link. Head back to today's puzzle." name="description" />
       </Head>
       <ServerErrorMessage title="400: Bad Request">
         Something went wrong with that link. Try going home and starting fresh.

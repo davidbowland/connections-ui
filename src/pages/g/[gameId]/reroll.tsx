@@ -44,6 +44,8 @@ const RerollPage = (): React.ReactNode => {
     <>
       <Head>
         <title>Reroll Game</title>
+        <meta content="Generate a replacement puzzle for a given day." name="description" />
+        <meta content="noindex" name="robots" />
       </Head>
       <main className="flex min-h-[100dvh] items-center justify-center px-4 py-10">
         {/* outer shell */}

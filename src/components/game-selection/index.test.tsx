@@ -33,15 +33,31 @@ describe('GameSelection', () => {
     expect(screen.getByLabelText('Pick another day')).toBeInTheDocument()
   })
 
-  it('does not display select when loading', () => {
+  it('displays the current day alone while the list loads', () => {
     jest.mocked(useGameIds).mockReturnValueOnce({
       ...defaultMockResult,
+      gameIds: [],
       isLoading: true,
     })
 
     render(<GameSelection gameId="2025-01-02" />)
 
-    expect(screen.queryByLabelText('Pick another day')).not.toBeInTheDocument()
+    const select = screen.getByLabelText('Pick another day')
+    expect(select).toBeEnabled()
+    expect(screen.getAllByRole('option')).toHaveLength(1)
+    expect(screen.getByRole('option')).toHaveTextContent('1/2/2025')
+  })
+
+  it('disables the select when no gameId is known yet', () => {
+    jest.mocked(useGameIds).mockReturnValueOnce({
+      ...defaultMockResult,
+      gameIds: [],
+      isLoading: true,
+    })
+
+    render(<GameSelection />)
+
+    expect(screen.getByLabelText('Pick another day')).toBeDisabled()
   })
 
   it('displays error message when present', () => {

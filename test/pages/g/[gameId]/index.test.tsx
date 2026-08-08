@@ -58,7 +58,17 @@ describe('GamePage', () => {
     })
     render(<GamePage />)
     act(() => {})
-    expect(screen.getByTestId('page-loading-skeleton')).toBeInTheDocument()
+    expect(screen.getByTestId('loading-skeleton')).toBeInTheDocument()
+  })
+
+  it('renders GameSelection before the gameId is known so its space is reserved', () => {
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/' },
+      writable: true,
+    })
+    render(<GamePage />)
+    act(() => {})
+    expect(GameSelection).toHaveBeenCalledWith({ gameId: undefined }, undefined)
   })
 
   it('renders ConnectionsGame with gameId after mount', () => {

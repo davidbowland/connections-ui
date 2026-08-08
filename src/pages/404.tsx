@@ -10,14 +10,13 @@ const NotFound = (): React.ReactNode => {
     setDisplay404(window.location.pathname.match(/^\/c\/[^/]+$/) === null)
   }, [])
 
-  if (!display404) return <></>
-
   return (
     <>
       <Head>
         <title>Common Threads | 404: Not Found</title>
+        <meta content="That page doesn't exist. Head back to today's puzzle." name="description" />
       </Head>
-      <ServerErrorMessage title="404: Not Found">That page doesn&apos;t exist.</ServerErrorMessage>
+      {display404 && <ServerErrorMessage title="404: Not Found">That page doesn&apos;t exist.</ServerErrorMessage>}
     </>
   )
 }

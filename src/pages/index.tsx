@@ -15,6 +15,10 @@ const Index = (): React.ReactNode => {
     <>
       <Head>
         <title>Common Threads | dbowland.com</title>
+        <meta
+          content="Find the four groups of four words that belong together. A new Common Threads puzzle every day."
+          name="description"
+        />
         <meta content="Common Threads" property="og:title" />
         <meta content="Find the common thread. A new puzzle every day." property="og:description" />
         <meta content="https://connections.dbowland.com/og-image.png" property="og:image" />

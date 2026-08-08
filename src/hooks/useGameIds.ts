@@ -23,6 +23,7 @@ export const useGameIds = (): UseGameIdsResult => {
       .catch((error: unknown) => {
         console.error('fetchConnectionsGameIds', { error })
         setErrorMessage('Unable to load game IDs')
+        setIsLoading(false)
       })
   }, [])
 

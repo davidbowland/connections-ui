@@ -8,6 +8,10 @@ const PrivacyPage = (): React.ReactNode => {
     <>
       <Head>
         <title>Common Threads | Privacy Policy</title>
+        <meta
+          content="What Common Threads collects, why we collect it, and how to reach us about it."
+          name="description"
+        />
       </Head>
       <main>
         <div className="mx-auto max-w-[900px] shadow-md">
