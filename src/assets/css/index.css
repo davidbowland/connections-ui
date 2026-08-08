@@ -1,19 +1,25 @@
 @import '@heroui/styles';
 
-/* HeroUI ships --accent at oklch(62.04% .195 253.83) (#0485f7). White on it is
-   3.68:1, and the primary buttons render 14px/500 — normal text, so AA wants
-   4.5:1. 56.8% is the highest lightness that clears it, at 4.536:1.
-   Unlayered on purpose: HeroUI declares --accent inside @layer base, and
-   unlayered rules beat layered ones regardless of specificity. It declares the
-   token exactly once, with no dark-mode override, so this fixes both themes. */
-:root {
-  --accent: oklch(56.8% 0.195 253.83);
-}
+/* HeroUI ships --accent at oklch(62.04% .195 253.83) (#0485f7). .button--primary
+   paints --accent-foreground on it, and that resolves to --snow,
+   oklch(0.9911 0 0) = #fcfcfc — the app never paints pure white here. Those
+   buttons render 14px/500, so AA wants 4.5:1, and #fcfcfc on the stock accent
+   is only 3.589:1. 56.25% is the highest lightness that clears the floor, at
+   4.532:1, so it stays as close to the brand blue as AA permits.
 
-/* CLAUDE.md mandates 44x44 touch targets. HeroUI's base button is
-   calc(var(--spacing) * 10) = 40px, and .button--sm is 36px. */
-.button {
-  min-height: 44px;
+   HeroUI derives --accent-hover by mixing the near-white foreground into the
+   accent, which makes hover lighter than rest: 3.785:1, worse than rest, on a
+   sustained state that .button--primary also uses for pressed. Mixing toward
+   black instead keeps hover darker than rest — the usual convention for a
+   primary button — and reaches 5.700:1.
+
+   Unlayered on purpose: HeroUI declares both tokens inside @layer base, and
+   unlayered rules beat layered ones regardless of specificity. It declares
+   --accent exactly once with no dark-mode override, and --accent-hover with the
+   same formula in both themes, so one override fixes light and dark alike. */
+:root {
+  --accent: oklch(56.25% 0.195 253.83);
+  --accent-hover: color-mix(in oklab, var(--accent) 90%, black 10%);
 }
 
 html {

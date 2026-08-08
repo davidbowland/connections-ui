@@ -52,6 +52,11 @@ export const solvedCardInk = (background: string): Record<Theme, string> => ({
 const gammaEncode = (channel: number): number =>
   channel <= 0.0031308 ? 12.92 * channel : 1.055 * channel ** (1 / 2.4) - 0.055
 
+// Valid only for colors inside or very near the sRGB gamut. Out-of-gamut channels
+// are clipped independently, whereas CSS oklch() gamut-maps by reducing chroma
+// until the color fits within a deltaEOK just-noticeable difference. The two agree
+// on in-gamut colors and diverge sharply outside it: oklch(0.99 0.4 0) clips to
+// #ff0cf1, a vivid magenta, where a browser renders a near-white #fff4fb.
 export const oklchToRgb = (lightness: number, chroma: number, hueDegrees: number): Rgb => {
   const hue = (hueDegrees * Math.PI) / 180
   const a = chroma * Math.cos(hue)

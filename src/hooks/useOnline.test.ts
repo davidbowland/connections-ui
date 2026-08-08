@@ -17,6 +17,16 @@ describe('useOnline', () => {
     expect(result.current).toBe(true)
   })
 
+  it('reports false when the page loads while the navigator is already offline', () => {
+    setNavigatorOnLine(false)
+
+    const { result } = renderHook(() => useOnline())
+
+    expect(result.current).toBe(false)
+
+    setNavigatorOnLine(true)
+  })
+
   it('reports false once an offline event fires', () => {
     const { result } = renderHook(() => useOnline())
 
@@ -26,6 +36,8 @@ describe('useOnline', () => {
     })
 
     expect(result.current).toBe(false)
+
+    setNavigatorOnLine(true)
   })
 
   it('reports true again once an online event fires', () => {
@@ -43,12 +55,17 @@ describe('useOnline', () => {
     expect(result.current).toBe(true)
   })
 
-  it('removes its listeners on unmount', () => {
+  it('removes the exact listeners it added on unmount', () => {
+    const addEventListener = jest.spyOn(window, 'addEventListener')
     const removeEventListener = jest.spyOn(window, 'removeEventListener')
+    const connectivityCalls = (calls: unknown[][]): unknown[][] =>
+      calls.filter(([type]) => type === 'online' || type === 'offline')
 
     renderHook(() => useOnline()).unmount()
 
-    expect(removeEventListener).toHaveBeenCalledWith('online', expect.any(Function))
-    expect(removeEventListener).toHaveBeenCalledWith('offline', expect.any(Function))
+    // Compared by reference, so a cleanup that removes some other function —
+    // leaking every listener the hook added — fails here.
+    expect(connectivityCalls(addEventListener.mock.calls)).toHaveLength(2)
+    expect(connectivityCalls(removeEventListener.mock.calls)).toEqual(connectivityCalls(addEventListener.mock.calls))
   })
 })

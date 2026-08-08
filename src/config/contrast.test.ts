@@ -108,28 +108,73 @@ describe('oklchToRgb', () => {
   })
 
   it('converts the corrected accent to its sRGB hex', () => {
-    expect(oklchToRgb(0.568, 0.195, 253.83)).toEqual([0, 116, 229])
+    expect(oklchToRgb(0.5625, 0.195, 253.83)).toEqual([0, 114, 227])
   })
 
-  it('clamps channels that fall outside the sRGB gamut', () => {
+  it('clips channels that fall outside the sRGB gamut', () => {
     // Both directions: this magenta drives red above the gamut, this green drives
-    // red and blue below it.
+    // red and blue below it. Clipping is not what CSS does — it gamut-maps by
+    // reducing chroma — so these are the helper's own answers, not a browser's.
     expect(oklchToRgb(0.99, 0.4, 0)).toEqual([255, 12, 241])
     expect(oklchToRgb(0.7, 0.4, 145)).toEqual([0, 210, 0])
   })
 })
 
-describe('the --accent token', () => {
-  const readAccent = (): [number, number, number] => {
-    const css = readFileSync(join(__dirname, '..', 'assets', 'css', 'index.css'), 'utf8')
-    const match = css.match(/--accent:\s*oklch\(([\d.]+)%\s+([\d.]+)\s+([\d.]+)\)/)
-    return [Number(match![1]) / 100, Number(match![2]), Number(match![3])]
-  }
+describe('the accent tokens in index.css', () => {
+  // .button--primary paints --accent-foreground on --accent, and that resolves to
+  // --snow = oklch(0.9911 0 0) = #fcfcfc. Measuring against pure white would
+  // certify a color pair the app never renders.
+  const ACCENT_FOREGROUND = oklchToRgb(0.9911, 0, 0)
+  const AA_NORMAL_TEXT = 4.5
 
-  it('clears the WCAG AA 4.5:1 floor for white text', () => {
-    const [lightness, chroma, hue] = readAccent()
-    const ratio = contrastRatio([255, 255, 255], oklchToRgb(lightness, chroma, hue))
+  // Comments are stripped first. A comment that quotes the token the natural way
+  // — "--accent: oklch(...)" — would otherwise win the match and let someone
+  // lighten the real declaration while this file stays green.
+  const stylesheet = readFileSync(join(__dirname, '..', 'assets', 'css', 'index.css'), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g,
+    '',
+  )
 
-    expect(ratio).toBeGreaterThanOrEqual(4.5)
+  // matchAll, so a later theme override (html.dark { --accent: ... }) is checked
+  // too rather than silently skipped.
+  const accents = [...stylesheet.matchAll(/--accent:\s*oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*\)/g)].map(
+    ([, lightness, chroma, hue]) => ({ chroma: Number(chroma), hue: Number(hue), lightness: Number(lightness) / 100 }),
+  )
+  const hoverMixes = [
+    ...stylesheet.matchAll(/--accent-hover:\s*color-mix\(\s*in oklab,\s*var\(--accent\)\s+([\d.]+)%,\s*black\s/g),
+  ].map(([, share]) => Number(share) / 100)
+
+  it('declares --accent as an oklch triple', () => {
+    expect(accents).not.toHaveLength(0)
+  })
+
+  it('derives --accent-hover by mixing the accent toward black, so hover is darker than rest', () => {
+    expect(hoverMixes).not.toHaveLength(0)
+  })
+
+  it('clears the WCAG AA 4.5:1 floor at rest, for every accent declared', () => {
+    expect(accents).not.toHaveLength(0)
+
+    accents.forEach(({ chroma, hue, lightness }) => {
+      const rest = oklchToRgb(lightness, chroma, hue)
+
+      expect(contrastRatio(ACCENT_FOREGROUND, rest)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+    })
+  })
+
+  it('clears the WCAG AA 4.5:1 floor on hover and pressed, for every accent declared', () => {
+    expect(accents).not.toHaveLength(0)
+    expect(hoverMixes).not.toHaveLength(0)
+
+    // Black is the origin in oklab, so mixing the accent at share% with black
+    // scales lightness and chroma by share and leaves the hue alone. Every mix is
+    // checked against every accent, since either could gain a theme override.
+    hoverMixes.forEach((share) =>
+      accents.forEach(({ chroma, hue, lightness }) => {
+        const hover = oklchToRgb(lightness * share, chroma * share, hue)
+
+        expect(contrastRatio(ACCENT_FOREGROUND, hover)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+      }),
+    )
   })
 })
