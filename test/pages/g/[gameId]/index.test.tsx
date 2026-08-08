@@ -118,6 +118,13 @@ describe('GamePage', () => {
     )
   })
 
+  it('marks dated puzzle pages noindex so crawlers index the root instead', () => {
+    setup()
+    render(<GamePage />)
+
+    expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow')
+  })
+
   describe('getStaticPaths', () => {
     const originalEnv = process.env.NODE_ENV
 

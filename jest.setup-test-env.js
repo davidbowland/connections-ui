@@ -1,3 +1,6 @@
+// Pin the timezone so local-date math is identical on every machine and in CI
+process.env.TZ = 'UTC'
+
 // Environment variables
 process.env.NEXT_PUBLIC_CONNECTIONS_API_BASE_URL = 'http://localhost'
 
