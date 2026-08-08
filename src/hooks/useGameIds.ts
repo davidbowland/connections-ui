@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
-import { fetchConnectionsGameIds } from '@services/connections'
 import { GameId } from '@types'
+import { allGameIds } from '@utils/game-ids'
 
 export interface UseGameIdsResult {
   errorMessage: string | null
@@ -9,23 +9,12 @@ export interface UseGameIdsResult {
   isLoading: boolean
 }
 
-export const useGameIds = (): UseGameIdsResult => {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [gameIds, setGameIds] = useState<GameId[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+// The list is pure date arithmetic now, so there is nothing to await and nothing to
+// fail -- which is exactly what makes the picker work with no connection.
+// errorMessage and isLoading survive only so the existing caller compiles unchanged;
+// the game-selection rewrite calls allGameIds() directly and deletes this hook.
+export const useGameIds = (now = Date.now): UseGameIdsResult => {
+  const gameIds = useMemo(() => allGameIds(now), [now])
 
-  useEffect(() => {
-    fetchConnectionsGameIds()
-      .then((response) => {
-        setGameIds(response.gameIds)
-        setIsLoading(false)
-      })
-      .catch((error: unknown) => {
-        console.error('fetchConnectionsGameIds', { error })
-        setErrorMessage('Unable to load game IDs')
-        setIsLoading(false)
-      })
-  }, [])
-
-  return { errorMessage, gameIds, isLoading }
+  return { errorMessage: null, gameIds, isLoading: false }
 }

@@ -1,4 +1,5 @@
-import { fetchConnectionsGame, fetchConnectionsGameIds, rerollGame } from './connections'
+import { fetchConnectionsGame, rerollGame } from './connections'
+import * as storage from '@services/storage'
 import { connectionsGame, gameId } from '@test/__mocks__'
 
 const mockGet = jest.fn()
@@ -10,10 +11,14 @@ jest.mock('axios', () => ({
   })),
   isAxiosError: jest.fn((e: any) => e?.isAxiosError === true),
 }))
+jest.mock('@services/storage')
 
 describe('connections', () => {
   beforeAll(() => {
     mockGet.mockResolvedValue({ data: connectionsGame, status: 200 })
+    // The auto-mock returns undefined, which is not null and would be handed back
+    // as a cache hit holding no puzzle. An empty device is the honest default.
+    jest.mocked(storage).readGame.mockReturnValue(null)
   })
 
   describe('fetchConnectionsGame', () => {
@@ -33,15 +38,59 @@ describe('connections', () => {
     })
   })
 
-  describe('fetchConnectionsGameIds', () => {
-    it('fetches game IDs', async () => {
-      const gameIdsResponse = { gameIds: ['2025-01-01', '2025-01-02'] }
-      mockGet.mockResolvedValueOnce({ data: gameIdsResponse })
+  describe('caching', () => {
+    it('returns the stored puzzle without touching the network', async () => {
+      jest.mocked(storage).readGame.mockReturnValueOnce(connectionsGame)
 
-      const result = await fetchConnectionsGameIds()
+      const result = await fetchConnectionsGame(gameId)
 
-      expect(mockGet).toHaveBeenCalledWith('/games')
-      expect(result).toEqual(gameIdsResponse)
+      expect(result).toEqual({ data: connectionsGame, isGenerating: false })
+      expect(mockGet).not.toHaveBeenCalled()
+    })
+
+    it('stores a puzzle it had to fetch', async () => {
+      await fetchConnectionsGame(gameId)
+
+      expect(jest.mocked(storage).writeGame).toHaveBeenCalledWith(gameId, connectionsGame)
+    })
+
+    it('never stores a puzzle that is still being generated', async () => {
+      mockGet.mockResolvedValueOnce({ data: {}, status: 202 })
+
+      await fetchConnectionsGame(gameId)
+
+      expect(jest.mocked(storage).writeGame).not.toHaveBeenCalled()
+    })
+
+    it('falls back to the stored puzzle when the network fails', async () => {
+      mockGet.mockRejectedValueOnce(new Error('offline'))
+      jest.mocked(storage).readGame.mockReturnValueOnce(null).mockReturnValueOnce(connectionsGame)
+
+      const result = await fetchConnectionsGame(gameId)
+
+      expect(result).toEqual({ data: connectionsGame, isGenerating: false })
+    })
+
+    it('rethrows when the network fails and nothing is stored', async () => {
+      mockGet.mockRejectedValueOnce(new Error('offline'))
+
+      await expect(fetchConnectionsGame(gameId)).rejects.toThrow('offline')
+    })
+
+    it('evicts the stored puzzle after a successful reroll', async () => {
+      mockPost.mockResolvedValueOnce({ data: { message: 'Rerolled' } })
+
+      await rerollGame(gameId, 'password')
+
+      expect(jest.mocked(storage).removeGame).toHaveBeenCalledWith(gameId)
+    })
+
+    it('leaves the stored puzzle alone when the reroll is refused', async () => {
+      mockPost.mockRejectedValueOnce({ isAxiosError: true, response: { status: 403 } })
+
+      await expect(rerollGame(gameId, 'wrong')).rejects.toThrow('Wrong password.')
+
+      expect(jest.mocked(storage).removeGame).not.toHaveBeenCalled()
     })
   })
 

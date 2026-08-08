@@ -1,43 +1,39 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 
 import { useGameIds } from './useGameIds'
-import * as connections from '@services/connections'
-
-jest.mock('@services/connections')
 
 describe('useGameIds', () => {
-  const mockGameIds = ['2025-01-05', '2025-01-04', '2025-01-03']
+  // 2026-08-08T21:30:00Z. TZ is pinned to UTC in jest.setup-test-env.js.
+  const now = () => 1_786_224_600_000
 
-  beforeAll(() => {
-    jest.mocked(connections).fetchConnectionsGameIds.mockResolvedValue({ gameIds: mockGameIds })
+  it('returns every game id newest first, with no network call to fail', () => {
+    const { result } = renderHook(() => useGameIds(now))
 
-    console.error = jest.fn()
-  })
-
-  it('returns game IDs from API', async () => {
-    const { result } = renderHook(() => useGameIds())
-
-    expect(result.current.isLoading).toBe(true)
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.gameIds).toEqual(mockGameIds)
+    expect(result.current.gameIds[0]).toBe('2026-08-08')
+    expect(result.current.gameIds.at(-1)).toBe('2025-01-01')
     expect(result.current.errorMessage).toBeNull()
   })
 
-  it('handles API errors', async () => {
-    jest.mocked(connections).fetchConnectionsGameIds.mockRejectedValueOnce(new Error('API Error'))
+  it('is never loading, because there is nothing to load', () => {
+    const { result } = renderHook(() => useGameIds(now))
 
+    expect(result.current.isLoading).toBe(false)
+  })
+
+  // No injected clock. The first id moves with the calendar, but the last one is the
+  // first puzzle ever published and never changes, so the assertion stays deterministic.
+  it('falls back to the real clock', () => {
     const { result } = renderHook(() => useGameIds())
 
-    expect(result.current.isLoading).toBe(true)
+    expect(result.current.gameIds.at(-1)).toBe('2025-01-01')
+  })
 
-    await waitFor(() => {
-      expect(result.current.errorMessage).toBe('Unable to load game IDs')
-    })
+  it('keeps the same array across renders', () => {
+    const { rerender, result } = renderHook(() => useGameIds(now))
+    const first = result.current.gameIds
 
-    expect(result.current.gameIds).toEqual([])
+    rerender()
+
+    expect(result.current.gameIds).toBe(first)
   })
 })
