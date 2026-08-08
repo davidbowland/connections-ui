@@ -45,3 +45,25 @@ export const solvedCardInk = (background: string): Record<Theme, string> => ({
   dark: readableInk(solvedCardBackground(background, 'dark')),
   light: readableInk(solvedCardBackground(background, 'light')),
 })
+
+// Oklch -> linear sRGB via the LMS matrices from Björn Ottosson's Oklab, then the
+// sRGB transfer function. Needed because HeroUI declares --accent in oklch and the
+// contrast floor has to be checkable from a test.
+const gammaEncode = (channel: number): number =>
+  channel <= 0.0031308 ? 12.92 * channel : 1.055 * channel ** (1 / 2.4) - 0.055
+
+export const oklchToRgb = (lightness: number, chroma: number, hueDegrees: number): Rgb => {
+  const hue = (hueDegrees * Math.PI) / 180
+  const a = chroma * Math.cos(hue)
+  const b = chroma * Math.sin(hue)
+
+  const long = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const medium = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const short = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3
+
+  return [
+    4.0767416621 * long - 3.3077115913 * medium + 0.2309699292 * short,
+    -1.2684380046 * long + 2.6097574011 * medium - 0.3413193965 * short,
+    -0.0041960863 * long - 0.7034186147 * medium + 1.707614701 * short,
+  ].map((channel) => Math.round(Math.min(1, Math.max(0, gammaEncode(channel))) * 255)) as Rgb
+}

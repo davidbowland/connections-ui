@@ -1,8 +1,12 @@
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
 import { GAME_COLORS } from './colors'
 import {
   compositeOver,
   contrastRatio,
   hexToRgb,
+  oklchToRgb,
   readableInk,
   relativeLuminance,
   Rgb,
@@ -95,5 +99,37 @@ describe('contrast', () => {
 
       expect(contrastRatio(ink, card)).toBeGreaterThanOrEqual(4.5)
     })
+  })
+})
+
+describe('oklchToRgb', () => {
+  it('converts the HeroUI default accent to its sRGB hex', () => {
+    expect(oklchToRgb(0.6204, 0.195, 253.83)).toEqual([4, 133, 247])
+  })
+
+  it('converts the corrected accent to its sRGB hex', () => {
+    expect(oklchToRgb(0.568, 0.195, 253.83)).toEqual([0, 116, 229])
+  })
+
+  it('clamps channels that fall outside the sRGB gamut', () => {
+    // Both directions: this magenta drives red above the gamut, this green drives
+    // red and blue below it.
+    expect(oklchToRgb(0.99, 0.4, 0)).toEqual([255, 12, 241])
+    expect(oklchToRgb(0.7, 0.4, 145)).toEqual([0, 210, 0])
+  })
+})
+
+describe('the --accent token', () => {
+  const readAccent = (): [number, number, number] => {
+    const css = readFileSync(join(__dirname, '..', 'assets', 'css', 'index.css'), 'utf8')
+    const match = css.match(/--accent:\s*oklch\(([\d.]+)%\s+([\d.]+)\s+([\d.]+)\)/)
+    return [Number(match![1]) / 100, Number(match![2]), Number(match![3])]
+  }
+
+  it('clears the WCAG AA 4.5:1 floor for white text', () => {
+    const [lightness, chroma, hue] = readAccent()
+    const ratio = contrastRatio([255, 255, 255], oklchToRgb(lightness, chroma, hue))
+
+    expect(ratio).toBeGreaterThanOrEqual(4.5)
   })
 })
