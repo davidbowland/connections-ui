@@ -1,7 +1,7 @@
 // jest-dom is imported per test file, never globally -- jest.setup-test-env.js does
 // not register it. Omitting this fails every toBeInTheDocument assertion.
 import '@testing-library/jest-dom'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useRouter } from 'next/router'
 import React from 'react'
@@ -10,6 +10,7 @@ import { GameSelection } from './index'
 import { UseInstallPromptResult, useInstallPrompt } from '@hooks/useInstallPrompt'
 import { useOnline } from '@hooks/useOnline'
 import * as storage from '@services/storage'
+import { connectionsGame } from '@test/__mocks__'
 import { GameId } from '@types'
 
 jest.mock('@hooks/useInstallPrompt')
@@ -29,9 +30,14 @@ describe('GameSelection', () => {
   const AUGUST_2026_LENGTH = 8
 
   const mockPush = jest.fn()
+  const mockReload = jest.fn()
   const mockDismiss = jest.fn()
   const mockInstall = jest.fn()
   const mockReopen = jest.fn()
+
+  // The real module, reached past the automock, so a test can make the write the app
+  // makes and let it announce itself the way it does in a browser.
+  const realStorage = jest.requireActual<typeof storage>('@services/storage')
 
   interface SetupOptions {
     install?: Partial<UseInstallPromptResult>
@@ -43,7 +49,7 @@ describe('GameSelection', () => {
   // Every test calls this. clearMocks is mockClear, which leaves mockReturnValue in
   // place, so a value set inside one test would otherwise leak into the next.
   const setup = ({ install, isOnline = true, onDevice, solved }: SetupOptions = {}): void => {
-    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any)
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush, reload: mockReload } as any)
     jest.mocked(useOnline).mockReturnValue(isOnline)
     jest.mocked(useInstallPrompt).mockReturnValue({
       dismiss: mockDismiss,
@@ -218,6 +224,48 @@ describe('GameSelection', () => {
     })
   })
 
+  // Reachable without solving anything: not installed, today opened while online, then
+  // the connection drops. The pool is then exactly the puzzle on screen, and offering
+  // it back is legitimate -- the board reshuffles on load. What is not legitimate is
+  // routing to the URL already in the address bar, or explaining the offer with a
+  // sentence about having solved things.
+  describe('replaying the only puzzle there is', () => {
+    const soleCandidate = { isOnline: false, onDevice: [today], solved: [] }
+
+    it('reloads instead of pushing the route it is already on', async () => {
+      const user = userEvent.setup()
+      setup(soleCandidate)
+
+      renderRegion()
+      await user.click(screen.getByRole('button', { name: 'Play August 8, 2026 again' }))
+
+      // push here is not merely redundant: pages/g/[gameId] keys its load on
+      // router.asPath, so the same path refetches nothing and reshuffles nothing.
+      expect(mockReload).toHaveBeenCalledTimes(1)
+      expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    it('does not claim a clean sweep when nothing has been solved', () => {
+      setup(soleCandidate)
+
+      renderRegion()
+
+      expect(screen.getByText('This is the only puzzle on this device. Same words, new order.')).toBeInTheDocument()
+      expect(screen.queryByText(/You’ve solved/)).not.toBeInTheDocument()
+    })
+
+    // The other replay branch still has to say what it always said: there, everything
+    // really has been solved and the offer is a genuine second pass.
+    it('still says so when the sweep is real', () => {
+      setup({ isOnline: false, onDevice: [today, '2026-08-07'], solved: [today, '2026-08-07'] })
+
+      renderRegion()
+
+      expect(screen.getByRole('button', { name: 'Play August 7, 2026 again' })).toBeInTheDocument()
+      expect(screen.getByText('You’ve solved every puzzle on this device. Same words, new order.')).toBeInTheDocument()
+    })
+  })
+
   describe('nothing playable', () => {
     it('says so rather than naming a puzzle it cannot open', () => {
       setup({ isOnline: false, onDevice: [] })
@@ -264,6 +312,40 @@ describe('GameSelection', () => {
 
       expect(screen.getByText('2 puzzles on this device')).toBeInTheDocument()
       expect(screen.getByRole('status')).toBeEmptyDOMElement()
+    })
+
+    // West of UTC the prefetch stores tomorrow's puzzle deliberately, hours before the
+    // local date reaches it, and the archive stops at the local today. Constructed
+    // rather than provoked with a clock: package.json pins TZ=UTC, the one zone where
+    // the two dates never disagree.
+    it('does not count a staged puzzle the archive does not list yet', () => {
+      setup({ onDevice: ['2026-08-09', today] })
+
+      renderRegion()
+
+      expect(screen.getByText('1 puzzle on this device')).toBeInTheDocument()
+    })
+
+    it('leaves it out of the offline count as well', () => {
+      setup({ isOnline: false, onDevice: ['2026-08-09', today] })
+
+      renderRegion()
+
+      expect(screen.getByRole('status')).toHaveTextContent('You’re offline · 1 puzzle on this device')
+    })
+
+    it('leaves it out of the offline archive summary as well', async () => {
+      const user = userEvent.setup()
+      setup({ isOnline: false, onDevice: ['2026-08-09', today] })
+
+      renderRegion()
+      await openArchive(user)
+
+      expect(
+        screen.getByText(
+          'You haven’t solved any of these yet. 1 of them is on this device — the rest need a connection.',
+        ),
+      ).toBeInTheDocument()
     })
   })
 
@@ -769,6 +851,40 @@ describe('GameSelection', () => {
       fireEvent(window, new Event('appinstalled'))
 
       expect(screen.getByText('2 puzzles on this device')).toBeInTheDocument()
+    })
+
+    // Nothing above fires when this tab writes to storage -- the native storage event
+    // is for other tabs. These two go through the real writers so the announcement is
+    // the app's own, not a hand-dispatched stand-in.
+    it('re-reads the device when the prefetch stores a puzzle', () => {
+      setup({ onDevice: [] })
+      window.localStorage.clear()
+      // Set after setup, which fixes a return value; a mockImplementation set here is
+      // overwritten by the next test's setup, so nothing leaks.
+      jest.mocked(storage).cachedGameIds.mockImplementation(realStorage.cachedGameIds)
+
+      renderRegion()
+
+      expect(screen.getByText('0 puzzles on this device')).toBeInTheDocument()
+
+      act(() => realStorage.writeGame(today, connectionsGame))
+
+      expect(screen.getByText('1 puzzle on this device')).toBeInTheDocument()
+    })
+
+    it('marks the row solved as soon as the board records the win', () => {
+      setup()
+      window.localStorage.clear()
+      jest.mocked(storage).readMeta.mockImplementation(realStorage.readMeta)
+
+      renderRegion()
+      const strip = screen.getByRole('group', { name: 'Last 7 days' })
+
+      expect(within(strip).getByRole('button', { name: '8/8/2026, Today — Not solved, On device' })).toBeInTheDocument()
+
+      act(() => realStorage.markSolved(today))
+
+      expect(within(strip).getByRole('button', { name: '8/8/2026, Today — ✓ Solved, On device' })).toBeInTheDocument()
     })
 
     // An installed app resumed the next morning keeps the same JS context, so a clock

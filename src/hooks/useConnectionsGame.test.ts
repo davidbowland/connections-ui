@@ -23,6 +23,12 @@ describe('useConnectionsGame', () => {
     await waitFor(() => expect(result.current.selectedWords).toContain(word))
   }
 
+  // navigator.onLine is a defined property on the jsdom navigator, so a value set by
+  // one test outlives clearMocks. Every test that cares sets it explicitly.
+  const setOnline = (onLine: boolean): void => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: onLine, writable: true })
+  }
+
   beforeAll(() => {
     jest.mocked(connections).fetchConnectionsGame.mockResolvedValue({ data: connectionsGame, isGenerating: false })
 
@@ -49,6 +55,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('handles API errors', async () => {
+    setOnline(true)
     jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error('API Error'))
 
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
@@ -60,6 +67,26 @@ describe('useConnectionsGame', () => {
     expect(result.current.isLoading).toBe(false)
     expect(result.current.categories).toEqual({})
     expect(result.current.words).toEqual([])
+  })
+
+  // fetchConnectionsGame answers from storage without touching the network, so a
+  // failure while offline means this puzzle is not on the device. "Refresh the page" is
+  // then the one instruction that cannot work -- and with the service worker installed
+  // the shell reloads and fails again, so it is advice that loops.
+  it('names the real problem when the device is offline', async () => {
+    setOnline(false)
+    jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error('Network Error'))
+
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
+
+    await waitFor(() => {
+      expect(result.current.errorMessage).toBe(
+        'You’re offline and this puzzle isn’t on this device. Play one that is, or try again when you’re online.',
+      )
+    })
+
+    setOnline(true)
+    expect(result.current.isLoading).toBe(false)
   })
 
   it('polls when game is generating', async () => {

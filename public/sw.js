@@ -64,10 +64,13 @@ function putInCache(key, response) {
 
 // The document wording is what a reader actually sees. A failed subresource never
 // renders its body -- but a *wrong* one would, which is the whole point of the guard
-// below.
+// below. "Saved" is retired from the interface, and this is reached only when even the
+// home page is uncached, so waiting for a connection is the only step left to name.
+// charset is declared because the copy carries the app's typographic apostrophe, and
+// text/plain with no charset is decoded as windows-1252 by every browser that guesses.
 function offlineResponse(noun) {
-  return new Response('You are offline and this ' + noun + ' is not saved on your device.', {
-    headers: { 'Content-Type': 'text/plain' },
+  return new Response('You’re offline and this ' + noun + ' isn’t on this device. Try again when you’re online.', {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     status: 503,
     statusText: 'Offline',
   })

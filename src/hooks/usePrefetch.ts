@@ -95,6 +95,13 @@ export const usePrefetch = (now = Date.now): void => {
           console.error('prefetch failed', { error, gameId })
         }
       }
+    } catch (error: unknown) {
+      // isInstalled, prefetchTargets and cachedGameIds all sit outside the per-puzzle
+      // guard above, and matchMedia and localStorage can each throw. run is called bare
+      // and registered as a listener, so neither call site has anywhere to put a
+      // rejection: without this it surfaces as an unhandled rejection that names no
+      // hook, and on the listener path nothing catches it at all.
+      console.error('prefetch run failed', { error })
     } finally {
       inFlight.current = false
     }

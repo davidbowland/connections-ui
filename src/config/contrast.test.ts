@@ -89,15 +89,41 @@ describe('contrast', () => {
     })
   })
 
+  // A floor assertion here would certify nothing. readableInk returns whichever of
+  // black and white contrasts *more*, and contrast(black, c) x contrast(white, c) = 21
+  // for every sRGB color, so the winner is always at least sqrt(21) = 4.583 -- above AA
+  // for normal text no matter what the palette or the layer alphas become. AA on a
+  // solved card is a property of the rule, proved by the readableInk cases above; what
+  // can actually regress is which ink each color gets, so that is what is pinned.
   describe('every game color', () => {
-    const themes: Theme[] = ['dark', 'light']
-    const cases = GAME_COLORS.flatMap((color) => themes.map((theme): [string, Theme] => [color.background, theme]))
+    it('gets the ink the app has to paint on it, in both themes', () => {
+      const inks = Object.fromEntries(GAME_COLORS.map(({ background }) => [background, solvedCardInk(background)]))
 
-    it.each(cases)('meets WCAG AA on a solved card: %s in %s theme', (background, theme) => {
-      const card = solvedCardBackground(background, theme)
-      const ink = hexToRgb(readableInk(card))
+      expect(inks).toEqual({
+        '#0049b7': { dark: '#ffffff', light: '#000000' },
+        '#00ddff': { dark: '#000000', light: '#000000' },
+        '#494d5f': { dark: '#ffffff', light: '#000000' },
+        '#4caf50': { dark: '#000000', light: '#000000' },
+        '#8458B3': { dark: '#ffffff', light: '#000000' },
+        '#ff1d58': { dark: '#ffffff', light: '#000000' },
+        '#ff6f00': { dark: '#000000', light: '#000000' },
+        '#fff685': { dark: '#000000', light: '#000000' },
+      })
+    })
 
-      expect(contrastRatio(ink, card)).toBeGreaterThanOrEqual(4.5)
+    // The tightest pair in the palette is orange in dark theme at 4.94:1. Naming the
+    // real margin is the only measurement here that a palette change can fail: drop
+    // below this and the card is still above AA, but it has stopped being comfortable.
+    it('keeps a margin over the AA floor even at its tightest', () => {
+      const themes: Theme[] = ['dark', 'light']
+      const ratios = GAME_COLORS.flatMap(({ background }) =>
+        themes.map((theme) => {
+          const card = solvedCardBackground(background, theme)
+          return contrastRatio(hexToRgb(readableInk(card)), card)
+        }),
+      )
+
+      expect(Math.min(...ratios)).toBeGreaterThanOrEqual(4.9)
     })
   })
 })

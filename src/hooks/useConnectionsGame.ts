@@ -215,7 +215,17 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
         setIsLoading(false)
       } catch (error: unknown) {
         console.error('fetchConnectionsGame', { error })
-        setErrorMessage("We couldn't load this puzzle. Refresh the page to try again.")
+        // fetchConnectionsGame serves a stored puzzle without touching the network, so
+        // reaching here while offline means this one is not on the device -- and
+        // refreshing is then the single action that cannot work. With the service
+        // worker installed the shell even reloads successfully and fails again, so the
+        // generic advice is a loop. onLine is only trustworthy when false, which is
+        // exactly the direction being read.
+        setErrorMessage(
+          window.navigator.onLine
+            ? "We couldn't load this puzzle. Refresh the page to try again."
+            : 'You’re offline and this puzzle isn’t on this device. Play one that is, or try again when you’re online.',
+        )
         setIsLoading(false)
       }
     }
