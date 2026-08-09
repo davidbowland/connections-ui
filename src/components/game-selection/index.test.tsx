@@ -222,6 +222,32 @@ describe('GameSelection', () => {
       expect(screen.getByRole('button', { name: 'Play August 7, 2026 again' })).toBeInTheDocument()
       expect(screen.getByText('You’ve solved every puzzle on this device. Same words, new order.')).toBeInTheDocument()
     })
+
+    // The installed-offline state this whole feature was built for: last week solved,
+    // today still open on screen. nextUnplayed only asks whether anything OTHER than
+    // the current puzzle is unsolved, so it reports a replay -- and claiming a clean
+    // sweep over an unfinished board is false on the one screen that matters most.
+    it('does not claim a clean sweep while the puzzle on screen is unsolved', () => {
+      const week = ['2026-08-08', '2026-08-07', '2026-08-06', '2026-08-05', '2026-08-04', '2026-08-03', '2026-08-02']
+      setup({ isOnline: false, onDevice: week, solved: week.slice(1) })
+
+      renderRegion()
+
+      expect(
+        screen.queryByText('You’ve solved every puzzle on this device. Same words, new order.'),
+      ).not.toBeInTheDocument()
+      expect(screen.getByText('Everything else on this device is solved. Same words, new order.')).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { level: 2, name: 'All caught up' })).not.toBeInTheDocument()
+    })
+
+    it('does not claim a clean sweep online while the puzzle on screen is unsolved', () => {
+      setup({ solved: everyDay().slice(1) })
+
+      renderRegion()
+
+      expect(screen.getByText('Everything else is solved. Same words, new order.')).toBeInTheDocument()
+      expect(screen.queryByText(/You’ve solved all/)).not.toBeInTheDocument()
+    })
   })
 
   // Reachable without solving anything: not installed, today opened while online, then

@@ -77,16 +77,26 @@ interface Choice {
   replay: boolean
 }
 
-const headingFor = (chosen: Choice | undefined): string => {
+const headingFor = (chosen: Choice | undefined, isSweep: boolean): string => {
   // undefined means nothing is playable at all -- offline with an empty device. It is
   // a fact about this device, not about the app, and the archive below is full of
   // buttons, so "nothing to play" would be contradicted by the screen it heads.
   if (chosen === undefined) return 'Nothing on this device'
-  if (chosen.replay) return 'All caught up'
+  // nextUnplayed only asks whether anything OTHER than the puzzle on screen is
+  // unsolved, so it reports a replay while the board above is still unfinished.
+  // "All caught up" over an unsolved puzzle is the same false claim the why-line
+  // guards against, one level up.
+  if (chosen.replay && isSweep) return 'All caught up'
   return 'Up next'
 }
 
-const whyLine = (chosen: Choice | undefined, isOffline: boolean, total: number, current: GameId): string => {
+const whyLine = (
+  chosen: Choice | undefined,
+  isOffline: boolean,
+  total: number,
+  current: GameId,
+  isSweep: boolean,
+): string => {
   if (chosen === undefined) return 'Nothing is on this device yet. Open a puzzle while you’re online and it stays.'
   if (chosen.replay) {
     // A replay of the puzzle on screen is not the same fact as a replay of some other
@@ -95,6 +105,15 @@ const whyLine = (chosen: Choice | undefined, isOffline: boolean, total: number, 
     // every puzzle" would then be flatly false above an unfinished board. Same trap the
     // non-replay line already sidesteps with "apart from this one".
     if (chosen.id === current) return 'This is the only puzzle on this device. Same words, new order.'
+    // nextUnplayed never asks whether the puzzle on screen is solved -- it only looks
+    // for something OTHER than current to hand over. So a sweep claim here is false
+    // whenever the board above is unfinished, which is the ordinary installed-offline
+    // state: yesterday back through last week solved, today still open.
+    if (!isSweep) {
+      return isOffline
+        ? 'Everything else on this device is solved. Same words, new order.'
+        : 'Everything else is solved. Same words, new order.'
+    }
     return isOffline
       ? 'You’ve solved every puzzle on this device. Same words, new order.'
       : `You’ve solved all ${total} puzzles. Same words, new order.`
@@ -153,6 +172,18 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
     () => nextUnplayed({ available: isOffline ? onDevice : undefined, current: gameId, ids, solved }),
     [gameId, ids, isOffline, onDevice, solved],
   )
+
+  // The sweep claim is about the pool nextUnplayed drew from, not about the puzzle on
+  // screen. nextUnplayed only ever asks whether something OTHER than current is
+  // unsolved, so it reports a replay with an unfinished board sitting above -- the
+  // ordinary installed-offline state, last week solved and today still open. Asking
+  // the pool directly is the only thing that makes "you've solved every puzzle" true
+  // when it is printed. Note current may not be in the pool at all: offline, a puzzle
+  // can be on screen without being on the device.
+  const isSweep = useMemo(() => {
+    const pool = isOffline ? ids.filter((id) => onDeviceSet.has(id)) : ids
+    return pool.every((id) => solvedSet.has(id))
+  }, [ids, isOffline, onDeviceSet, solvedSet])
 
   // Counted over ids, not over solved: ct:meta can hold a day the archive no longer
   // lists, and "138 of 585" has to be a subset of the 585 on screen.
@@ -229,7 +260,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
   return (
     <section aria-label="Puzzles">
       <h2 className="mb-2 text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55">
-        {headingFor(chosen)}
+        {headingFor(chosen, isSweep)}
       </h2>
 
       {chosen && (
@@ -243,7 +274,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
       )}
 
       <p className="mt-2 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
-        {whyLine(chosen, isOffline, ids.length, gameId)}
+        {whyLine(chosen, isOffline, ids.length, gameId, isSweep)}
       </p>
 
       {/* Always mounted, empty while online. NVDA and JAWS announce a change of text
