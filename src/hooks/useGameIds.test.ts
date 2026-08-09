@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react'
 
-import { useGameIds } from './useGameIds'
+import { UseGameIdsResult, useGameIds } from './useGameIds'
 
 describe('useGameIds', () => {
   // 2026-08-08T21:30:00Z. TZ is pinned to UTC in jest.setup-test-env.js.
@@ -14,10 +14,27 @@ describe('useGameIds', () => {
     expect(result.current.errorMessage).toBeNull()
   })
 
-  it('is never loading, because there is nothing to load', () => {
+  it('is done loading once the browser has it', () => {
     const { result } = renderHook(() => useGameIds(now))
 
     expect(result.current.isLoading).toBe(false)
+  })
+
+  // The export is prerendered in Node, and effects never run there -- so whatever the
+  // first render returns is what ships in the HTML. Hand back the list and the labels
+  // carry the server's locale while the count is frozen at deploy time: two guaranteed
+  // hydration mismatches.
+  it('hands back nothing on the first render, before effects run', () => {
+    const renders: UseGameIdsResult[] = []
+
+    renderHook(() => {
+      const value = useGameIds(now)
+      renders.push(value)
+      return value
+    })
+
+    expect(renders[0].gameIds).toEqual([])
+    expect(renders[0].isLoading).toBe(true)
   })
 
   // No injected clock. The first id moves with the calendar, but the last one is the
