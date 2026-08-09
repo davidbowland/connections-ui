@@ -25,7 +25,7 @@
     "prepare": "husky || true",
     "start": "next dev",
     "serve": "next build && npx serve out",
-    "test": "jest --colors",
+    "test": "TZ=UTC jest --colors",
     "typecheck": "tsc --noEmit",
     "update": "npx update-browserslist-db@latest && ncu --doctor --target minor --upgrade && npm audit fix --audit-level=none && npm run test && npm dedupe"
   },
@@ -72,7 +72,7 @@
     "**/*.{js,jsx,ts,tsx}": [
       "prettier --write --ignore-unknown",
       "eslint --fix",
-      "jest --colors --findRelatedTests --coverageThreshold '{}' --passWithNoTests"
+      "npm test -- --findRelatedTests --coverageThreshold {} --passWithNoTests"
     ],
     "**/*": [
       "prettier --write --ignore-unknown"
