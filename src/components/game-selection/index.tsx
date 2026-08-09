@@ -270,7 +270,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
 
         {chosen && (
           <button
-            className="min-h-11 w-full rounded-full bg-[var(--accent)] px-4 text-[11px] uppercase tracking-[0.15em] text-white hover:bg-[var(--accent-hover)]"
+            className="min-h-11 w-full cursor-pointer rounded-full bg-[var(--accent)] px-4 text-[11px] uppercase tracking-[0.15em] text-white hover:bg-[var(--accent-hover)]"
             onClick={() => goTo(chosen.id)}
             type="button"
           >
@@ -308,21 +308,36 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
           already on screen. Swapping one for the other keeps the disclosure honest and
           removes the duplicate outright. */}
       <div className="mt-6 border-t border-black/8 pt-6 dark:border-white/8">
-        <div className="mb-3 flex items-baseline justify-between gap-3">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <h3 className="text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55" id="strip-heading">
             {isArchiveOpen ? 'Every puzzle' : 'Last 7 days'}
           </h3>
-          {/* The label names the destination and never changes, so aria-expanded is
-              left to carry the state -- a control that renames itself on press reads as
-              a different control to anyone listening to it. */}
+          {/* The label names what the press does, not what is already on screen. Held
+              fixed at "See every puzzle" it stayed on the open archive still telling
+              you to open it, and the only thing reporting that it now closes it was
+              aria-expanded -- which sighted users never hear. The chevron and the
+              border carry the rest: unlabelled grey capitals at the edge of a heading
+              row read as a caption, not as the one control that changes the list. */}
           <button
             aria-controls={isArchiveOpen ? ARCHIVE_ID : undefined}
             aria-expanded={isArchiveOpen}
-            className="-mr-2 min-h-11 shrink-0 px-2 text-[10px] uppercase tracking-[0.15em] text-black/60 hover:text-black/[0.88] dark:text-white/55 dark:hover:text-white/90"
+            className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-black/20 px-3.5 text-[10px] uppercase tracking-[0.15em] text-black/70 hover:border-black/35 hover:bg-black/[0.04] hover:text-black/[0.88] dark:border-white/25 dark:text-white/70 dark:hover:border-white/40 dark:hover:bg-white/[0.06] dark:hover:text-white/90"
             onClick={() => setIsArchiveOpen((open) => !open)}
             type="button"
           >
-            See every puzzle
+            {isArchiveOpen ? 'Show last 7 days' : `Show all ${ids.length} puzzles`}
+            <svg
+              aria-hidden="true"
+              className={`h-3 w-3${isArchiveOpen ? ' rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 12 12"
+            >
+              <path d="M2.5 4.5 6 8l3.5-3.5" />
+            </svg>
           </button>
         </div>
 
@@ -351,7 +366,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
                   where the scroll region now sits. */}
               <div className="relative">
                 <select
-                  className="min-h-11 w-full appearance-none rounded-xl border border-black/8 bg-black/[0.03] py-2 pl-3 pr-10 text-[11px] text-black/70 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/65"
+                  className="min-h-11 w-full cursor-pointer appearance-none rounded-xl border border-black/8 bg-black/[0.03] py-2 pl-3 pr-10 text-[11px] text-black/70 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/65"
                   defaultValue=""
                   id="jump-to-month"
                   onChange={(event) => jumpToMonth(event.target.value)}

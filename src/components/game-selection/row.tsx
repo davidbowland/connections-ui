@@ -46,6 +46,11 @@ export const GameSelectionRow = ({
 
   // Offline and on-device are orthogonal facts. A row is only blocked where they
   // meet: the puzzle is not here and there is no connection to fetch it with.
+  //
+  // The cursor split below is only visible because the playable branch names its own:
+  // Tailwind v4's preflight dropped the button { cursor: pointer } rule v3 shipped, so
+  // every button in this app pointed at an arrow and cursor-default here was a no-op
+  // distinguishing nothing from nothing.
   const isBlocked = isOffline && !isOnDevice
 
   // Online, storage is a fact with no consequence, so no marker is shown.
@@ -69,7 +74,7 @@ export const GameSelectionRow = ({
       className={`flex min-h-11 w-full items-center gap-2 rounded-xl border border-black/8 px-3 text-left text-[11px] dark:border-white/8${
         isBlocked
           ? ' cursor-default text-black/60 dark:text-white/55'
-          : ' text-black/70 hover:border-black/18 hover:bg-black/[0.03] dark:text-white/65 dark:hover:border-white/18 dark:hover:bg-white/[0.04]'
+          : ' cursor-pointer text-black/70 hover:border-black/18 hover:bg-black/[0.03] dark:text-white/65 dark:hover:border-white/18 dark:hover:bg-white/[0.04]'
       }`}
       onClick={() => !isBlocked && onSelect(gameId)}
       tabIndex={tabIndex}
@@ -93,6 +98,25 @@ export const GameSelectionRow = ({
         {isSolved && <span>✓ Solved</span>}
         {storage && <span>{storage}</span>}
       </span>
+      {/* A date in a rounded box is a list item everywhere else on the web; nothing but
+          the hover said these open a puzzle, and hover is not a thing on the phone this
+          gets installed on. The same chevron the month select uses, turned a quarter, so
+          it reads as this app's affordance rather than a new one. Blocked rows omit it:
+          they do not open, so they must not promise to. */}
+      {!isBlocked && (
+        <svg
+          aria-hidden="true"
+          className="ml-1 h-3 w-3 shrink-0 -rotate-90 opacity-70"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox="0 0 12 12"
+        >
+          <path d="M2.5 4.5 6 8l3.5-3.5" />
+        </svg>
+      )}
     </button>
   )
 }

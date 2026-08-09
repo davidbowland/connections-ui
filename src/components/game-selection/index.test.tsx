@@ -67,7 +67,7 @@ describe('GameSelection', () => {
   const renderRegion = (gameId: GameId = today) => render(<GameSelection gameId={gameId} locale="en-US" now={now} />)
 
   const openArchive = async (user: ReturnType<typeof userEvent.setup>): Promise<HTMLElement> => {
-    await user.click(screen.getByRole('button', { name: 'See every puzzle' }))
+    await user.click(screen.getByRole('button', { name: `Show all ${ARCHIVE_LENGTH} puzzles` }))
     return screen.getByRole('group', { name: 'Every puzzle, newest first' })
   }
 
@@ -482,13 +482,33 @@ describe('GameSelection', () => {
 
       renderRegion()
 
-      expect(screen.getByRole('button', { name: 'See every puzzle' })).toHaveAttribute('aria-expanded', 'false')
+      expect(screen.getByRole('button', { name: `Show all ${ARCHIVE_LENGTH} puzzles` })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      )
       expect(screen.queryByRole('group', { name: 'Every puzzle, newest first' })).not.toBeInTheDocument()
 
       const archive = await openArchive(user)
 
       expect(archive).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'See every puzzle' })).toHaveAttribute('aria-expanded', 'true')
+      expect(screen.getByRole('button', { name: 'Show last 7 days' })).toHaveAttribute('aria-expanded', 'true')
+    })
+
+    // The press that opens the archive has to rename the control, or the open archive
+    // sits under a button still offering to open it -- the state it reports through
+    // aria-expanded reaches nobody who is looking at the screen.
+    it('names what the press does, not what is on screen', async () => {
+      const user = userEvent.setup()
+      setup()
+
+      renderRegion()
+
+      expect(screen.getByRole('button', { name: `Show all ${ARCHIVE_LENGTH} puzzles` })).toBeInTheDocument()
+
+      await openArchive(user)
+
+      expect(screen.getByRole('button', { name: 'Show last 7 days' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: `Show all ${ARCHIVE_LENGTH} puzzles` })).not.toBeInTheDocument()
     })
 
     it('lists every day back to the first puzzle', async () => {
@@ -603,7 +623,7 @@ describe('GameSelection', () => {
 
       renderRegion()
       await openArchive(user)
-      await user.click(screen.getByRole('button', { name: 'See every puzzle' }))
+      await user.click(screen.getByRole('button', { name: 'Show last 7 days' }))
 
       expect(screen.queryByRole('group', { name: 'Every puzzle, newest first' })).not.toBeInTheDocument()
     })
