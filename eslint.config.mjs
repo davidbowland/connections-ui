@@ -69,9 +69,10 @@ export default tseslint.config(
     },
   },
 
-  // 4) Node scripts / config files may use CommonJS require().
+  // 4) Node scripts / config files may use CommonJS require(). test/**/*.js is here
+  // too: plain-JS tests run as CommonJS and reach for __dirname and require().
   {
-    files: ['scripts/**/*.{js,mjs,cjs,ts}', '*.config.{js,mjs,cjs,ts}', 'next.config.*'],
+    files: ['scripts/**/*.{js,mjs,cjs,ts}', '*.config.{js,mjs,cjs,ts}', 'next.config.*', 'test/**/*.js'],
     languageOptions: { globals: { ...globals.node } },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
@@ -79,6 +80,9 @@ export default tseslint.config(
   // 5) Jest rules scoped to test / mock / test-support files only.
   {
     files: [
+      // public/sw.js runs in a worker scope, so its test loads it as text and
+      // evaluates it -- which only works from a plain .js test file.
+      '**/*.test.js',
       '**/*.test.ts',
       '**/*.test.tsx',
       '**/*TestUtils.{ts,tsx}',

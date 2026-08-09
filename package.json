@@ -17,7 +17,7 @@
   "homepage": "https://github.com/davidbowland/connections-ui#readme",
   "scripts": {
     "build": "npm run clean && next build",
-    "postbuild": "node scripts/generate-dynamic-pages.js && next-sitemap",
+    "postbuild": "node scripts/generate-dynamic-pages.js && next-sitemap && node scripts/generate-sw-manifest.js",
     "clean": "rm -rf .next coverage out && npm ci",
     "deploy": "DEVELOPMENT=true npm run build && ./scripts/deploy.sh",
     "generate:favicons": "node scripts/generate-favicons.js",

@@ -1,12 +1,19 @@
 {
   "name": "Common Threads",
   "short_name": "Common Threads",
+  "description": "Find the common thread. A new puzzle every day.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#060608",
+  "background_color": "#060608",
   "icons": [
     { "src": "/favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
     { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
-    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
-  ],
-  "theme_color": "#060608",
-  "background_color": "#060608",
-  "display": "standalone"
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
 }
