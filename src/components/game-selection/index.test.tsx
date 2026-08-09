@@ -1,7 +1,7 @@
 // jest-dom is imported per test file, never globally -- jest.setup-test-env.js does
 // not register it. Omitting this fails every toBeInTheDocument assertion.
 import '@testing-library/jest-dom'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useRouter } from 'next/router'
 import React from 'react'
@@ -18,10 +18,15 @@ jest.mock('@services/storage')
 jest.mock('next/router', () => ({ useRouter: jest.fn() }))
 
 describe('GameSelection', () => {
-  // 2026-08-08T21:30:00Z. Fixed, so allGameIds() always yields the same 585 days.
+  // 2026-08-08T21:30:00Z, and TZ=UTC on the jest invocation, so allGameIds() always
+  // yields the same 585 days.
   const now = () => 1_786_224_600_000
+  // The same clock one day earlier, for the puzzle that is on screen when an installed
+  // app is put down at night and picked up the next morning.
+  const yesterday = () => 1_786_138_200_000
   const today: GameId = '2026-08-08'
   const ARCHIVE_LENGTH = 585
+  const AUGUST_2026_LENGTH = 8
 
   const mockPush = jest.fn()
   const mockDismiss = jest.fn()
@@ -130,12 +135,19 @@ describe('GameSelection', () => {
       expect(screen.getByRole('button', { name: 'Play August 7, 2026' })).toBeInTheDocument()
     })
 
-    it('offers today when no puzzle is on screen yet', () => {
+    // Both pages resolve their gameId in an effect. Painting before it arrives prints
+    // one recommendation and relabels it a frame later, and says "apart from this one"
+    // about a board that is still loading.
+    it('waits for the puzzle on screen instead of naming one it would replace', () => {
       setup()
 
-      render(<GameSelection locale="en-US" now={now} />)
+      const { rerender } = render(<GameSelection locale="en-US" now={now} />)
 
-      expect(screen.getByRole('button', { name: 'Play August 8, 2026' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^Play / })).not.toBeInTheDocument()
+
+      rerender(<GameSelection gameId={today} locale="en-US" now={now} />)
+
+      expect(screen.getByRole('button', { name: 'Play August 7, 2026' })).toBeInTheDocument()
     })
 
     it('walks back past solved puzzles', () => {
@@ -215,7 +227,7 @@ describe('GameSelection', () => {
       expect(
         screen.getByText('Nothing is on this device yet. Open a puzzle while you’re online and it stays.'),
       ).toBeInTheDocument()
-      expect(screen.getByRole('heading', { level: 2, name: 'Nothing to play' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 2, name: 'Nothing on this device' })).toBeInTheDocument()
     })
 
     it('offers no call to action it could not honour', () => {
@@ -223,7 +235,7 @@ describe('GameSelection', () => {
 
       renderRegion()
 
-      expect(screen.getByRole('heading', { level: 2, name: 'Nothing to play' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 2, name: 'Nothing on this device' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /^Play / })).not.toBeInTheDocument()
     })
   })
@@ -251,7 +263,7 @@ describe('GameSelection', () => {
       renderRegion()
 
       expect(screen.getByText('2 puzzles on this device')).toBeInTheDocument()
-      expect(screen.queryByRole('status')).not.toBeInTheDocument()
+      expect(screen.getByRole('status')).toBeEmptyDOMElement()
     })
   })
 
@@ -263,6 +275,24 @@ describe('GameSelection', () => {
 
       expect(screen.getByRole('status')).toHaveTextContent('You’re offline · 2 puzzles on this device')
       expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+
+    // A live region is only announced when text changes inside a region the screen
+    // reader is already watching. Swapping the element in with its message already in
+    // place is what NVDA and JAWS miss, so the node has to survive the transition.
+    it('fills the live region it already had rather than inserting one', () => {
+      setup()
+
+      const { rerender } = renderRegion()
+      const status = screen.getByRole('status')
+
+      expect(status).toBeEmptyDOMElement()
+
+      jest.mocked(useOnline).mockReturnValue(false)
+      rerender(<GameSelection gameId={today} locale="en-US" now={now} />)
+
+      expect(status).toHaveTextContent('You’re offline · 2 puzzles on this device')
+      expect(screen.getByRole('status')).toBe(status)
     })
 
     it('guards the plural on the offline count too', () => {
@@ -364,18 +394,6 @@ describe('GameSelection', () => {
       expect(within(archive).getByText('1/1/2025')).toBeInTheDocument()
     })
 
-    it('adds one tab stop for the rows rather than 585', async () => {
-      const user = userEvent.setup()
-      setup()
-
-      renderRegion()
-      const archive = await openArchive(user)
-      const rows = within(archive).getAllByRole('button')
-
-      expect(archive).toHaveAttribute('tabindex', '0')
-      expect(rows.filter((row) => row.tabIndex === -1)).toHaveLength(ARCHIVE_LENGTH)
-    })
-
     it('sections the rows by month', async () => {
       const user = userEvent.setup()
       setup()
@@ -386,6 +404,20 @@ describe('GameSelection', () => {
       expect(within(archive).getByRole('heading', { level: 3, name: 'August 2026' })).toBeInTheDocument()
       expect(within(archive).getByRole('heading', { level: 3, name: 'January 2025' })).toBeInTheDocument()
       expect(within(archive).getAllByRole('heading', { level: 3 })).toHaveLength(20)
+    })
+
+    // Buttons loose in a box give a screen reader nothing to count. A list per month
+    // announces "3 of 31", which is the only position information on offer here.
+    it('presents each month as a list of rows', async () => {
+      const user = userEvent.setup()
+      setup()
+
+      renderRegion()
+      const archive = await openArchive(user)
+      const august = within(archive).getByRole('list', { name: 'August 2026' })
+
+      expect(within(archive).getAllByRole('list')).toHaveLength(20)
+      expect(within(august).getAllByRole('listitem')).toHaveLength(AUGUST_2026_LENGTH)
     })
 
     it('counts solved puzzles rather than days', async () => {
@@ -426,7 +458,9 @@ describe('GameSelection', () => {
       await openArchive(user)
 
       expect(
-        screen.getByText('You haven’t solved any of these yet. 2 are on this device — the rest need a connection.'),
+        screen.getByText(
+          'You haven’t solved any of these yet. 2 of them are on this device — the rest need a connection.',
+        ),
       ).toBeInTheDocument()
     })
 
@@ -438,7 +472,9 @@ describe('GameSelection', () => {
       await openArchive(user)
 
       expect(
-        screen.getByText('You haven’t solved any of these yet. 1 is on this device — the rest need a connection.'),
+        screen.getByText(
+          'You haven’t solved any of these yet. 1 of them is on this device — the rest need a connection.',
+        ),
       ).toBeInTheDocument()
     })
 
@@ -466,32 +502,71 @@ describe('GameSelection', () => {
   })
 
   describe('archive keyboard navigation', () => {
-    const openAndFocus = async (user: ReturnType<typeof userEvent.setup>): Promise<HTMLElement> => {
+    // Two stops from the disclosure: the month select, then the rows. If the rows ever
+    // cost more than one, this walk lands somewhere else and every test below fails.
+    const openAndTabToRows = async (user: ReturnType<typeof userEvent.setup>): Promise<HTMLElement> => {
       const archive = await openArchive(user)
-      archive.focus()
+      await user.tab()
+      await user.tab()
       return archive
     }
 
-    it('walks into the rows with the down arrow', async () => {
+    it('gives the rows exactly one tab stop, on a row', async () => {
       const user = userEvent.setup()
       setup()
 
       renderRegion()
-      await openAndFocus(user)
-      await user.keyboard('{ArrowDown}')
+      const archive = await openArchive(user)
+      const rows = within(archive).getAllByRole('button')
 
+      expect(rows.filter((row) => row.tabIndex === 0)).toHaveLength(1)
+      expect(rows.filter((row) => row.tabIndex === -1)).toHaveLength(ARCHIVE_LENGTH - 1)
+      expect(archive).not.toHaveAttribute('tabindex')
+    })
+
+    it('puts Tab on the newest row rather than on the box around it', async () => {
+      const user = userEvent.setup()
+      setup()
+
+      renderRegion()
+      const archive = await openArchive(user)
+      await user.tab()
+
+      expect(document.activeElement).toBe(screen.getByLabelText('Jump to month'))
+
+      await user.tab()
+
+      expect(document.activeElement).toBe(within(archive).getAllByRole('button')[0])
       expect(document.activeElement).toHaveTextContent('8/8/2026')
     })
 
-    it('keeps walking down', async () => {
+    it('walks down the rows with the down arrow', async () => {
       const user = userEvent.setup()
       setup()
 
       renderRegion()
-      await openAndFocus(user)
-      await user.keyboard('{ArrowDown}{ArrowDown}')
+      await openAndTabToRows(user)
+      await user.keyboard('{ArrowDown}')
 
       expect(document.activeElement).toHaveTextContent('8/7/2026')
+
+      await user.keyboard('{ArrowDown}')
+
+      expect(document.activeElement).toHaveTextContent('8/6/2026')
+    })
+
+    it('takes the tab stop with it', async () => {
+      const user = userEvent.setup()
+      setup()
+
+      renderRegion()
+      const archive = await openAndTabToRows(user)
+      await user.keyboard('{ArrowDown}')
+      const rows = within(archive).getAllByRole('button')
+
+      expect(rows.filter((row) => row.tabIndex === 0)).toHaveLength(1)
+      expect(rows[1].tabIndex).toBe(0)
+      expect(rows[0].tabIndex).toBe(-1)
     })
 
     it('walks back up and stops at the top', async () => {
@@ -499,7 +574,7 @@ describe('GameSelection', () => {
       setup()
 
       renderRegion()
-      await openAndFocus(user)
+      await openAndTabToRows(user)
       await user.keyboard('{ArrowDown}{ArrowDown}{ArrowUp}{ArrowUp}{ArrowUp}')
 
       expect(document.activeElement).toHaveTextContent('8/8/2026')
@@ -510,7 +585,7 @@ describe('GameSelection', () => {
       setup()
 
       renderRegion()
-      await openAndFocus(user)
+      await openAndTabToRows(user)
       await user.keyboard('{End}')
 
       expect(document.activeElement).toHaveTextContent('1/1/2025')
@@ -525,10 +600,10 @@ describe('GameSelection', () => {
       setup()
 
       renderRegion()
-      const archive = await openAndFocus(user)
+      await openAndTabToRows(user)
       await user.keyboard('{PageDown}')
 
-      expect(document.activeElement).toBe(archive)
+      expect(document.activeElement).toHaveTextContent('8/8/2026')
     })
 
     it('opens the focused row', async () => {
@@ -536,10 +611,10 @@ describe('GameSelection', () => {
       setup()
 
       renderRegion()
-      await openAndFocus(user)
+      await openAndTabToRows(user)
       await user.keyboard('{ArrowDown}{Enter}')
 
-      expect(mockPush).toHaveBeenCalledWith('/g/2026-08-08')
+      expect(mockPush).toHaveBeenCalledWith('/g/2026-08-07')
     })
   })
 
@@ -553,6 +628,19 @@ describe('GameSelection', () => {
       await user.selectOptions(screen.getByLabelText('Jump to month'), '2025-03')
 
       expect(document.activeElement).toHaveTextContent('3/31/2025')
+    })
+
+    it('hands the tab stop to the row it jumped to', async () => {
+      const user = userEvent.setup()
+      setup()
+
+      renderRegion()
+      const archive = await openArchive(user)
+      await user.selectOptions(screen.getByLabelText('Jump to month'), '2025-03')
+      const rows = within(archive).getAllByRole('button')
+
+      expect(rows.filter((row) => row.tabIndex === 0)).toHaveLength(1)
+      expect(rows.find((row) => row.tabIndex === 0)).toHaveTextContent('3/31/2025')
     })
 
     it('offers one option per month', async () => {
@@ -612,17 +700,96 @@ describe('GameSelection', () => {
   })
 
   describe('recomputation', () => {
-    it('re-reads the device when the route changes', async () => {
+    // The count comes from the snapshot and nothing else, so it moves only if the
+    // device was read a second time. The recommendation does not: gameId reaches it as
+    // a prop, which is how the old version of this test passed without any re-read.
+    it('re-reads the device when the route changes', () => {
       setup()
 
       const { rerender } = renderRegion()
 
-      expect(screen.getByRole('button', { name: 'Play August 7, 2026' })).toBeInTheDocument()
+      expect(screen.getByText('2 puzzles on this device')).toBeInTheDocument()
 
-      jest.mocked(storage).readMeta.mockReturnValue({ installDismissed: true, solved: ['2026-08-07'], v: 1 })
+      jest.mocked(storage).cachedGameIds.mockReturnValue(['2026-08-08', '2026-08-07', '2026-08-06'])
       rerender(<GameSelection gameId="2026-08-06" locale="en-US" now={now} />)
 
-      expect(await screen.findByRole('button', { name: 'Play August 8, 2026' })).toBeInTheDocument()
+      expect(screen.getByText('3 puzzles on this device')).toBeInTheDocument()
+      expect(storage.cachedGameIds).toHaveBeenCalledTimes(2)
+    })
+
+    // The reproduction that made this a blocker: a cold start writes nothing, the
+    // background fill lands seven puzzles, then the connection drops. Reading the
+    // device only on mount and on navigation left the region refusing to play with
+    // seven playable puzzles on it.
+    it('offers what arrived after the first read when the connection drops', () => {
+      setup({ onDevice: [] })
+
+      const { rerender } = renderRegion()
+
+      expect(screen.getByText('0 puzzles on this device')).toBeInTheDocument()
+
+      jest
+        .mocked(storage)
+        .cachedGameIds.mockReturnValue([
+          '2026-08-08',
+          '2026-08-07',
+          '2026-08-06',
+          '2026-08-05',
+          '2026-08-04',
+          '2026-08-03',
+          '2026-08-02',
+        ])
+      jest.mocked(useOnline).mockReturnValue(false)
+      rerender(<GameSelection gameId={today} locale="en-US" now={now} />)
+
+      expect(screen.getByRole('heading', { level: 2, name: 'Up next' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Play August 7, 2026' })).toBeInTheDocument()
+      expect(screen.getByRole('status')).toHaveTextContent('You’re offline · 7 puzzles on this device')
+    })
+
+    it('re-reads the device when the connection comes back', () => {
+      setup({ onDevice: [] })
+
+      renderRegion()
+
+      expect(screen.getByText('0 puzzles on this device')).toBeInTheDocument()
+
+      jest.mocked(storage).cachedGameIds.mockReturnValue(['2026-08-08'])
+      fireEvent(window, new Event('online'))
+
+      expect(screen.getByText('1 puzzle on this device')).toBeInTheDocument()
+    })
+
+    it('re-reads the device after an install fills it', () => {
+      setup({ onDevice: [] })
+
+      renderRegion()
+
+      jest.mocked(storage).cachedGameIds.mockReturnValue(['2026-08-08', '2026-08-07'])
+      fireEvent(window, new Event('appinstalled'))
+
+      expect(screen.getByText('2 puzzles on this device')).toBeInTheDocument()
+    })
+
+    // An installed app resumed the next morning keeps the same JS context, so a clock
+    // read once at mount leaves yesterday wearing the Today tag and today's puzzle
+    // missing from the archive altogether.
+    it('crosses midnight when the app is picked up again', () => {
+      setup()
+      let currentTime = yesterday()
+
+      render(<GameSelection gameId="2026-08-07" locale="en-US" now={() => currentTime} />)
+      const strip = screen.getByRole('group', { name: 'Last 7 days' })
+
+      expect(within(strip).getByRole('button', { name: '8/7/2026, Today — Not solved, On device' })).toBeInTheDocument()
+      expect(within(strip).queryByRole('button', { name: /^8\/8\/2026/ })).not.toBeInTheDocument()
+
+      currentTime = now()
+      fireEvent(document, new Event('visibilitychange'))
+
+      expect(within(strip).getByRole('button', { name: '8/8/2026, Today — Not solved, On device' })).toBeInTheDocument()
+      expect(within(strip).getByRole('button', { name: '8/7/2026 — Not solved, On device' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Play August 8, 2026' })).toBeInTheDocument()
     })
   })
 
@@ -635,8 +802,8 @@ describe('GameSelection', () => {
       expect(screen.getByRole('button', { name: 'Play August 7, 2026' })).toBeInTheDocument()
     })
 
-    // The build has no navigator, so reading navigator.language there would throw
-    // rather than merely mislabel. Nothing date-bearing survives that render anyway.
+    // Node 24 always defines globalThis.navigator, so this is not the export build --
+    // it is the guard that keeps one from throwing on any runtime that omits it.
     it('falls back to en-US where there is no navigator at all', () => {
       setup()
       const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator')!
