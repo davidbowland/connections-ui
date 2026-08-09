@@ -122,6 +122,24 @@ self.addEventListener('fetch', function (event) {
   var url = new URL(request.url)
   if (url.origin !== self.location.origin) return
 
+  // The manifest is the file that decides whether Android offers to install an app or
+  // to drop a bookmark on the home screen, and Gecko discards the whole thing on any
+  // non-2xx answer:
+  //
+  //   const badStatus = aResp.status < 200 || aResp.status >= 300
+  //   if (aResp.type === "error" || badStatus) throw new Error(msg)
+  //
+  // mobile/shared/actors/ContentDelegateChild.sys.mjs runs that fetch from a
+  // requestIdleCallback with no try/catch, so a single bad response means no manifest
+  // at all for that page load, and Firefox's installableManifest() returns null.
+  //
+  // A worker in that path has nothing to offer -- the file is under a kilobyte, ships
+  // no-cache, and only matters while there is a connection to install over -- and one
+  // thing to lose, because the miss branch below answers any non-navigate request with
+  // a synthetic 503. So leave it to the browser, which is what the sibling apps that
+  // install correctly do by not having a worker at all.
+  if (url.pathname === '/site.webmanifest') return
+
   var shell = shellFor(url.pathname)
 
   // Everything under _next/ is content-hashed and ships immutable (see

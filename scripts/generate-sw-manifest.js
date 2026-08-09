@@ -71,14 +71,14 @@ if (missing.length > 0) {
   process.exit(1)
 }
 
-// The manifest is the file that makes this an app rather than a bookmark, and the two
-// large icons are what a launcher paints on the home screen. None of them lives under
-// _next/, so none of them was precached -- and public/sw.js answers an uncached miss
-// for a subresource with a synthetic 503. Firefox fetches the manifest with
-// mode: 'cors', so it lands in exactly that branch, and Gecko's ManifestObtainer throws
-// on any non-2xx response: no manifest, no icons, and Android offers a plain shortcut
-// instead of Install. Precaching them means the worker always has a real answer.
-const identity = ['/site.webmanifest', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png']
+// The launcher icons. Neither lives under _next/, so neither was precached, and
+// public/sw.js answers an uncached miss for a subresource with a synthetic 503 --
+// which is a broken image on an installed device with no connection.
+//
+// The manifest is deliberately NOT here: public/sw.js declines to intercept it at all,
+// for the reason spelled out at that early return, so a precache entry for it would be
+// fetched on every install and never once served.
+const identity = ['/icon-192.png', '/icon-512.png', '/icon-maskable-512.png']
 const absent = identity.filter((url) => !fs.existsSync(fileForShell(url)))
 if (absent.length > 0) {
   console.error(`✗ sw.js precache is missing the app identity files: ${absent.join(', ')}`)
