@@ -18,6 +18,22 @@ const QUIET_ACTION =
 const OFFER =
   'mb-2 min-h-11 w-full rounded-full border border-black/20 px-4 text-[11px] uppercase tracking-[0.15em] text-black/70 hover:border-black/35 hover:bg-black/[0.03] dark:border-white/20 dark:text-white/65 dark:hover:border-white/35 dark:hover:bg-white/[0.04]'
 
+// Safari has no install API, and Firefox for Android fires no beforeinstallprompt. On
+// both, the gesture happens in the browser's own chrome, where we cannot put a button,
+// so the only honest offer is to name the steps.
+//
+// Neither list claims a position. Share sits at the bottom on iPhone and the top on
+// iPad, and Firefox's menu is at the bottom on a phone and the top on a tablet.
+// Naming Safari matters: Chrome, Firefox and the browsers inside messaging apps all
+// report themselves as iOS, and none of them can add anything to a home screen. The
+// Firefox steps stop short of naming the menu item, because Firefox has called it both
+// Install and Add to Home screen depending on the version, and never say "Share",
+// which Firefox does not have.
+const STEPS: Partial<Record<InstallPlatform, string[]>> = {
+  'firefox-android': ['Open the ⋮ menu in Firefox.', 'Tap Install, or Add to Home screen.'],
+  ios: ['Open this page in Safari.', 'Tap Share, then Add to Home Screen.'],
+}
+
 export const InstallCard = ({ mode, onDismiss, onInstall, onReopen, platform }: InstallCardProps): React.ReactNode => {
   const collapsedRef = useRef<HTMLButtonElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -34,15 +50,16 @@ export const InstallCard = ({ mode, onDismiss, onInstall, onReopen, platform }: 
     const previous = previousMode.current
     previousMode.current = mode
     if (previous === 'card' && mode === 'link') collapsedRef.current?.focus()
-    // iOS offers steps instead of a button, so there the card announces itself by its
-    // title rather than dropping focus back onto <body>.
+    // iOS and Firefox for Android offer steps instead of a button, so there the card
+    // announces itself by its title rather than dropping focus back onto <body>.
     if (previous === 'link' && mode === 'card') (installRef.current ?? headingRef.current)?.focus()
   }, [mode])
 
   // A desktop has no home screen, so the same label cannot serve both. Both branches
   // read from the same expression: an offer that returned under a second name would
   // look like a different offer.
-  const offerLabel = platform === 'android' ? 'Add to home screen' : 'Install'
+  const offerLabel = platform === 'android' || platform === 'firefox-android' ? 'Add to home screen' : 'Install'
+  const steps = STEPS[platform]
 
   if (mode === 'none') return null
 
@@ -76,21 +93,18 @@ export const InstallCard = ({ mode, onDismiss, onInstall, onReopen, platform }: 
         Only the puzzles you open stay on this device. Install Common Threads and the last seven days stay too — no
         connection needed.
       </p>
-      {platform === 'ios' ? (
-        // Safari has no install API. A button here would be a promise the browser
-        // cannot keep, so the steps are named exactly as Safari names them. Neither
-        // step claims where Share sits: it is at the bottom on iPhone and the top on
-        // iPad. Naming Safari matters too -- Chrome, Firefox and the webviews inside
-        // messaging apps all report themselves as iOS and none of them can add
-        // anything to the home screen.
-        <ol className="mb-3 list-decimal pl-5 text-[12.5px] leading-5 text-black/60 dark:text-white/55">
-          <li>Open this page in Safari.</li>
-          <li>Tap Share, then Add to Home Screen.</li>
-        </ol>
-      ) : (
+      {steps === undefined ? (
         <button className={OFFER} onClick={onInstall} ref={installRef} type="button">
           {offerLabel}
         </button>
+      ) : (
+        // A button here would be a promise the browser cannot keep: neither platform
+        // that lands in this branch has an install event to replay.
+        <ol className="mb-3 list-decimal pl-5 text-[12.5px] leading-5 text-black/60 dark:text-white/55">
+          {steps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
       )}
       <button className={QUIET_ACTION} onClick={onDismiss} type="button">
         Not now

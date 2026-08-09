@@ -81,6 +81,36 @@ describe('InstallCard', () => {
     expect(screen.queryByRole('button', { name: 'Install' })).not.toBeInTheDocument()
   })
 
+  it('says Add to home screen on Firefox for Android, which also has a home screen', () => {
+    render(<InstallCard {...props} mode="link" platform="firefox-android" />)
+
+    expect(screen.getByRole('button', { name: 'Add to home screen' })).toBeInTheDocument()
+  })
+
+  // Firefox for Android fires no beforeinstallprompt, so a button here would be wired
+  // to an event that never arrives. The steps name the menu rather than Share, which
+  // Firefox does not have, and stop short of naming the menu item: Firefox has called
+  // it both Install and Add to Home screen depending on the version.
+  it('gives Firefox for Android the browser menu instead of a button it cannot fire', () => {
+    render(<InstallCard {...props} platform="firefox-android" />)
+
+    expect(screen.getByText('Open the ⋮ menu in Firefox.')).toBeInTheDocument()
+    expect(screen.getByText('Tap Install, or Add to Home screen.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add to home screen' })).not.toBeInTheDocument()
+  })
+
+  it('numbers the Firefox steps, because their order matters', () => {
+    render(<InstallCard {...props} platform="firefox-android" />)
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+  })
+
+  it('keeps the Firefox steps off a platform that can be prompted', () => {
+    render(<InstallCard {...props} platform="android" />)
+
+    expect(screen.queryByText('Open the ⋮ menu in Firefox.')).not.toBeInTheDocument()
+  })
+
   it('keeps the iOS steps off a platform that can be prompted', () => {
     render(<InstallCard {...props} />)
 

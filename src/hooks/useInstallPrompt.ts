@@ -3,7 +3,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { readMeta, setInstallDismissed } from '@services/storage'
 
 export type InstallMode = 'card' | 'link' | 'none'
-export type InstallPlatform = 'android' | 'desktop' | 'ios'
+// Firefox for Android is a platform of its own here, not a browser detail on top of
+// android, because it is the only install route in the app that neither fires
+// beforeinstallprompt nor has a Share sheet. Every other Android browser worth naming
+// is Chromium and fires the event.
+export type InstallPlatform = 'android' | 'desktop' | 'firefox-android' | 'ios'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<{ outcome: 'accepted' | 'dismissed' }>
@@ -39,6 +43,10 @@ const detectPlatform = (): InstallPlatform => {
   const agent = window.navigator.userAgent
   if (/iPad|iPhone|iPod/.test(agent)) return 'ios'
   if (/Macintosh/.test(agent) && window.navigator.maxTouchPoints > 1) return 'ios'
+  // After the iOS checks, never before. Firefox on iOS is Safari underneath and
+  // reports FxiOS, so a bare match on "Firefox" would hand an iPhone a browser menu
+  // that does not exist and take away the Share steps that are its only way in.
+  if (/Android.*Firefox\//.test(agent)) return 'firefox-android'
   if (/Android/.test(agent)) return 'android'
   return 'desktop'
 }
@@ -157,8 +165,10 @@ export const useInstallPrompt = (): UseInstallPromptResult => {
     install,
     mode: resolveMode({
       isDismissed,
-      // iOS never fires the event, so the manual steps are always on offer there.
-      isOfferable: wasPromptOffered || platform === 'ios',
+      // Neither iOS nor Firefox for Android fires the event, so the manual steps are
+      // always on offer there. Gating on the event alone is what left Firefox showing
+      // nothing at all: the platform installs web apps, it just never announces it.
+      isOfferable: wasPromptOffered || platform === 'ios' || platform === 'firefox-android',
       isRunningInstalled,
     }),
     platform,

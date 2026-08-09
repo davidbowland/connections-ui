@@ -6,6 +6,8 @@ import * as storage from '@services/storage'
 jest.mock('@services/storage')
 
 const ANDROID = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
+const FIREFOX_ANDROID = 'Mozilla/5.0 (Android 14; Mobile; rv:129.0) Gecko/129.0 Firefox/129.0'
+const FIREFOX_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 FxiOS/129.0 Safari'
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Safari'
 const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36'
 
@@ -135,6 +137,17 @@ describe('useInstallPrompt', () => {
       expect(result.current.mode).toBe('none')
     })
 
+    // beforeinstallprompt is a Chromium event. Firefox for Android installs web apps
+    // but never fires it, so gating the card on the event alone left the browser with
+    // no route to installing and nothing on screen saying one exists.
+    it('shows the card on Firefox for Android without any prompt event', () => {
+      setup({ userAgent: FIREFOX_ANDROID })
+
+      const { result } = renderHook(() => useInstallPrompt())
+
+      expect(result.current.mode).toBe('card')
+    })
+
     it('offers nothing on a platform with no install route, dismissed or not', () => {
       setup({ installDismissed: true })
 
@@ -159,6 +172,25 @@ describe('useInstallPrompt', () => {
       const { result } = renderHook(() => useInstallPrompt())
 
       expect(result.current.platform).toBe('android')
+    })
+
+    it('reports firefox-android for Firefox on android, which has its own install route', () => {
+      setup({ userAgent: FIREFOX_ANDROID })
+
+      const { result } = renderHook(() => useInstallPrompt())
+
+      expect(result.current.platform).toBe('firefox-android')
+    })
+
+    // Firefox on iOS is Safari underneath: it carries no Gecko engine and no browser
+    // menu that installs anything. Only the Share sheet works there, so it must not
+    // be swept up by a bare match on "Firefox".
+    it('reports ios for Firefox on iOS, where only the Share sheet installs', () => {
+      setup({ userAgent: FIREFOX_IOS })
+
+      const { result } = renderHook(() => useInstallPrompt())
+
+      expect(result.current.platform).toBe('ios')
     })
 
     it('reports ios for an iPhone', () => {
