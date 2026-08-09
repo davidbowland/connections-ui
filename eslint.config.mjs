@@ -14,6 +14,10 @@ export default tseslint.config(
     ignores: [
       '**/__mocks__/',
       '**/__snapshots__/',
+      // Parallel-agent worktrees are full checkouts of this repo. Without this,
+      // `npm run lint` lints every worktree's copy of every file and reports
+      // errors from whatever commit that worktree sits on.
+      '.claude/',
       '.cache/',
       '.next/',
       '.swc/',
