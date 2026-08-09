@@ -263,6 +263,20 @@ describe('sw fetch', () => {
 
     expect(event.responded).toBeUndefined()
   })
+
+  // Gecko fetches the manifest with mode 'cors' and throws away the entire manifest on
+  // any non-2xx, which is the difference between Android offering to install an app and
+  // offering a bookmark. Answering it from here can only ever downgrade that: the miss
+  // branch hands a non-navigate request a synthetic 503. The network is down in this
+  // setup, so a worker that took the request would produce that 503 rather than nothing.
+  it('leaves the manifest to the browser, even with the network down', async () => {
+    const sw = setup()
+
+    const { event } = await dispatchFetch(sw, '/site.webmanifest', { mode: 'cors' })
+
+    expect(event.responded).toBeUndefined()
+    expect(sw.fetchMock).not.toHaveBeenCalled()
+  })
 })
 
 describe('sw fetch of hashed assets', () => {
@@ -407,11 +421,15 @@ describe('sw fetch of offline subresources', () => {
     expect(response.status).toBe(503)
   })
 
+  // Not the manifest: that one is never intercepted at all now, so it cannot stand in
+  // for the general case. The share image is the same shape -- a root-level file the
+  // precache does not carry.
   it('fails an uncached asset rather than answering with HTML', async () => {
     const sw = setup({ '/': 'home page' })
 
-    const { response } = await dispatchFetch(sw, '/site.webmanifest', { mode: 'cors' })
+    const { response } = await dispatchFetch(sw, '/og-image.png', { mode: 'cors' })
 
     expect(response.body).not.toBe('home page')
+    expect(response.status).toBe(503)
   })
 })
