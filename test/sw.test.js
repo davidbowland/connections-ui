@@ -385,6 +385,9 @@ describe('sw fetch of documents', () => {
     const { response } = await dispatchFetch(sw, '/some-new-route/', { mode: 'navigate' })
 
     expect(response.status).toBe(503)
+    // "Saved" is retired from the interface, and this is the one string the worker
+    // writes that a reader ever sees, so it also has to name a next step.
+    expect(response.body).toBe('You’re offline and this page isn’t on this device. Try again when you’re online.')
   })
 })
 

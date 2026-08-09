@@ -1,11 +1,11 @@
 import {
   cachedGameIds,
-  isSolved,
   markSolved,
   readGame,
   readMeta,
   removeGame,
   setInstallDismissed,
+  STORAGE_EVENT,
   writeGame,
 } from './storage'
 import { connectionsGame, gameId } from '@test/__mocks__'
@@ -13,6 +13,18 @@ import { connectionsGame, gameId } from '@test/__mocks__'
 describe('storage', () => {
   const setup = (): void => {
     window.localStorage.clear()
+  }
+
+  // onAnnounce runs inside the listener, so a test can assert what storage looked like
+  // at the moment it was told rather than only that it was told. The listener is
+  // detached before the assertions run: window outlives every test in this file, and
+  // one left attached would keep firing for the rest of the suite.
+  const announcementsDuring = (act: () => void, onAnnounce: () => void = () => undefined): jest.Mock => {
+    const listener = jest.fn(onAnnounce)
+    window.addEventListener(STORAGE_EVENT, listener)
+    act()
+    window.removeEventListener(STORAGE_EVENT, listener)
+    return listener
   }
 
   beforeAll(() => {
@@ -124,8 +136,7 @@ describe('storage', () => {
       setup()
       markSolved(gameId)
 
-      expect(isSolved(gameId)).toBe(true)
-      expect(isSolved('2025-06-01')).toBe(false)
+      expect(readMeta().solved).toEqual([gameId])
     })
 
     it('does not record the same puzzle twice', () => {
@@ -163,8 +174,6 @@ describe('storage', () => {
       window.localStorage.setItem('ct:meta', JSON.stringify({ solved: gameId, v: 1 }))
 
       expect(readMeta().solved).toEqual([])
-      expect(isSolved(gameId)).toBe(false)
-      expect(isSolved('01-15')).toBe(false)
     })
 
     it('hands every caller its own copy', () => {
@@ -173,6 +182,78 @@ describe('storage', () => {
       first.solved.push(gameId)
 
       expect(readMeta().solved).toEqual([])
+    })
+  })
+
+  // The native storage event fires in other tabs only, so a component rendering a count
+  // off these keys learns nothing about the writes this tab makes. Everything that
+  // changes what cachedGameIds or readMeta return has to say so.
+  describe('announcements', () => {
+    it('announces a stored puzzle, with the puzzle already stored', () => {
+      setup()
+      let visible: string[] = []
+
+      const announced = announcementsDuring(
+        () => writeGame(gameId, connectionsGame),
+        () => {
+          visible = cachedGameIds()
+        },
+      )
+
+      expect(announced).toHaveBeenCalledTimes(1)
+      expect(visible).toEqual([gameId])
+    })
+
+    it('announces a removed puzzle, with the puzzle already gone', () => {
+      setup()
+      writeGame(gameId, connectionsGame)
+      let visible: string[] = [gameId]
+
+      const announced = announcementsDuring(
+        () => removeGame(gameId),
+        () => {
+          visible = cachedGameIds()
+        },
+      )
+
+      expect(announced).toHaveBeenCalledTimes(1)
+      expect(visible).toEqual([])
+    })
+
+    it('announces a win, with the win already recorded', () => {
+      setup()
+      let visible: string[] = []
+
+      const announced = announcementsDuring(
+        () => markSolved(gameId),
+        () => {
+          visible = readMeta().solved
+        },
+      )
+
+      expect(announced).toHaveBeenCalledTimes(1)
+      expect(visible).toEqual([gameId])
+    })
+
+    // Re-solving writes nothing, so there is nothing to tell anyone about. Announcing
+    // anyway would re-read the device on every render of a finished board.
+    it('stays quiet when a win changes nothing', () => {
+      setup()
+      markSolved(gameId)
+
+      expect(announcementsDuring(() => markSolved(gameId))).not.toHaveBeenCalled()
+    })
+
+    // A write that could not land still moved nothing, but the listener re-reads rather
+    // than trusting the announcement, so telling it is harmless -- and cheaper than
+    // teaching safeWrite to report failure up through three call sites.
+    it('still announces when the write itself failed', () => {
+      setup()
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new DOMException('full', 'QuotaExceededError')
+      })
+
+      expect(announcementsDuring(() => writeGame(gameId, connectionsGame))).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -5,6 +5,13 @@ const GAME_ID_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const META_KEY = 'ct:meta'
 const VERSION = 1
 
+// localStorage tells this tab nothing about its own writes -- the native storage event
+// fires only in *other* tabs. Anything that renders a count or a solved marker off
+// these keys therefore has to be told, or it keeps painting the first read it ever
+// made: usePrefetch fills the device seconds after mount, and markSolved lands on a
+// win, and neither moves a route, a connection, or a visibility state.
+export const STORAGE_EVENT = 'ct:storage'
+
 export interface Meta {
   installDismissed: boolean
   solved: GameId[]
@@ -26,6 +33,10 @@ const safeWrite = (key: string, value: string): void => {
   }
 }
 
+// Announced after the write, never before: a listener re-reads storage synchronously,
+// so firing first would hand it the state it was told had changed.
+const announce = (): void => void window.dispatchEvent(new Event(STORAGE_EVENT))
+
 const safeRead = (key: string): string | null => {
   try {
     return window.localStorage.getItem(key)
@@ -46,8 +57,10 @@ export const readGame = (gameId: GameId): ConnectionsGame | null => {
   }
 }
 
-export const writeGame = (gameId: GameId, game: ConnectionsGame): void =>
+export const writeGame = (gameId: GameId, game: ConnectionsGame): void => {
   safeWrite(`${GAME_PREFIX}${gameId}`, JSON.stringify(game))
+  announce()
+}
 
 export const removeGame = (gameId: GameId): void => {
   try {
@@ -55,6 +68,7 @@ export const removeGame = (gameId: GameId): void => {
   } catch (error: unknown) {
     console.error('storage remove failed', { error, gameId })
   }
+  announce()
 }
 
 // Derived, never stored. A stored index drifts: iOS evicts localStorage wholesale
@@ -102,9 +116,8 @@ export const markSolved = (gameId: GameId): void => {
   const meta = readMeta()
   if (meta.solved.includes(gameId)) return
   writeMeta({ ...meta, solved: [...meta.solved, gameId] })
+  announce()
 }
-
-export const isSolved = (gameId: GameId): boolean => readMeta().solved.includes(gameId)
 
 export const setInstallDismissed = (dismissed: boolean): void =>
   writeMeta({ ...readMeta(), installDismissed: dismissed })

@@ -265,14 +265,57 @@ describe('usePrefetch', () => {
     expect(jest.mocked(connections).fetchConnectionsGame).toHaveBeenCalledTimes(1)
   })
 
-  it('removes its listeners on unmount', () => {
+  it('removes the exact listeners it added on unmount', () => {
     setup(false, false)
+    const addEventListener = jest.spyOn(window, 'addEventListener')
     const removeEventListener = jest.spyOn(window, 'removeEventListener')
+    const prefetchCalls = (calls: unknown[][]): unknown[][] =>
+      calls.filter(([type]) => type === 'online' || type === 'appinstalled')
 
     renderHook(() => usePrefetch(now)).unmount()
 
-    expect(removeEventListener).toHaveBeenCalledWith('online', expect.any(Function))
-    expect(removeEventListener).toHaveBeenCalledWith('appinstalled', expect.any(Function))
+    // Compared by reference. expect.any(Function) passed for a cleanup that removed
+    // some other function entirely and leaked both listeners.
+    expect(prefetchCalls(addEventListener.mock.calls)).toHaveLength(2)
+    expect(prefetchCalls(removeEventListener.mock.calls)).toEqual(prefetchCalls(addEventListener.mock.calls))
+  })
+
+  // isInstalled, prefetchTargets and cachedGameIds all sit outside the per-puzzle
+  // try/catch, and run is registered as a listener as well as called bare -- neither
+  // call site has anywhere to put a rejection.
+  it('logs rather than rejecting when the device cannot be read at all', async () => {
+    setup(false, false)
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    jest.mocked(storage).cachedGameIds.mockImplementationOnce(() => {
+      throw new DOMException('denied', 'SecurityError')
+    })
+
+    renderHook(() => usePrefetch(now))
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith('prefetch run failed', { error: expect.any(DOMException) })
+    })
+    await settle()
+
+    expect(jest.mocked(connections).fetchConnectionsGame).not.toHaveBeenCalled()
+  })
+
+  // The guard is released in a finally, so a throw must not wedge every later run.
+  it('runs again after a failure', async () => {
+    setup(false, false)
+    jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    jest.mocked(storage).cachedGameIds.mockImplementationOnce(() => {
+      throw new DOMException('denied', 'SecurityError')
+    })
+
+    renderHook(() => usePrefetch(now))
+    await settle()
+
+    window.dispatchEvent(new Event('online'))
+
+    await waitFor(() => {
+      expect(jest.mocked(connections).fetchConnectionsGame).toHaveBeenCalledTimes(1)
+    })
   })
 
   // No injected clock, so the date is whatever today is. The count is the assertion,

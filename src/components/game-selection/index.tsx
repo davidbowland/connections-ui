@@ -5,7 +5,7 @@ import { InstallCard } from './install-card'
 import { GameSelectionRow } from './row'
 import { useInstallPrompt } from '@hooks/useInstallPrompt'
 import { useOnline } from '@hooks/useOnline'
-import { cachedGameIds, readMeta } from '@services/storage'
+import { cachedGameIds, readMeta, STORAGE_EVENT } from '@services/storage'
 import { GameId } from '@types'
 import { allGameIds, nextUnplayed } from '@utils/game-ids'
 
@@ -86,9 +86,15 @@ const headingFor = (chosen: Choice | undefined): string => {
   return 'Up next'
 }
 
-const whyLine = (chosen: Choice | undefined, isOffline: boolean, total: number): string => {
+const whyLine = (chosen: Choice | undefined, isOffline: boolean, total: number, current: GameId): string => {
   if (chosen === undefined) return 'Nothing is on this device yet. Open a puzzle while you’re online and it stays.'
   if (chosen.replay) {
+    // A replay of the puzzle on screen is not the same fact as a replay of some other
+    // one. nextUnplayed falls back to the current puzzle when it is the only thing in
+    // the pool, and nothing need have been solved for that to happen -- "you've solved
+    // every puzzle" would then be flatly false above an unfinished board. Same trap the
+    // non-replay line already sidesteps with "apart from this one".
+    if (chosen.id === current) return 'This is the only puzzle on this device. Same words, new order.'
     return isOffline
       ? 'You’ve solved every puzzle on this device. Same words, new order.'
       : `You’ve solved all ${total} puzzles. Same words, new order.`
@@ -151,6 +157,12 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
   // Counted over ids, not over solved: ct:meta can hold a day the archive no longer
   // lists, and "138 of 585" has to be a subset of the 585 on screen.
   const solvedCount = useMemo(() => ids.filter((id) => solvedSet.has(id)).length, [ids, solvedSet])
+
+  // The same drift, in the other direction. West of UTC the prefetch stages tomorrow's
+  // puzzle hours before the local date reaches it, deliberately -- but ids stops at the
+  // local today, so the raw length counts a puzzle this region will not list, will not
+  // offer, and will not open. Every US evening it read one too many.
+  const listedOnDevice = useMemo(() => ids.filter((id) => onDeviceSet.has(id)), [ids, onDeviceSet])
   const strip = useMemo(() => ids.slice(0, STRIP_LENGTH), [ids])
   const months = useMemo(() => groupByMonth(ids, locale), [ids, locale])
 
@@ -158,7 +170,20 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
   // rebuilt whenever the app resumes -- so the stored index is clamped, never trusted.
   const activeIndex = Math.min(activeRow, ids.length - 1)
 
-  const goTo = useCallback((id: GameId) => void router.push(`/g/${id}`), [router])
+  // Pushing the route already on screen does nothing at all: pages/g/[gameId] keys its
+  // load on router.asPath, which does not change, so the board neither refetches nor
+  // reshuffles. That makes "Play <date> again" -- the one CTA that always names the
+  // current puzzle -- a dead button. A reload is what "same words, new order" costs.
+  const goTo = useCallback(
+    (id: GameId) => {
+      if (id === gameId) {
+        router.reload()
+        return
+      }
+      void router.push(`/g/${id}`)
+    },
+    [gameId, router],
+  )
 
   // Delegated: keydown bubbles from the focused row up to the region, so one handler
   // serves all 585 without 585 listeners.
@@ -199,7 +224,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
     />
   )
 
-  const deviceCount = pluralize(onDevice.length, 'puzzle', 'puzzles')
+  const deviceCount = pluralize(listedOnDevice.length, 'puzzle', 'puzzles')
 
   return (
     <section aria-label="Puzzles">
@@ -218,7 +243,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
       )}
 
       <p className="mt-2 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
-        {whyLine(chosen, isOffline, ids.length)}
+        {whyLine(chosen, isOffline, ids.length, gameId)}
       </p>
 
       {/* Always mounted, empty while online. NVDA and JAWS announce a change of text
@@ -264,7 +289,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
               ? 'You haven’t solved any of these yet.'
               : `You’ve solved ${solvedCount} of ${ids.length} puzzles.`}
             {isOffline &&
-              ` ${onDevice.length} of them ${onDevice.length === 1 ? 'is' : 'are'} on this device — the rest need a connection.`}
+              ` ${listedOnDevice.length} of them ${listedOnDevice.length === 1 ? 'is' : 'are'} on this device — the rest need a connection.`}
           </p>
 
           <div className="mt-2">
@@ -351,6 +376,12 @@ export const GameSelection = ({
     // stores seven puzzles after mount and again on every reconnect and install, and
     // useConnectionsGame stores the puzzle on screen. None of that touches gameId, so
     // the region has to listen to the same signals the writes do.
+    //
+    // ct:storage is the write itself, and it is the only one of these that fires when
+    // the device fills. online/appinstalled fire *before* the prefetch they start
+    // finishes, so on a first visit the count sat at "0 puzzles on this device" for the
+    // whole session, and a win did not reach the strip until a navigation.
+    window.addEventListener(STORAGE_EVENT, read)
     window.addEventListener('online', read)
     window.addEventListener('appinstalled', read)
     // Resume, not merely visibility. An installed PWA keeps its JS context across
@@ -358,6 +389,7 @@ export const GameSelection = ({
     // morning, hides today's puzzle entirely, and offers a day already finished.
     document.addEventListener('visibilitychange', read)
     return () => {
+      window.removeEventListener(STORAGE_EVENT, read)
       window.removeEventListener('online', read)
       window.removeEventListener('appinstalled', read)
       document.removeEventListener('visibilitychange', read)
