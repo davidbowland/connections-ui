@@ -73,7 +73,7 @@ export const InstallCard = ({ mode, onDismiss, onInstall, onReopen, platform }: 
     return (
       <button
         aria-expanded={false}
-        className={`mt-3 ${QUIET_ACTION}`}
+        className={`mt-5 ${QUIET_ACTION}`}
         onClick={onReopen}
         ref={collapsedRef}
         type="button"
@@ -84,7 +84,7 @@ export const InstallCard = ({ mode, onDismiss, onInstall, onReopen, platform }: 
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-black/8 bg-black/[0.03] p-4 dark:border-white/8 dark:bg-white/[0.04]">
+    <div className="mt-6 rounded-xl border border-black/8 bg-black/[0.03] p-4 dark:border-white/8 dark:bg-white/[0.04]">
       <h3
         className="mb-2 text-[11px] uppercase tracking-[0.15em] text-black/[0.88] dark:text-white/90"
         ref={headingRef}

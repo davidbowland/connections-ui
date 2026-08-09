@@ -273,7 +273,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
         </button>
       )}
 
-      <p className="mt-2 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
+      <p className="mt-3 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
         {whyLine(chosen, isOffline, ids.length, gameId, isSweep)}
       </p>
 
@@ -282,7 +282,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
           with its message already in it is routinely missed, which would make going
           offline silent -- the one transition this region exists to report. */}
       <p
-        className="mt-1 text-[11px] uppercase tracking-[0.15em] text-black/60 empty:mt-0 dark:text-white/55"
+        className="mt-5 text-[11px] uppercase tracking-[0.15em] text-black/60 empty:mt-0 dark:text-white/55"
         role="status"
       >
         {isOffline ? `You’re offline · ${deviceCount} on this device` : ''}
@@ -291,22 +291,22 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
       {/* Inventory, not news, so it is not announced: the count would otherwise be
           re-read on every navigation, which is noise rather than information. */}
       {isOnline && (
-        <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-black/60 dark:text-white/55">
+        <p className="mt-5 text-[11px] uppercase tracking-[0.15em] text-black/60 dark:text-white/55">
           {deviceCount} on this device
         </p>
       )}
 
-      <div aria-labelledby="strip-heading" className="mt-4" role="group">
+      <div aria-labelledby="strip-heading" className="mt-7" role="group">
         <h3 className="text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55" id="strip-heading">
           Last 7 days
         </h3>
-        <div className="mt-1.5 flex flex-col gap-1.5">{strip.map((id) => renderRow(id))}</div>
+        <div className="mt-2.5 flex flex-col gap-2">{strip.map((id) => renderRow(id))}</div>
       </div>
 
       <button
         aria-controls={isArchiveOpen ? ARCHIVE_ID : undefined}
         aria-expanded={isArchiveOpen}
-        className="mt-3 min-h-11 text-[10px] uppercase tracking-[0.15em] text-black/60 hover:text-black/[0.88] dark:text-white/55 dark:hover:text-white/90"
+        className="mt-5 min-h-11 text-[10px] uppercase tracking-[0.15em] text-black/60 hover:text-black/[0.88] dark:text-white/55 dark:hover:text-white/90"
         onClick={() => setIsArchiveOpen((open) => !open)}
         type="button"
       >
@@ -315,7 +315,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
 
       {isArchiveOpen && (
         <>
-          <p className="mt-1 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
+          <p className="mt-3 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
             {solvedCount === 0
               ? 'You haven’t solved any of these yet.'
               : `You’ve solved ${solvedCount} of ${ids.length} puzzles.`}
@@ -323,9 +323,9 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
               ` ${listedOnDevice.length} of them ${listedOnDevice.length === 1 ? 'is' : 'are'} on this device — the rest need a connection.`}
           </p>
 
-          <div className="mt-2">
+          <div className="mt-5">
             <label
-              className="mb-1 block text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55"
+              className="mb-1.5 block text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55"
               htmlFor="jump-to-month"
             >
               Jump to month
@@ -353,7 +353,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
               keyboard user no clue that the rows are reachable at all. */}
           <div
             aria-label="Every puzzle, newest first"
-            className="mt-2 max-h-[420px] overflow-y-auto"
+            className="mt-4 max-h-[420px] overflow-y-auto"
             id={ARCHIVE_ID}
             onFocus={onArchiveFocus}
             onKeyDown={onArchiveKeyDown}
@@ -369,7 +369,7 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
                 </h3>
                 {/* A real list, so a screen reader says "3 of 31" instead of leaving
                     the rows as anonymous buttons in an anonymous box. */}
-                <ul aria-labelledby={`archive-${month.key}`} className="flex flex-col gap-1.5 pb-1.5">
+                <ul aria-labelledby={`archive-${month.key}`} className="mt-1 flex flex-col gap-2 pb-3">
                   {month.ids.map((id, index) => (
                     <li key={id}>{renderRow(id, month.start + index === activeIndex ? 0 : -1)}</li>
                   ))}
