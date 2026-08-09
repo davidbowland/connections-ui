@@ -13,16 +13,24 @@ const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 
 describe('useInstallPrompt', () => {
   interface SetupOptions {
     displayMode?: boolean
+    installDismissed?: boolean
     maxTouchPoints?: number
     navigatorStandalone?: boolean
     userAgent?: string
   }
 
-  // Named arrangement, called explicitly by every test. Nothing here leaks between
-  // tests: every browser fact the hook reads is written on every call, so the order
-  // the tests run in cannot change an outcome.
+  // Named arrangement, called explicitly by every test, and the only place in this
+  // file that stubs anything. Every fact the hook reads is written on every call, so
+  // the order the tests run in cannot change an outcome.
+  //
+  // Once, never mockReturnValue, for both stubs. clearMocks is mockClear, which
+  // leaves return values in place, so a plain mockReturnValue here would outlive the
+  // test that set it and surface as a failure in some later, unrelated test. Each
+  // queued value is consumed by the single mount its test performs: the hook reads
+  // readMeta and matchMedia exactly once each, in the mount effect.
   const setup = ({
     displayMode = false,
+    installDismissed = false,
     maxTouchPoints = 0,
     navigatorStandalone = false,
     userAgent = MAC,
@@ -30,8 +38,7 @@ describe('useInstallPrompt', () => {
     Object.defineProperty(window.navigator, 'maxTouchPoints', { configurable: true, value: maxTouchPoints })
     Object.defineProperty(window.navigator, 'standalone', { configurable: true, value: navigatorStandalone })
     Object.defineProperty(window.navigator, 'userAgent', { configurable: true, value: userAgent })
-    // The hook calls matchMedia exactly once per mount, so Once is enough and the
-    // shared default from jest.setup-test-env.js survives for the next test.
+    jest.mocked(storage).readMeta.mockReturnValueOnce({ installDismissed, solved: [], v: 1 })
     jest.mocked(window.matchMedia).mockReturnValueOnce({ matches: displayMode } as MediaQueryList)
   }
 
@@ -43,6 +50,9 @@ describe('useInstallPrompt', () => {
     return event
   }
 
+  // The shared default. An auto-mocked readMeta returns undefined rather than a
+  // Meta, and the hook reads a property straight off it, so without this a test that
+  // forgot setup() would die on a TypeError instead of reporting what it checked.
   beforeAll(() => {
     jest.mocked(storage).readMeta.mockReturnValue({ installDismissed: false, solved: [], v: 1 })
   })
@@ -184,8 +194,7 @@ describe('useInstallPrompt', () => {
     })
 
     it('reads a dismissal recorded on an earlier visit', () => {
-      setup()
-      jest.mocked(storage).readMeta.mockReturnValueOnce({ installDismissed: true, solved: [], v: 1 })
+      setup({ installDismissed: true })
 
       const { result } = renderHook(() => useInstallPrompt())
 
@@ -193,8 +202,7 @@ describe('useInstallPrompt', () => {
     })
 
     it('reopens after a dismissal, because the card is never destroyed', () => {
-      setup()
-      jest.mocked(storage).readMeta.mockReturnValueOnce({ installDismissed: true, solved: [], v: 1 })
+      setup({ installDismissed: true })
 
       const { result } = renderHook(() => useInstallPrompt())
       act(() => {
@@ -206,8 +214,7 @@ describe('useInstallPrompt', () => {
     })
 
     it('still offers a dismissed iOS card, the only route to installing there', () => {
-      setup({ userAgent: IPHONE })
-      jest.mocked(storage).readMeta.mockReturnValueOnce({ installDismissed: true, solved: [], v: 1 })
+      setup({ installDismissed: true, userAgent: IPHONE })
 
       const { result } = renderHook(() => useInstallPrompt())
 
