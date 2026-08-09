@@ -88,14 +88,14 @@ describe('InstallCard', () => {
   })
 
   // Firefox for Android fires no beforeinstallprompt, so a button here would be wired
-  // to an event that never arrives. The steps name the menu rather than Share, which
-  // Firefox does not have, and stop short of naming the menu item: Firefox has called
-  // it both Install and Add to Home screen depending on the version.
+  // to an event that never arrives. The steps name Install rather than Share, which
+  // Firefox does not have, and rather than Add to Home screen, which in current
+  // Firefox is a separate item that makes an ordinary shortcut.
   it('gives Firefox for Android the browser menu instead of a button it cannot fire', () => {
     render(<InstallCard {...props} platform="firefox-android" />)
 
-    expect(screen.getByText('Open the ⋮ menu in Firefox.')).toBeInTheDocument()
-    expect(screen.getByText('Tap Install, or Add to Home screen.')).toBeInTheDocument()
+    expect(screen.getByText('Open the Firefox menu.')).toBeInTheDocument()
+    expect(screen.getByText('Tap Install. Older versions call it Add to Home screen.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add to home screen' })).not.toBeInTheDocument()
   })
 
@@ -108,7 +108,7 @@ describe('InstallCard', () => {
   it('keeps the Firefox steps off a platform that can be prompted', () => {
     render(<InstallCard {...props} platform="android" />)
 
-    expect(screen.queryByText('Open the ⋮ menu in Firefox.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Open the Firefox menu.')).not.toBeInTheDocument()
   })
 
   it('keeps the iOS steps off a platform that can be prompted', () => {

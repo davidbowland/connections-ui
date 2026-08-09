@@ -23,14 +23,17 @@ const OFFER =
 // so the only honest offer is to name the steps.
 //
 // Neither list claims a position. Share sits at the bottom on iPhone and the top on
-// iPad, and Firefox's menu is at the bottom on a phone and the top on a tablet.
-// Naming Safari matters: Chrome, Firefox and the browsers inside messaging apps all
-// report themselves as iOS, and none of them can add anything to a home screen. The
-// Firefox steps stop short of naming the menu item, because Firefox has called it both
-// Install and Add to Home screen depending on the version, and never say "Share",
-// which Firefox does not have.
+// iPad, and Firefox's menu moves with the toolbar setting. Naming Safari matters:
+// Chrome, Firefox and the browsers inside messaging apps all report themselves as iOS,
+// and none of them can add anything to a home screen.
+//
+// Install, named first and named exactly. Firefox lists Add to Home screen as a
+// SEPARATE item that makes an ordinary shortcut -- it opens in a tab and Android never
+// counts it as installed -- so a step that said only "add to home screen" would send
+// the player to the one item that cannot work. Older Firefox called the install item
+// Add to Home screen itself, which is why the second name still has to appear.
 const STEPS: Partial<Record<InstallPlatform, string[]>> = {
-  'firefox-android': ['Open the ⋮ menu in Firefox.', 'Tap Install, or Add to Home screen.'],
+  'firefox-android': ['Open the Firefox menu.', 'Tap Install. Older versions call it Add to Home screen.'],
   ios: ['Open this page in Safari.', 'Tap Share, then Add to Home Screen.'],
 }
 
