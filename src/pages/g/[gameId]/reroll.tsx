@@ -78,14 +78,38 @@ const RerollPage = (): React.ReactNode => {
                   value={password}
                 />
               </div>
+              {/* The 40% dim reads as "not available yet" and is reserved for the empty-password
+                  state. A request in flight keeps full contrast, because "Rerolling…" is
+                  information the user needs to read. */}
               <button
-                className="w-full rounded-full bg-black/88 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-opacity disabled:opacity-40 dark:bg-white/95 dark:text-[#060608]"
+                aria-busy={isLoading}
+                className={`flex w-full items-center justify-center gap-2.5 rounded-full bg-black/88 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-opacity dark:bg-white/95 dark:text-[#060608] ${
+                  isLoading ? 'cursor-wait' : 'disabled:opacity-40'
+                }`}
                 disabled={isLoading || !password}
                 type="submit"
               >
-                {isLoading ? '…' : 'Reroll'}
+                {isLoading ? (
+                  <>
+                    {/* Hidden rather than frozen under reduced motion: a stopped ring is a
+                        broken circle, and the label already says what is happening. */}
+                    <span
+                      aria-hidden="true"
+                      className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:hidden"
+                    />
+                    Rerolling…
+                  </>
+                ) : (
+                  'Reroll'
+                )}
               </button>
             </form>
+
+            {/* The button is disabled while the request runs, so its own label change is not
+                reliably announced. This is. */}
+            <span className="sr-only" role="status">
+              {isLoading ? 'Rerolling the puzzle…' : ''}
+            </span>
 
             {feedback && <FeedbackMessage isError={isError} message={feedback} />}
           </div>

@@ -85,6 +85,44 @@ describe('RerollPage', () => {
     expect(screen.getByText('Game is being regenerated')).toBeInTheDocument()
   })
 
+  it('names the wait and announces it while the reroll is in flight', async () => {
+    setup()
+    let finishReroll: (message: string) => void = () => undefined
+    jest.mocked(rerollGame).mockReturnValueOnce(
+      new Promise<string>((resolve) => {
+        finishReroll = resolve
+      }),
+    )
+    const user = userEvent.setup()
+    render(<RerollPage />)
+
+    await user.type(screen.getByLabelText(/password/i), 'my-password')
+    await user.click(screen.getByRole('button', { name: 'Reroll' }))
+
+    const button = await screen.findByRole('button', { name: 'Rerolling…' })
+    expect(button).toBeDisabled()
+    expect(button).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('status')).toHaveTextContent('Rerolling the puzzle…')
+
+    finishReroll('Game is being regenerated')
+    await screen.findByText('Game is being regenerated')
+  })
+
+  it('restores the resting label once the reroll finishes', async () => {
+    setup()
+    const user = userEvent.setup()
+    render(<RerollPage />)
+
+    expect(screen.getByRole('button', { name: 'Reroll' })).not.toHaveAttribute('aria-busy', 'true')
+
+    await user.type(screen.getByLabelText(/password/i), 'my-password')
+    await user.click(screen.getByRole('button', { name: 'Reroll' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Reroll' })).toBeEnabled()
+    })
+  })
+
   it('shows error message on failure', async () => {
     setup()
     jest.mocked(rerollGame).mockRejectedValueOnce(new Error('Wrong password.'))

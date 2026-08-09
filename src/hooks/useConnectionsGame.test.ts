@@ -2,9 +2,11 @@ import { renderHook, waitFor } from '@testing-library/react'
 
 import { dedupeKey, useConnectionsGame } from './useConnectionsGame'
 import * as connections from '@services/connections'
+import * as storage from '@services/storage'
 import { connectionsGame, gameId, wordList } from '@test/__mocks__'
 
 jest.mock('@services/connections')
+jest.mock('@services/storage')
 
 Object.defineProperty(window, 'crypto', {
   value: {
@@ -19,6 +21,12 @@ describe('useConnectionsGame', () => {
   const selectWord = async (result: any, word: string) => {
     result.current.selectWord(word)
     await waitFor(() => expect(result.current.selectedWords).toContain(word))
+  }
+
+  // navigator.onLine is a defined property on the jsdom navigator, so a value set by
+  // one test outlives clearMocks. Every test that cares sets it explicitly.
+  const setOnline = (onLine: boolean): void => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: onLine, writable: true })
   }
 
   beforeAll(() => {
@@ -47,6 +55,7 @@ describe('useConnectionsGame', () => {
   })
 
   it('handles API errors', async () => {
+    setOnline(true)
     jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error('API Error'))
 
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
@@ -58,6 +67,26 @@ describe('useConnectionsGame', () => {
     expect(result.current.isLoading).toBe(false)
     expect(result.current.categories).toEqual({})
     expect(result.current.words).toEqual([])
+  })
+
+  // fetchConnectionsGame answers from storage without touching the network, so a
+  // failure while offline means this puzzle is not on the device. "Refresh the page" is
+  // then the one instruction that cannot work -- and with the service worker installed
+  // the shell reloads and fails again, so it is advice that loops.
+  it('names the real problem when the device is offline', async () => {
+    setOnline(false)
+    jest.mocked(connections).fetchConnectionsGame.mockRejectedValueOnce(new Error('Network Error'))
+
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
+
+    await waitFor(() => {
+      expect(result.current.errorMessage).toBe(
+        'You’re offline and this puzzle isn’t on this device. Play one that is, or try again when you’re online.',
+      )
+    })
+
+    setOnline(true)
+    expect(result.current.isLoading).toBe(false)
   })
 
   it('polls when game is generating', async () => {
@@ -647,5 +676,123 @@ describe('useConnectionsGame', () => {
     result.current.selectWords(['WORD01', 'WORD02', 'WORD03', 'WORD05'])
 
     await waitFor(() => expect(result.current.isSelectionSubmitted).toBe(false))
+  })
+
+  const solveCategory = async (result: any, words: string[], solvedCount: number) => {
+    await selectFour(result, words)
+    expect(result.current.submitWords()).toBe('correct')
+    await waitFor(() => expect(result.current.solvedCategories).toHaveLength(solvedCount))
+  }
+
+  const CATEGORY_WORDS = [
+    ['WORD01', 'WORD02', 'WORD03', 'WORD04'],
+    ['WORD05', 'WORD06', 'WORD07', 'WORD08'],
+    ['WORD09', 'WORD10', 'WORD11', 'WORD12'],
+    ['WORD13', 'WORD14', 'WORD15', 'WORD16'],
+  ]
+
+  it('records the puzzle as solved when every category is solved by submission', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+    await solveCategory(result, CATEGORY_WORDS[1], 2)
+    await solveCategory(result, CATEGORY_WORDS[2], 3)
+    await solveCategory(result, CATEGORY_WORDS[3], 4)
+
+    expect(storage.markSolved).toHaveBeenCalledWith(gameId)
+    expect(storage.markSolved).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not record the puzzle before the final category is solved', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+    await solveCategory(result, CATEGORY_WORDS[1], 2)
+    await solveCategory(result, CATEGORY_WORDS[2], 3)
+
+    expect(storage.markSolved).not.toHaveBeenCalled()
+  })
+
+  it('does not record the puzzle when the solution is revealed', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    result.current.revealSolution()
+    await waitFor(() => expect(result.current.solvedCategories).toHaveLength(4))
+
+    expect(storage.markSolved).not.toHaveBeenCalled()
+  })
+
+  it('does not record the puzzle when three categories are solved and the rest revealed', async () => {
+    const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+    await solveCategory(result, CATEGORY_WORDS[1], 2)
+    await solveCategory(result, CATEGORY_WORDS[2], 3)
+
+    result.current.revealSolution()
+    await waitFor(() => expect(result.current.solvedCategories).toHaveLength(4))
+    await waitFor(() => expect(result.current.words).toEqual([]))
+
+    expect(storage.markSolved).not.toHaveBeenCalled()
+  })
+
+  it('records the puzzle currently being played, not the one it replaced', async () => {
+    const { rerender, result } = renderHook(({ id }) => useConnectionsGame(id, () => 0), {
+      initialProps: { id: gameId },
+    })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+
+    rerender({ id: '2025-01-16' })
+    await waitFor(() => expect(result.current.words).toHaveLength(16))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+    await solveCategory(result, CATEGORY_WORDS[1], 2)
+    await solveCategory(result, CATEGORY_WORDS[2], 3)
+    await solveCategory(result, CATEGORY_WORDS[3], 4)
+
+    expect(storage.markSolved).toHaveBeenCalledWith('2025-01-16')
+    expect(storage.markSolved).not.toHaveBeenCalledWith(gameId)
+  })
+
+  it('does not record the next puzzle when the game id changes after a win', async () => {
+    const { rerender, result } = renderHook(({ id }) => useConnectionsGame(id, () => 0), {
+      initialProps: { id: gameId },
+    })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+    await solveCategory(result, CATEGORY_WORDS[1], 2)
+    await solveCategory(result, CATEGORY_WORDS[2], 3)
+    await solveCategory(result, CATEGORY_WORDS[3], 4)
+
+    rerender({ id: '2025-01-16' })
+    await waitFor(() => expect(result.current.words).toHaveLength(16))
+    await waitFor(() => expect(result.current.solvedCategories).toEqual([]))
+
+    expect(storage.markSolved).not.toHaveBeenCalledWith('2025-01-16')
+    expect(storage.markSolved).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not record the previous puzzle when the game id changes mid-session', async () => {
+    const { rerender, result } = renderHook(({ id }) => useConnectionsGame(id, () => 0), {
+      initialProps: { id: gameId },
+    })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await solveCategory(result, CATEGORY_WORDS[0], 1)
+    await solveCategory(result, CATEGORY_WORDS[1], 2)
+    await solveCategory(result, CATEGORY_WORDS[2], 3)
+
+    rerender({ id: '2025-01-16' })
+    await waitFor(() => expect(result.current.words).toHaveLength(16))
+    await waitFor(() => expect(result.current.solvedCategories).toEqual([]))
+
+    expect(storage.markSolved).not.toHaveBeenCalled()
   })
 })

@@ -6,10 +6,6 @@ export interface ConnectionsGame {
   categories: CategoryObject
 }
 
-export interface GameIdsResponse {
-  gameIds: GameId[]
-}
-
 // Categories
 
 export interface Category {

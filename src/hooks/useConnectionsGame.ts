@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 
 import { fetchConnectionsGame } from '@services/connections'
+import { markSolved } from '@services/storage'
 import { CategoryObject, SolvedCategory } from '@types'
 
 // Cryptographically secure random shuffle using Fisher-Yates algorithm
@@ -114,6 +115,17 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
 
     if (categoryEntry) {
       const [categoryName, category] = categoryEntry
+
+      // Recorded here, in the correct-guess branch, rather than from an effect watching
+      // solvedCategories. revealSolution() fills solvedCategories with every remaining
+      // category, so a completed board cannot tell a win from a reveal -- but reveals
+      // never run this code, and neither does a wrong, duplicate, or short submission.
+      // The guard fires on the one submission that takes the last category, so
+      // markSolved runs once per win rather than on every render of a finished board.
+      if (solvedCategories.length + 1 === Object.keys(categories).length) {
+        markSolved(gameId)
+      }
+
       setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words.toSorted() }])
       setWords((prev) => prev.filter((w) => !category.words.includes(w)))
       setSelectedWords([])
@@ -136,7 +148,7 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
       }
       return isOneAway ? 'one-away' : 'wrong'
     }
-  }, [categories, pastGuesses, selectedWords])
+  }, [categories, gameId, pastGuesses, selectedWords, solvedCategories])
 
   const getHint = useCallback(() => {
     const unsolvedCategories = Object.entries(categories).filter(
@@ -203,7 +215,17 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
         setIsLoading(false)
       } catch (error: unknown) {
         console.error('fetchConnectionsGame', { error })
-        setErrorMessage("We couldn't load this puzzle. Refresh the page to try again.")
+        // fetchConnectionsGame serves a stored puzzle without touching the network, so
+        // reaching here while offline means this one is not on the device -- and
+        // refreshing is then the single action that cannot work. With the service
+        // worker installed the shell even reloads successfully and fails again, so the
+        // generic advice is a loop. onLine is only trustworthy when false, which is
+        // exactly the direction being read.
+        setErrorMessage(
+          window.navigator.onLine
+            ? "We couldn't load this puzzle. Refresh the page to try again."
+            : 'You’re offline and this puzzle isn’t on this device. Play one that is, or try again when you’re online.',
+        )
         setIsLoading(false)
       }
     }

@@ -22,7 +22,13 @@ public/*
 !public/favicon-16x16.png
 !public/favicon-32x32.png
 !public/apple-touch-icon.png
+!public/icon-192.png
+!public/icon-512.png
+!public/icon-maskable-512.png
 !public/og-image.png
+# sw.js is hand-written source, not generated. scripts/generate-sw-manifest.js only
+# rewrites the copy in out/ at postbuild; this one is the input.
+!public/sw.js
 
 # Compiled Java class files
 *.class

@@ -14,6 +14,10 @@ export default tseslint.config(
     ignores: [
       '**/__mocks__/',
       '**/__snapshots__/',
+      // Parallel-agent worktrees are full checkouts of this repo. Without this,
+      // `npm run lint` lints every worktree's copy of every file and reports
+      // errors from whatever commit that worktree sits on.
+      '.claude/',
       '.cache/',
       '.next/',
       '.swc/',
@@ -65,9 +69,10 @@ export default tseslint.config(
     },
   },
 
-  // 4) Node scripts / config files may use CommonJS require().
+  // 4) Node scripts / config files may use CommonJS require(). test/**/*.js is here
+  // too: plain-JS tests run as CommonJS and reach for __dirname and require().
   {
-    files: ['scripts/**/*.{js,mjs,cjs,ts}', '*.config.{js,mjs,cjs,ts}', 'next.config.*'],
+    files: ['scripts/**/*.{js,mjs,cjs,ts}', '*.config.{js,mjs,cjs,ts}', 'next.config.*', 'test/**/*.js'],
     languageOptions: { globals: { ...globals.node } },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
@@ -75,6 +80,9 @@ export default tseslint.config(
   // 5) Jest rules scoped to test / mock / test-support files only.
   {
     files: [
+      // public/sw.js runs in a worker scope, so its test loads it as text and
+      // evaluates it -- which only works from a plain .js test file.
+      '**/*.test.js',
       '**/*.test.ts',
       '**/*.test.tsx',
       '**/*TestUtils.{ts,tsx}',

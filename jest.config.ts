@@ -29,12 +29,19 @@ const config: Config = {
     '^@services/(.*)$': '<rootDir>/src/services/$1',
     '^@test/(.*)$': '<rootDir>/test/$1',
     '^@types$': '<rootDir>/src/types',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '@fontsource/(.*)$': '<rootDir>/__mocks__/file-mock.js',
     '^framer-motion$': '<rootDir>/__mocks__/framer-motion.js',
   },
+  // clearMocks alone leaves jest.spyOn installed on the prototype for the rest of
+  // the file. restoreMocks puts the original back after every test.
+  restoreMocks: true,
   setupFiles: ['<rootDir>/jest.setup-test-env.js'],
   testEnvironment: 'jsdom',
-  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out/'],
+  // <rootDir>/.claude/ holds agent worktrees — full checkouts of this repo. Without
+  // this the suite discovers every worktree's copy of every test and reports failures
+  // from whatever commit that worktree happens to sit on.
+  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out/', '<rootDir>/\\.claude/'],
 }
 
 export default createJestConfig(config)
