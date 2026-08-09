@@ -44,11 +44,32 @@ function isStorable(response) {
   return Boolean(response) && response.ok && response.status !== 206
 }
 
+// Returns a promise so the caller can hand it to event.waitUntil -- a worker may be
+// killed the moment respondWith settles, which would drop the write. The catch is
+// load-bearing too: cache.put rejects on a full quota or an unsupported scheme, and an
+// unhandled rejection in a worker is both noisy and useless. The response is already
+// on its way to the page, so a lost write costs one re-fetch and nothing else.
 function putInCache(key, response) {
-  if (!isStorable(response)) return
+  if (!isStorable(response)) return Promise.resolve()
   var copy = response.clone()
-  caches.open(CACHE_NAME).then(function (cache) {
-    return cache.put(key, copy)
+  return caches
+    .open(CACHE_NAME)
+    .then(function (cache) {
+      return cache.put(key, copy)
+    })
+    .catch(function () {
+      return undefined
+    })
+}
+
+// The document wording is what a reader actually sees. A failed subresource never
+// renders its body -- but a *wrong* one would, which is the whole point of the guard
+// below.
+function offlineResponse(noun) {
+  return new Response('You are offline and this ' + noun + ' is not saved on your device.', {
+    headers: { 'Content-Type': 'text/plain' },
+    status: 503,
+    statusText: 'Offline',
   })
 }
 
@@ -63,19 +84,25 @@ self.addEventListener('install', function (event) {
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys
-          .filter(function (key) {
-            return key !== CACHE_NAME
-          })
-          .map(function (key) {
-            return caches.delete(key)
-          }),
-      )
-    }),
+    caches
+      .keys()
+      .then(function (keys) {
+        return Promise.all(
+          keys
+            .filter(function (key) {
+              return key !== CACHE_NAME
+            })
+            .map(function (key) {
+              return caches.delete(key)
+            }),
+        )
+      })
+      // Inside waitUntil and after the deletion, so a page adopted by this worker
+      // never sees the moment where the old caches are still around.
+      .then(function () {
+        return self.clients.claim()
+      }),
   )
-  self.clients.claim()
 })
 
 self.addEventListener('fetch', function (event) {
@@ -97,7 +124,7 @@ self.addEventListener('fetch', function (event) {
         return (
           hit ||
           fetch(request).then(function (response) {
-            putInCache(request, response)
+            event.waitUntil(putInCache(request, response))
             return response
           })
         )
@@ -110,34 +137,40 @@ self.addEventListener('fetch', function (event) {
   // was deliberately reverted (9514bd2) -- so network-first. A cache-first shell
   // would pin every installed player to the build they first opened.
   event.respondWith(
-    fetch(request)
-      .then(function (response) {
-        putInCache(shell || request, response)
+    // Two-argument then, not .then().catch(): a trailing catch also swallows anything
+    // the success handler throws, which would quietly answer a live request with a
+    // stale cached copy and look exactly like being offline.
+    fetch(request).then(
+      function (response) {
+        event.waitUntil(putInCache(shell || request, response))
         return response
-      })
-      .catch(function () {
+      },
+      function () {
         // In order: the exact URL (or its rewritten shell), the directory index the
-        // edge would have appended, then the home page. Falling straight to the home
-        // page would answer /privacy-policy/ with the puzzle board.
+        // edge would have appended, then -- for a document only -- the home page.
+        // Falling straight to the home page would answer /privacy-policy/ with the
+        // puzzle board.
         return caches
           .match(shell || request)
           .then(function (hit) {
             return hit || caches.match(indexFor(url.pathname) || url.pathname)
           })
           .then(function (hit) {
-            return hit || caches.match('/')
+            if (hit) return hit
+            // The home page is a last resort for a *document*. Handing its HTML to a
+            // subresource is worse than failing: /_next/data/<buildId>/g/<date>.json
+            // from a build this worker has not cached would resolve with 200 and an
+            // HTML body, and Next's route loader would throw on res.json(). Same for
+            // /site.webmanifest, the icons, robots.txt -- none of them precached.
+            // Without a worker each is a clean network error; keep it that way.
+            if (request.mode !== 'navigate') return offlineResponse('file')
+            return caches.match('/')
           })
           .then(function (hit) {
-            return (
-              hit ||
-              new Response('You are offline and this page is not on your device.', {
-                headers: { 'Content-Type': 'text/plain' },
-                status: 503,
-                statusText: 'Offline',
-              })
-            )
+            return hit || offlineResponse('page')
           })
-      }),
+      },
+    ),
   )
 })
 

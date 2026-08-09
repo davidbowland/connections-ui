@@ -125,9 +125,11 @@ Resources:
         - Key: 'environment'
           Value: !Ref Environment
 
-  # NOTE: public/sw.js replicates the three dynamic-route rewrites below. Offline
-  # there is no CloudFront, so /g/<date> would miss the service worker cache
-  # entirely without them. Change one and you must change the other.
+  # NOTE: public/sw.js replicates all four rewrites below -- the three dynamic-route
+  # rules in shellFor, and the trailing index.html rule in indexFor. Offline there is
+  # no CloudFront, so /g/<date> would miss the service worker cache entirely without
+  # them, and /privacy-policy/ would fall through to the home page. Change one and you
+  # must change the other.
   UiUrlRewriteFunction:
     Type: AWS::CloudFront::Function
     Properties:
