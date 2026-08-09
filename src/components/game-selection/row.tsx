@@ -11,6 +11,10 @@ export interface GameSelectionRowProps {
   isUpNext: boolean
   locale?: string
   onSelect: (gameId: GameId) => void
+  // The archive renders ~585 of these. Leaving each one in the tab order would put
+  // 585 stops between the disclosure and the next control, so the archive passes -1
+  // and moves focus with the arrow keys instead. The strip omits it and stays tabbable.
+  tabIndex?: number
 }
 
 const defaultLocale = (): string => (typeof navigator === 'undefined' ? 'en-US' : navigator.language)
@@ -36,6 +40,7 @@ export const GameSelectionRow = ({
   isUpNext,
   locale = defaultLocale(),
   onSelect,
+  tabIndex,
 }: GameSelectionRowProps): React.ReactNode => {
   const date = shortDate(gameId, locale)
 
@@ -67,6 +72,7 @@ export const GameSelectionRow = ({
           : ' text-black/70 hover:border-black/18 hover:bg-black/[0.03] dark:text-white/65 dark:hover:border-white/18 dark:hover:bg-white/[0.04]'
       }`}
       onClick={() => !isBlocked && onSelect(gameId)}
+      tabIndex={tabIndex}
       type="button"
     >
       <span aria-hidden="true">{date}</span>

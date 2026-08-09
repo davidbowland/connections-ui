@@ -195,4 +195,28 @@ describe('GameSelectionRow', () => {
 
     expect(screen.getByRole('button')).toHaveFocus()
   })
+
+  it('is a tab stop by default', async () => {
+    const user = userEvent.setup()
+    render(<GameSelectionRow {...props} />)
+
+    await user.tab()
+
+    expect(screen.getByRole('button')).toHaveFocus()
+  })
+
+  // The archive renders ~585 rows and lifts them out of the tab order, walking them
+  // with the arrow keys instead. They stay focusable, just not by Tab.
+  it('leaves the tab order when the caller asks it to', async () => {
+    const user = userEvent.setup()
+    render(<GameSelectionRow {...props} tabIndex={-1} />)
+
+    await user.tab()
+
+    expect(screen.getByRole('button')).not.toHaveFocus()
+
+    screen.getByRole('button').focus()
+
+    expect(screen.getByRole('button')).toHaveFocus()
+  })
 })
