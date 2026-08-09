@@ -4,8 +4,15 @@
 // CACHE_VERSION and PRECACHE are rewritten by scripts/generate-sw-manifest.js at
 // postbuild, so the cache name changes whenever the build does. The literals below
 // are only what a dev server sees; nothing ships with them.
+//
+// PRECACHE therefore lists only '/', the one URL that exists in both worlds. The
+// game shells sit at literal /g/[gameId]/ paths that scripts/generate-dynamic-pages.js
+// writes into out/, and `next dev` has never heard of them. addAll is atomic, so
+// naming one here cost a 404 in the dev-server log on every page load and then failed
+// the install -- meaning the worker never activated locally and none of the offline
+// behavior could be exercised in dev at all.
 var CACHE_VERSION = 'dev'
-var PRECACHE = ['/', '/g/%5BgameId%5D/index.html']
+var PRECACHE = ['/']
 
 var CACHE_NAME = 'common-threads-' + CACHE_VERSION
 

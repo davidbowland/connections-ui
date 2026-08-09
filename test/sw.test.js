@@ -206,12 +206,16 @@ describe('sw shellFor', () => {
 })
 
 describe('sw install', () => {
-  it('precaches the app shell and the game route', async () => {
+  // The list read here is the dev placeholder, which is only '/' -- the one URL a dev
+  // server can answer. The shipped list is written by scripts/generate-sw-manifest.js,
+  // which already fails the build when the game shells are missing from it. What this
+  // covers is the part that placeholder cannot: install caches every entry it is given.
+  it('precaches every entry in the manifest', async () => {
     const sw = setup()
 
     await dispatchLifecycle(sw, 'install')
 
-    expect([...sw.caches.stores.get(CACHE).keys()]).toEqual([`${ORIGIN}/`, `${ORIGIN}/g/%5BgameId%5D/index.html`])
+    expect([...sw.caches.stores.get(CACHE).keys()]).toEqual([`${ORIGIN}/`])
   })
 
   it('takes over from the previous worker immediately', async () => {

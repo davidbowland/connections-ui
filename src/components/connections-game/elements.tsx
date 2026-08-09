@@ -240,8 +240,11 @@ export const StatLine = ({ children }: { children: React.ReactNode }): React.Rea
   </p>
 )
 
+// Same 560px the board above it uses, so the picker reads as the next section of one
+// column rather than a narrow strip pinned under a wide grid. At 300px every row wrapped
+// its own width and the whole region rendered as one long thin ribbon.
 export const GameSelectionWrapper = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="mx-auto mb-16 max-w-[300px] md:mb-20">{children}</div>
+  <div className="mx-auto mb-16 max-w-[560px] md:mb-20">{children}</div>
 )
 
 // Mirrors the loaded board element for element so nothing moves when the puzzle arrives

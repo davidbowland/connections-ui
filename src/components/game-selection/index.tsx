@@ -259,126 +259,165 @@ const GameSelectionRegion = ({ gameId, isOnline, locale, snapshot }: RegionProps
 
   return (
     <section aria-label="Puzzles">
-      <h2 className="mb-2 text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55">
-        {headingFor(chosen, isSweep)}
-      </h2>
+      {/* The recommendation is the one thing on this screen that is a decision rather
+          than a list, so it gets the only filled panel. Without an edge of its own it
+          sat in the same flat column as everything under it and the whole region read
+          as one undifferentiated run of small grey type. */}
+      <div className="rounded-2xl border border-black/8 bg-black/[0.02] p-5 dark:border-white/8 dark:bg-white/[0.03]">
+        <h2 className="mb-2.5 text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55">
+          {headingFor(chosen, isSweep)}
+        </h2>
 
-      {chosen && (
-        <button
-          className="min-h-11 w-full rounded-full bg-[var(--accent)] px-4 text-[11px] uppercase tracking-[0.15em] text-white hover:bg-[var(--accent-hover)]"
-          onClick={() => goTo(chosen.id)}
-          type="button"
-        >
-          {chosen.replay ? `Play ${longDate(chosen.id, locale)} again` : `Play ${longDate(chosen.id, locale)}`}
-        </button>
-      )}
+        {chosen && (
+          <button
+            className="min-h-11 w-full rounded-full bg-[var(--accent)] px-4 text-[11px] uppercase tracking-[0.15em] text-white hover:bg-[var(--accent-hover)]"
+            onClick={() => goTo(chosen.id)}
+            type="button"
+          >
+            {chosen.replay ? `Play ${longDate(chosen.id, locale)} again` : `Play ${longDate(chosen.id, locale)}`}
+          </button>
+        )}
 
-      <p className="mt-3 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
-        {whyLine(chosen, isOffline, ids.length, gameId, isSweep)}
-      </p>
-
-      {/* Always mounted, empty while online. NVDA and JAWS announce a change of text
-          inside a region they are already watching; a role="status" element inserted
-          with its message already in it is routinely missed, which would make going
-          offline silent -- the one transition this region exists to report. */}
-      <p
-        className="mt-5 text-[11px] uppercase tracking-[0.15em] text-black/60 empty:mt-0 dark:text-white/55"
-        role="status"
-      >
-        {isOffline ? `You’re offline · ${deviceCount} on this device` : ''}
-      </p>
-
-      {/* Inventory, not news, so it is not announced: the count would otherwise be
-          re-read on every navigation, which is noise rather than information. */}
-      {isOnline && (
-        <p className="mt-5 text-[11px] uppercase tracking-[0.15em] text-black/60 dark:text-white/55">
-          {deviceCount} on this device
+        <p className="mt-3 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
+          {whyLine(chosen, isOffline, ids.length, gameId, isSweep)}
         </p>
-      )}
 
-      <div aria-labelledby="strip-heading" className="mt-7" role="group">
-        <h3 className="text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55" id="strip-heading">
-          Last 7 days
-        </h3>
-        <div className="mt-2.5 flex flex-col gap-2">{strip.map((id) => renderRow(id))}</div>
+        {/* Always mounted, empty while online. NVDA and JAWS announce a change of text
+            inside a region they are already watching; a role="status" element inserted
+            with its message already in it is routinely missed, which would make going
+            offline silent -- the one transition this region exists to report. */}
+        <p
+          className="mt-4 text-[11px] uppercase tracking-[0.15em] text-black/60 empty:mt-0 dark:text-white/55"
+          role="status"
+        >
+          {isOffline ? `You’re offline · ${deviceCount} on this device` : ''}
+        </p>
+
+        {/* Inventory, not news, so it is not announced: the count would otherwise be
+            re-read on every navigation, which is noise rather than information. */}
+        {isOnline && (
+          <p className="mt-4 text-[11px] uppercase tracking-[0.15em] text-black/60 dark:text-white/55">
+            {deviceCount} on this device
+          </p>
+        )}
       </div>
 
-      <button
-        aria-controls={isArchiveOpen ? ARCHIVE_ID : undefined}
-        aria-expanded={isArchiveOpen}
-        className="mt-5 min-h-11 text-[10px] uppercase tracking-[0.15em] text-black/60 hover:text-black/[0.88] dark:text-white/55 dark:hover:text-white/90"
-        onClick={() => setIsArchiveOpen((open) => !open)}
-        type="button"
-      >
-        See every puzzle
-      </button>
-
-      {isArchiveOpen && (
-        <>
-          <p className="mt-3 text-[11.5px] leading-5 text-black/60 dark:text-white/55">
-            {solvedCount === 0
-              ? 'You haven’t solved any of these yet.'
-              : `You’ve solved ${solvedCount} of ${ids.length} puzzles.`}
-            {isOffline &&
-              ` ${listedOnDevice.length} of them ${listedOnDevice.length === 1 ? 'is' : 'are'} on this device — the rest need a connection.`}
-          </p>
-
-          <div className="mt-5">
-            <label
-              className="mb-1.5 block text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55"
-              htmlFor="jump-to-month"
-            >
-              Jump to month
-            </label>
-            {/* Uncontrolled: the select keeps naming the month you jumped to, which is
-                where the scroll region now sits. */}
-            <select
-              className="w-full appearance-none rounded-xl border border-black/8 bg-black/[0.03] px-3 py-2 text-[11px] text-black/70 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/65"
-              defaultValue=""
-              id="jump-to-month"
-              onChange={(event) => jumpToMonth(event.target.value)}
-            >
-              <option value="" />
-              {months.map((month) => (
-                <option key={month.key} value={month.key}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* One tab stop for ~585 rows, and it is a row: exactly one carries
-              tabIndex 0 and the arrow keys move it. Tab therefore lands on a button
-              that announces itself as one, rather than on a container that gives a
-              keyboard user no clue that the rows are reachable at all. */}
-          <div
-            aria-label="Every puzzle, newest first"
-            className="mt-4 max-h-[420px] overflow-y-auto"
-            id={ARCHIVE_ID}
-            onFocus={onArchiveFocus}
-            onKeyDown={onArchiveKeyDown}
-            role="group"
+      {/* One list, two lengths. The strip and the archive used to be rendered together,
+          so opening the archive printed the same seven dates a second time a few hundred
+          pixels below the first -- the newest month always opens with exactly the week
+          already on screen. Swapping one for the other keeps the disclosure honest and
+          removes the duplicate outright. */}
+      <div className="mt-6 border-t border-black/8 pt-6 dark:border-white/8">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h3 className="text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55" id="strip-heading">
+            {isArchiveOpen ? 'Every puzzle' : 'Last 7 days'}
+          </h3>
+          {/* The label names the destination and never changes, so aria-expanded is
+              left to carry the state -- a control that renames itself on press reads as
+              a different control to anyone listening to it. */}
+          <button
+            aria-controls={isArchiveOpen ? ARCHIVE_ID : undefined}
+            aria-expanded={isArchiveOpen}
+            className="-mr-2 min-h-11 shrink-0 px-2 text-[10px] uppercase tracking-[0.15em] text-black/60 hover:text-black/[0.88] dark:text-white/55 dark:hover:text-white/90"
+            onClick={() => setIsArchiveOpen((open) => !open)}
+            type="button"
           >
-            {months.map((month) => (
-              <div data-month={month.key} key={month.key}>
-                <h3
-                  className="sticky top-0 bg-[#f4f4f6] py-1 text-[9px] uppercase tracking-[0.2em] text-black/60 dark:bg-[#060608] dark:text-white/55"
-                  id={`archive-${month.key}`}
+            See every puzzle
+          </button>
+        </div>
+
+        {isArchiveOpen ? (
+          <>
+            <p className="text-[11.5px] leading-5 text-black/60 dark:text-white/55">
+              {solvedCount === 0
+                ? 'You haven’t solved any of these yet.'
+                : `You’ve solved ${solvedCount} of ${ids.length} puzzles.`}
+              {isOffline &&
+                ` ${listedOnDevice.length} of them ${listedOnDevice.length === 1 ? 'is' : 'are'} on this device — the rest need a connection.`}
+            </p>
+
+            <div className="mt-5">
+              <label
+                className="mb-1.5 block text-[9px] uppercase tracking-[0.2em] text-black/60 dark:text-white/55"
+                htmlFor="jump-to-month"
+              >
+                Jump to month
+              </label>
+              {/* appearance-none strips the platform's own arrow, so without both the
+                  named placeholder and the chevron below this rendered as an empty
+                  rounded box that gave no sign it was a menu at all.
+
+                  Uncontrolled: the select keeps naming the month you jumped to, which is
+                  where the scroll region now sits. */}
+              <div className="relative">
+                <select
+                  className="min-h-11 w-full appearance-none rounded-xl border border-black/8 bg-black/[0.03] py-2 pl-3 pr-10 text-[11px] text-black/70 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/65"
+                  defaultValue=""
+                  id="jump-to-month"
+                  onChange={(event) => jumpToMonth(event.target.value)}
                 >
-                  {month.label}
-                </h3>
-                {/* A real list, so a screen reader says "3 of 31" instead of leaving
-                    the rows as anonymous buttons in an anonymous box. */}
-                <ul aria-labelledby={`archive-${month.key}`} className="mt-1 flex flex-col gap-2 pb-3">
-                  {month.ids.map((id, index) => (
-                    <li key={id}>{renderRow(id, month.start + index === activeIndex ? 0 : -1)}</li>
+                  <option value="">Pick a month</option>
+                  {months.map((month) => (
+                    <option key={month.key} value={month.key}>
+                      {month.label}
+                    </option>
                   ))}
-                </ul>
+                </select>
+                <svg
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-3.5 top-1/2 h-3 w-3 -translate-y-1/2 text-black/60 dark:text-white/55"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 12 12"
+                >
+                  <path d="M2.5 4.5 6 8l3.5-3.5" />
+                </svg>
               </div>
-            ))}
+            </div>
+
+            {/* One tab stop for ~585 rows, and it is a row: exactly one carries
+                tabIndex 0 and the arrow keys move it. Tab therefore lands on a button
+                that announces itself as one, rather than on a container that gives a
+                keyboard user no clue that the rows are reachable at all. */}
+            <div
+              aria-label="Every puzzle, newest first"
+              className="mt-4 max-h-[420px] overflow-y-auto rounded-xl border border-black/8 px-3 dark:border-white/8"
+              id={ARCHIVE_ID}
+              onFocus={onArchiveFocus}
+              onKeyDown={onArchiveKeyDown}
+              role="group"
+            >
+              {months.map((month) => (
+                <div data-month={month.key} key={month.key}>
+                  {/* The month name is the only thing separating one run of near
+                      identical dates from the next, so it is also the divider: a ruled
+                      band that stays put while its own rows scroll under it. */}
+                  <h3
+                    className="sticky top-0 z-10 border-b border-black/8 bg-[#f4f4f6] pb-1.5 pt-3 text-[9px] uppercase tracking-[0.2em] text-black/[0.88] dark:border-white/8 dark:bg-[#060608] dark:text-white/90"
+                    id={`archive-${month.key}`}
+                  >
+                    {month.label}
+                  </h3>
+                  {/* A real list, so a screen reader says "3 of 31" instead of leaving
+                      the rows as anonymous buttons in an anonymous box. */}
+                  <ul aria-labelledby={`archive-${month.key}`} className="mt-2 flex flex-col gap-2 pb-4">
+                    {month.ids.map((id, index) => (
+                      <li key={id}>{renderRow(id, month.start + index === activeIndex ? 0 : -1)}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div aria-labelledby="strip-heading" className="flex flex-col gap-2" role="group">
+            {strip.map((id) => renderRow(id))}
           </div>
-        </>
-      )}
+        )}
+      </div>
 
       <InstallCard mode={mode} onDismiss={dismiss} onInstall={install} onReopen={reopen} platform={platform} />
     </section>
