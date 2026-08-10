@@ -29,6 +29,11 @@ const ease = [0.32, 0.72, 0, 1] as const
 
 const getRandomValue = <T,>(arr: T[], random = Math.random): T => arr[Math.floor(random() * arr.length)]
 
+// scrollIntoView's `behavior` option beats the stylesheet, so the reduced-motion rule in
+// index.css cannot reach these scrolls. The preference has to be read here instead.
+const scrollBehavior = (): ScrollBehavior =>
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+
 export interface ConnectionsGameProps {
   gameId: GameId
   incorrectGuessesUntilHint?: number
@@ -73,15 +78,14 @@ export const ConnectionsGame = ({
   const [toast, setToast] = useState<{ key: number; message: string } | null>(null)
 
   const boardRef = useRef<HTMLDivElement>(null)
-  const hintsRef = useRef<HTMLDivElement>(null)
+  const newestHintRef = useRef<HTMLDivElement>(null)
+  // Seeded from the first render, so mounting a game that already has hints never scrolls
+  const previousHintCount = useRef(hints.length)
   const toastDelayTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const toastTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const scrollToBoard = () => {
-    setTimeout(() => boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
-  }
-  const scrollToHints = () => {
-    setTimeout(() => hintsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+    setTimeout(() => boardRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' }), 100)
   }
 
   const displayGameId = useMemo(() => {
@@ -133,6 +137,18 @@ export const ConnectionsGame = ({
     }
   }, [gameId, isLoading])
 
+  // A new hint is inserted directly above the button that asked for it, so it usually
+  // needs no scroll at all: `nearest` moves the minimum distance and does nothing when the
+  // card is already visible, which keeps the board on screen. Anchoring the hints
+  // container with `start` instead pinned the *oldest* hint to the top of the viewport and
+  // pushed the grid off it every time.
+  useEffect(() => {
+    if (hints.length > previousHintCount.current) {
+      newestHintRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' })
+    }
+    previousHintCount.current = hints.length
+  }, [hints.length])
+
   const showToastMessage = (message: string) => {
     clearTimeout(toastDelayTimer.current)
     clearTimeout(toastTimer.current)
@@ -159,11 +175,6 @@ export const ConnectionsGame = ({
   const handleSelectOneAway = (guess: string[]) => {
     selectWords(guess)
     scrollToBoard()
-  }
-
-  const handleGetHint = () => {
-    getHint()
-    scrollToHints()
   }
 
   const handleRevealSolution = () => {
@@ -228,9 +239,9 @@ export const ConnectionsGame = ({
           </AnimatePresence>
         </WordGrid>
 
-        <HintsContainer ref={hintsRef}>
+        <HintsContainer>
           {hints.map((hint, index) => (
-            <HintCard hint={hint} key={index} />
+            <HintCard hint={hint} key={index} ref={index === hints.length - 1 ? newestHintRef : undefined} />
           ))}
         </HintsContainer>
 
@@ -259,7 +270,7 @@ export const ConnectionsGame = ({
           {!isGameComplete && (isHintEnabled || isSolutionEnabled) && (
             <ActionRow>
               {isHintEnabled && (
-                <ActionButton onPress={handleGetHint} variant="outline">
+                <ActionButton onPress={getHint} variant="outline">
                   Get hint
                 </ActionButton>
               )}

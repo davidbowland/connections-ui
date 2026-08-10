@@ -84,20 +84,21 @@ export const SolvedCategoryCard = ({
   )
 }
 
-export const HintsContainer = ({
-  children,
-  ref,
-}: {
-  children: React.ReactNode
-  ref?: React.Ref<HTMLDivElement>
-}): React.ReactNode => (
-  <div className="mb-2 mt-4" ref={ref}>
+// role="status" so a new hint is announced instead of appearing in silence — the scroll
+// that used to be the only signal was a sighted-only affordance. The container renders
+// even when empty on purpose: a live region inserted at the same moment as its content
+// is not reliably announced, so it has to be in the DOM ahead of the first hint.
+export const HintsContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <div className="mb-2 mt-4" data-testid="hints" role="status">
     {children}
   </div>
 )
 
-export const HintCard = ({ hint }: { hint: string }): React.ReactNode => (
-  <div className="mb-3 flex items-start gap-3 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] px-4 py-3">
+export const HintCard = ({ hint, ref }: { hint: string; ref?: React.Ref<HTMLDivElement> }): React.ReactNode => (
+  <div
+    className="mb-3 flex items-start gap-3 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] px-4 py-3"
+    ref={ref}
+  >
     <span
       aria-hidden="true"
       className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-violet-400/35 text-[10px] text-violet-600 dark:text-purple-200/70"

@@ -204,6 +204,63 @@ describe('ConnectionsGame', () => {
     expect(screen.queryByText(/Test hint/)).not.toBeInTheDocument()
   })
 
+  it('announces hints politely', () => {
+    setup({ hints: ['Test hint 1'] })
+    expect(screen.getByTestId('hints')).toHaveAttribute('role', 'status')
+  })
+
+  it('keeps the hints live region mounted before the first hint arrives', () => {
+    setup({ hints: [] })
+    expect(screen.getByTestId('hints')).toBeInTheDocument()
+  })
+
+  const addHint = (hints: string[]) => {
+    jest.mocked(useConnectionsGame).mockReturnValue({ ...useConnectionsGameResult, hints })
+  }
+
+  it('scrolls the newest hint the minimum distance when a hint arrives', () => {
+    const { rerender } = setup({ hints: ['Test hint 1'] })
+
+    addHint(['Test hint 1', 'Test hint 2'])
+    rerender(<ConnectionsGame gameId={gameId} />)
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' })
+  })
+
+  it('targets the newest hint card rather than the first', () => {
+    const { rerender } = setup({ hints: ['Test hint 1'] })
+
+    addHint(['Test hint 1', 'Test hint 2'])
+    rerender(<ConnectionsGame gameId={gameId} />)
+
+    const [target] = jest.mocked(window.HTMLElement.prototype.scrollIntoView).mock.contexts as HTMLElement[]
+    expect(target).toHaveTextContent('Test hint 2')
+    expect(target).not.toHaveTextContent('Test hint 1')
+  })
+
+  it('does not scroll when a hint is already on the board', () => {
+    const { rerender } = setup({ hints: ['Test hint 1'] })
+
+    rerender(<ConnectionsGame gameId={gameId} />)
+
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled()
+  })
+
+  it('does not scroll on mount when the board already has hints', () => {
+    setup({ hints: ['Test hint 1', 'Test hint 2'] })
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled()
+  })
+
+  it('jumps to a new hint without animation when the player prefers reduced motion', () => {
+    const { rerender } = setup({ hints: ['Test hint 1'] })
+
+    jest.mocked(window.matchMedia).mockReturnValueOnce({ matches: true } as MediaQueryList)
+    addHint(['Test hint 1', 'Test hint 2'])
+    rerender(<ConnectionsGame gameId={gameId} />)
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'nearest' })
+  })
+
   it('shows timer in stat line', () => {
     setup()
     expect(screen.getByText(/0:00/)).toBeInTheDocument()
@@ -285,6 +342,17 @@ describe('ConnectionsGame', () => {
     act(() => jest.advanceTimersByTime(100))
 
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+  })
+
+  it('jumps the board without animation when the player prefers reduced motion', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    setup({ oneAwayGuesses: [['WORD01', 'WORD02', 'WORD03', 'WORD05']] })
+
+    await user.click(screen.getByRole('button', { name: 'Select WORD01 WORD02 WORD03 WORD05 again' }))
+    jest.mocked(window.matchMedia).mockReturnValueOnce({ matches: true } as MediaQueryList)
+    act(() => jest.advanceTimersByTime(100))
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' })
   })
 
   it('selects the words again when a one-away row is clicked', async () => {
@@ -410,7 +478,8 @@ describe('ConnectionsGame', () => {
       selectedWords: REPEAT,
     })
 
-    expect(screen.getByRole('status')).toHaveTextContent('You already tried this — it was one away.')
+    expect(screen.getByTestId('guard-line')).toHaveAttribute('role', 'status')
+    expect(screen.getByTestId('guard-line')).toHaveTextContent('You already tried this — it was one away.')
   })
 
   it('keeps the one-away list below the action buttons so submit never moves', () => {
