@@ -15,6 +15,8 @@ const Forbidden = (): React.ReactNode => {
       <Head>
         <title>Common Threads | 403: Forbidden</title>
         <meta content="You don't have permission to view that page." name="description" />
+        {/* See the note in `400.tsx`. */}
+        <meta content="noindex, follow" name="robots" />
       </Head>
       {display403 && (
         <ServerErrorMessage title="403: Forbidden">

@@ -16,26 +16,6 @@ jest.mock('@heroui/react', () => ({
 jest.mock('next/router', () => ({
   useRouter: () => ({ asPath: '/g/2024-01-01' }),
 }))
-jest.mock('next/head', () => {
-  const MockHead = ({ children }: { children: React.ReactNode }) => {
-    document.querySelectorAll('meta[data-mock-head]').forEach((el) => el.remove())
-    React.Children.toArray(children).forEach((child) => {
-      if (!React.isValidElement(child)) return
-      if (child.type === 'title') {
-        document.title = (child.props as { children: string }).children
-      }
-      if (child.type === 'meta') {
-        const meta = document.createElement('meta')
-        Object.entries(child.props as Record<string, string>).forEach(([key, value]) => meta.setAttribute(key, value))
-        meta.setAttribute('data-mock-head', 'true')
-        document.head.appendChild(meta)
-      }
-    })
-    return null
-  }
-  MockHead.displayName = 'MockHead'
-  return MockHead
-})
 
 describe('GamePage', () => {
   beforeAll(() => {

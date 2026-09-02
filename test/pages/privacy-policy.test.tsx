@@ -7,22 +7,6 @@ import PrivacyPage from '@pages/privacy-policy'
 
 jest.mock('@components/privacy-policy')
 
-jest.mock('next/head', () => {
-  const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.toArray(children)
-      .filter(
-        (child): child is React.ReactElement<{ children: string }> =>
-          React.isValidElement(child) && child.type === 'title',
-      )
-      .forEach((child) => {
-        document.title = child.props.children
-      })
-    return null
-  }
-  MockHead.displayName = 'MockHead'
-  return MockHead
-})
-
 describe('Privacy page', () => {
   beforeAll(() => {
     jest.mocked(PrivacyPolicy).mockReturnValue(<>PrivacyPolicy</>)
@@ -37,5 +21,12 @@ describe('Privacy page', () => {
   it('renders title', () => {
     render(<PrivacyPage />)
     expect(document.title).toEqual('Common Threads | Privacy Policy')
+  })
+
+  it('names production as the canonical, so the test deploy does not compete with it', () => {
+    render(<PrivacyPage />)
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toEqual(
+      'https://connections.dbowland.com/privacy-policy/',
+    )
   })
 })

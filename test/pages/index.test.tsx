@@ -15,29 +15,6 @@ jest.mock('next/router', () => ({
   useRouter: jest.fn().mockReturnValue({ push: jest.fn(), replace: jest.fn() }),
 }))
 
-jest.mock('next/head', () => {
-  const MockHead = ({ children }: { children: React.ReactNode }) => {
-    document.querySelectorAll('[data-mock-head]').forEach((el) => el.remove())
-    React.Children.toArray(children).forEach((child) => {
-      if (!React.isValidElement(child)) return
-      if (child.type === 'title') {
-        document.title = (child.props as { children: string }).children
-      }
-      if (child.type === 'meta' || child.type === 'link') {
-        const element = document.createElement(child.type)
-        Object.entries(child.props as Record<string, string>).forEach(([key, value]) =>
-          element.setAttribute(key, value),
-        )
-        element.setAttribute('data-mock-head', 'true')
-        document.head.appendChild(element)
-      }
-    })
-    return null
-  }
-  MockHead.displayName = 'MockHead'
-  return MockHead
-})
-
 describe('Index page', () => {
   // 2025-01-15T10:00:00Z
   const noon = () => Date.UTC(2025, 0, 15, 10)

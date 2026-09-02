@@ -9,6 +9,8 @@ const InternalServerError = (): React.ReactNode => {
       <Head>
         <title>Common Threads | 500: Internal Server Error</title>
         <meta content="Something broke on our end. Try again in a moment." name="description" />
+        {/* See the note in `400.tsx`. */}
+        <meta content="noindex, follow" name="robots" />
       </Head>
       <ServerErrorMessage title="500: Internal Server Error">
         Something broke on our end. Try again in a moment.

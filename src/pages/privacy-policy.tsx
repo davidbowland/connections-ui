@@ -12,6 +12,8 @@ const PrivacyPage = (): React.ReactNode => {
           content="What Common Threads collects, why we collect it, and how to reach us about it."
           name="description"
         />
+        {/* Points at production from both deploys -- see the note in `index.tsx`. */}
+        <link href="https://connections.dbowland.com/privacy-policy/" rel="canonical" />
       </Head>
       <main>
         <div className="mx-auto max-w-[900px] shadow-md">

@@ -7,22 +7,6 @@ import BadRequest from '@pages/400'
 
 jest.mock('@components/server-error-message')
 
-jest.mock('next/head', () => {
-  const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.toArray(children)
-      .filter(
-        (child): child is React.ReactElement<{ children: string }> =>
-          React.isValidElement(child) && child.type === 'title',
-      )
-      .forEach((child) => {
-        document.title = child.props.children
-      })
-    return null
-  }
-  MockHead.displayName = 'MockHead'
-  return MockHead
-})
-
 describe('400 error page', () => {
   beforeAll(() => {
     jest.mocked(ServerErrorMessage).mockReturnValue(<>ServerErrorMessage</>)
@@ -39,5 +23,10 @@ describe('400 error page', () => {
   it('renders title', () => {
     render(<BadRequest />)
     expect(document.title).toEqual('Common Threads | 400: Bad Request')
+  })
+
+  it('keeps the error page out of an index', () => {
+    render(<BadRequest />)
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toEqual('noindex, follow')
   })
 })

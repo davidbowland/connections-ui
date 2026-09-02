@@ -7,21 +7,6 @@ import RerollPage, { getStaticPaths, getStaticProps } from '@pages/g/[gameId]/re
 import { rerollGame } from '@services/connections'
 
 jest.mock('@services/connections')
-jest.mock('next/head', () => {
-  const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.toArray(children)
-      .filter(
-        (child): child is React.ReactElement<{ children: string }> =>
-          React.isValidElement(child) && child.type === 'title',
-      )
-      .forEach((child) => {
-        document.title = child.props.children
-      })
-    return null
-  }
-  MockHead.displayName = 'MockHead'
-  return MockHead
-})
 const mockUseRouter = jest.fn().mockReturnValue({ asPath: '/g/2024-01-01/reroll' })
 jest.mock('next/router', () => ({
   useRouter: (...args: any[]) => mockUseRouter(...args),

@@ -7,22 +7,6 @@ import Forbidden from '@pages/403'
 
 jest.mock('@components/server-error-message')
 
-jest.mock('next/head', () => {
-  const MockHead = ({ children }: { children: React.ReactNode }) => {
-    React.Children.toArray(children)
-      .filter(
-        (child): child is React.ReactElement<{ children: string }> =>
-          React.isValidElement(child) && child.type === 'title',
-      )
-      .forEach((child) => {
-        document.title = child.props.children
-      })
-    return null
-  }
-  MockHead.displayName = 'MockHead'
-  return MockHead
-})
-
 describe('403 error page', () => {
   beforeAll(() => {
     jest.mocked(ServerErrorMessage).mockReturnValue(<>ServerErrorMessage</>)
@@ -57,5 +41,11 @@ describe('403 error page', () => {
     window.location.pathname = '/an-invalid-page'
     render(<Forbidden />)
     expect(document.title).toEqual('Common Threads | 403: Forbidden')
+  })
+
+  it('keeps the error page out of an index', () => {
+    window.location.pathname = '/an-invalid-page'
+    render(<Forbidden />)
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toEqual('noindex, follow')
   })
 })

@@ -27,6 +27,12 @@ const Index = ({ now = Date.now }: { now?: () => number }): React.ReactNode => {
           content="Find the four groups of four words that belong together. A new Common Threads puzzle every day."
           name="description"
         />
+        {/*
+          Hardcoded to production, and deliberately not derived from the environment: this same build
+          is deployed byte for byte to connections.bowland.link, where it serves a full crawlable copy
+          of this page. The canonical is the only tag that tells a search engine which of the two is
+          the original -- og:url below is an unfurl hint and is not read for canonicalization.
+        */}
         <link href="https://connections.dbowland.com/" rel="canonical" />
         <meta content="Common Threads" property="og:title" />
         <meta content="Find the common thread. A new puzzle every day." property="og:description" />

@@ -15,6 +15,8 @@ const NotFound = (): React.ReactNode => {
       <Head>
         <title>Common Threads | 404: Not Found</title>
         <meta content="That page doesn't exist. Head back to today's puzzle." name="description" />
+        {/* See the note in `400.tsx`. */}
+        <meta content="noindex, follow" name="robots" />
       </Head>
       {display404 && <ServerErrorMessage title="404: Not Found">That page doesn&apos;t exist.</ServerErrorMessage>}
     </>
