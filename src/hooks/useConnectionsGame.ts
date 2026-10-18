@@ -117,11 +117,10 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
       const [categoryName, category] = categoryEntry
 
       // Recorded here, in the correct-guess branch, rather than from an effect watching
-      // solvedCategories. revealSolution() fills solvedCategories with every remaining
-      // category, so a completed board cannot tell a win from a reveal -- but reveals
-      // never run this code, and neither does a wrong, duplicate, or short submission.
+      // solvedCategories, so a wrong, duplicate, or short submission never records it.
       // The guard fires on the one submission that takes the last category, so
       // markSolved runs once per win rather than on every render of a finished board.
+      // revealSolution() records the puzzle itself.
       if (solvedCategories.length + 1 === Object.keys(categories).length) {
         markSolved(gameId)
       }
@@ -175,12 +174,14 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
       words: category.words,
     }))
 
+    // A revealed board is finished, so it leaves the list of puzzles still to play.
+    markSolved(gameId)
     setRevealedHints({})
     setSelectedWords([])
     setIsSelectionSubmitted(false)
     setSolvedCategories((prev) => [...prev, ...newSolved])
     setWords([])
-  }, [categories, solvedCategories])
+  }, [categories, gameId, solvedCategories])
 
   useEffect(() => {
     setIsLoading(true)

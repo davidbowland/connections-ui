@@ -715,17 +715,18 @@ describe('useConnectionsGame', () => {
     expect(storage.markSolved).not.toHaveBeenCalled()
   })
 
-  it('does not record the puzzle when the solution is revealed', async () => {
+  it('records the puzzle when the solution is revealed', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     result.current.revealSolution()
     await waitFor(() => expect(result.current.solvedCategories).toHaveLength(4))
 
-    expect(storage.markSolved).not.toHaveBeenCalled()
+    expect(storage.markSolved).toHaveBeenCalledWith(gameId)
+    expect(storage.markSolved).toHaveBeenCalledTimes(1)
   })
 
-  it('does not record the puzzle when three categories are solved and the rest revealed', async () => {
+  it('records the puzzle once when three categories are solved and the rest revealed', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -737,7 +738,8 @@ describe('useConnectionsGame', () => {
     await waitFor(() => expect(result.current.solvedCategories).toHaveLength(4))
     await waitFor(() => expect(result.current.words).toEqual([]))
 
-    expect(storage.markSolved).not.toHaveBeenCalled()
+    expect(storage.markSolved).toHaveBeenCalledWith(gameId)
+    expect(storage.markSolved).toHaveBeenCalledTimes(1)
   })
 
   it('records the puzzle currently being played, not the one it replaced', async () => {
