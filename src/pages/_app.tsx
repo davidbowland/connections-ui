@@ -1,4 +1,11 @@
-import '@fontsource/space-grotesk'
+// Every weight the UI asks for: font-light, regular, HeroUI's medium buttons, font-semibold and
+// font-bold. The bare package import is 400 alone, which left browsers faking bold and rendering
+// light text at regular weight.
+import '@fontsource/space-grotesk/300.css'
+import '@fontsource/space-grotesk/400.css'
+import '@fontsource/space-grotesk/500.css'
+import '@fontsource/space-grotesk/600.css'
+import '@fontsource/space-grotesk/700.css'
 import type { AppProps } from 'next/app'
 import React, { useEffect } from 'react'
 
