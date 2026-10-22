@@ -229,6 +229,66 @@ describe('useConnectionsGame', () => {
     expect(result.current.selectedWords).toEqual([])
   })
 
+  describe('search phrases', () => {
+    const searchedGame = {
+      categories: {
+        Fish: {
+          hint: 'Gone fishing?',
+          searches: { BASS: 'bass fish', CARP: 'carp fish', PERCH: 'perch fish', PIKE: 'pike fish' },
+          words: ['PIKE', 'BASS', 'PERCH', 'CARP'],
+        },
+        Planets: {
+          hint: 'Look up',
+          searches: { MARS: 'mars planet', MERCURY: 'mercury planet' },
+          words: ['MERCURY', 'MARS', 'VENUS', 'EARTH'],
+        },
+      },
+    }
+
+    const loadSearchedGame = async () => {
+      jest.mocked(connections).fetchConnectionsGame.mockResolvedValueOnce({ data: searchedGame, isGenerating: false })
+      const rendered = renderHook(() => useConnectionsGame(gameId, () => 0))
+      await waitFor(() => expect(rendered.result.current.isLoading).toBe(false))
+      return rendered
+    }
+
+    it('carries a solved category’s search phrases', async () => {
+      const { result } = await loadSearchedGame()
+
+      for (const word of ['PIKE', 'BASS', 'PERCH', 'CARP']) {
+        await selectWord(result, word)
+      }
+      expect(result.current.submitWords()).toBe('correct')
+
+      await waitFor(() => expect(result.current.solvedCategories).toHaveLength(1))
+      expect(result.current.solvedCategories[0]).toEqual({
+        description: 'Fish',
+        searches: { BASS: 'bass fish', CARP: 'carp fish', PERCH: 'perch fish', PIKE: 'pike fish' },
+        words: ['BASS', 'CARP', 'PERCH', 'PIKE'],
+      })
+    })
+
+    it('carries each revealed category’s own search phrases', async () => {
+      const { result } = await loadSearchedGame()
+
+      result.current.revealSolution()
+
+      await waitFor(() => expect(result.current.solvedCategories).toHaveLength(2))
+      expect(result.current.solvedCategories).toEqual([
+        {
+          description: 'Fish',
+          searches: { BASS: 'bass fish', CARP: 'carp fish', PERCH: 'perch fish', PIKE: 'pike fish' },
+          words: ['PIKE', 'BASS', 'PERCH', 'CARP'],
+        },
+        {
+          description: 'Planets',
+          searches: { MARS: 'mars planet', MERCURY: 'mercury planet' },
+          words: ['MERCURY', 'MARS', 'VENUS', 'EARTH'],
+        },
+      ])
+    })
+  })
+
   it('limits selection to 4 words', async () => {
     const { result } = renderHook(() => useConnectionsGame(gameId, () => 0))
 

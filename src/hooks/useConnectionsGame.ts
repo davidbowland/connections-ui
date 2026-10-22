@@ -125,7 +125,10 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
         markSolved(gameId)
       }
 
-      setSolvedCategories((prev) => [...prev, { description: categoryName, words: category.words.toSorted() }])
+      setSolvedCategories((prev) => [
+        ...prev,
+        { description: categoryName, searches: category.searches, words: category.words.toSorted() },
+      ])
       setWords((prev) => prev.filter((w) => !category.words.includes(w)))
       setSelectedWords([])
       setIsSelectionSubmitted(false)
@@ -171,6 +174,7 @@ export const useConnectionsGame = (gameId: string, random = Math.random): UseCon
 
     const newSolved = remainingCategories.map(([categoryName, category]) => ({
       description: categoryName,
+      searches: category.searches,
       words: category.words,
     }))
 

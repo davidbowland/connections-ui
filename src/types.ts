@@ -10,11 +10,15 @@ export interface ConnectionsGame {
 
 export interface Category {
   hint: string
+  // Word (as it appears in words) -> the web-search phrase for the sense this category uses.
+  // Optional because puzzles generated before phrases existed have none.
+  searches?: Record<string, string>
   words: string[]
 }
 
 export interface SolvedCategory {
   description: string
+  searches?: Record<string, string>
   words: string[]
 }
 

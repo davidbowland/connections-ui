@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import React from 'react'
 
 import { BrandMark } from '@components/brand-mark'
+import { WordSearchLink } from '@components/word-search-link'
 import { solvedCardInk } from '@config/contrast'
 import { GameColor } from '@types'
 
@@ -55,10 +56,12 @@ export const BoardContainer = ({
 export const SolvedCategoryCard = ({
   color,
   description,
+  searches,
   words,
 }: {
   color: GameColor
   description: string
+  searches?: Record<string, string>
   words: string[]
 }): React.ReactNode => {
   const ink = solvedCardInk(color.background)
@@ -78,7 +81,20 @@ export const SolvedCategoryCard = ({
         }
       >
         <p className="text-xs font-bold uppercase tracking-widest">{description}</p>
-        <p className="mt-1 text-xs font-light tracking-wide">{words.join(' · ')}</p>
+        {/* A list so a screen reader hears "list, 4 items". The separator lives inside each <li>
+            (before every word but the first) rather than between them, so the count stays 4, and
+            it is aria-hidden so it is never read out as "middle dot". A word with no phrase --
+            every puzzle made before phrases existed -- searches for itself. role="list" is not
+            redundant: Tailwind's preflight sets list-style: none, and Safari then drops the
+            list role, so VoiceOver would never say "list, 4 items". */}
+        <ul className="mt-1 flex flex-wrap items-center justify-center text-xs font-light tracking-wide" role="list">
+          {words.map((word, index) => (
+            <li className="flex items-center" key={word}>
+              {index > 0 && <span aria-hidden="true">·</span>}
+              <WordSearchLink phrase={searches?.[word] ?? word} word={word} />
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )

@@ -1,13 +1,15 @@
 import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React, { act } from 'react'
 
 import { ConnectionsGame } from './index'
 import { dedupeKey, useConnectionsGame } from '@hooks/useConnectionsGame'
+import * as connections from '@services/connections'
 import { gameId, useConnectionsGameResult, wordList } from '@test/__mocks__'
 
 jest.mock('@hooks/useConnectionsGame')
+jest.mock('@services/connections')
 
 describe('ConnectionsGame', () => {
   const setup = (overrides: Partial<ReturnType<typeof useConnectionsGame>> = {}) => {
@@ -48,13 +50,92 @@ describe('ConnectionsGame', () => {
     })
   })
 
-  it('displays solved category with words joined by dot separator', () => {
-    setup({
-      solvedCategories: [{ description: 'Category 1', words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'] }],
-      words: wordList.slice(4),
+  describe('solved category card', () => {
+    const fish = {
+      description: 'Category 1',
+      searches: { BASS: 'bass fish', CARP: 'carp fish', PERCH: 'perch fish', PIKE: 'pike fish' },
+      words: ['BASS', 'CARP', 'PERCH', 'PIKE'],
+    }
+
+    const queryOf = (link: HTMLElement): string | null => new URL(link.getAttribute('href') ?? '').searchParams.get('q')
+
+    it('shows the category name', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      expect(screen.getByText('Category 1')).toBeInTheDocument()
     })
-    expect(screen.getByText('Category 1')).toBeInTheDocument()
-    expect(screen.getByText('WORD01 · WORD02 · WORD03 · WORD04')).toBeInTheDocument()
+
+    it('lists the four words as four links', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      const list = screen.getByRole('list')
+      expect(within(list).getAllByRole('listitem')).toHaveLength(4)
+      expect(within(list).getAllByRole('link')).toHaveLength(4)
+    })
+
+    it('names each link for its word, its phrase, and DuckDuckGo', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      const names = [
+        'BASS, look up bass fish on DuckDuckGo (opens in a new tab)',
+        'CARP, look up carp fish on DuckDuckGo (opens in a new tab)',
+        'PERCH, look up perch fish on DuckDuckGo (opens in a new tab)',
+        'PIKE, look up pike fish on DuckDuckGo (opens in a new tab)',
+      ]
+      expect(names.map((name) => screen.getByRole('link', { name }))).toEqual(screen.getAllByRole('link'))
+    })
+
+    it('opens every link in a new tab without handing the page an opener', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      expect(screen.getAllByRole('link').map((link) => link.getAttribute('target'))).toEqual(Array(4).fill('_blank'))
+      expect(screen.getAllByRole('link').map((link) => link.getAttribute('rel'))).toEqual(
+        Array(4).fill('noopener noreferrer'),
+      )
+    })
+
+    it('searches each word’s phrase', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      expect(screen.getAllByRole('link').map(queryOf)).toEqual(['bass fish', 'carp fish', 'perch fish', 'pike fish'])
+    })
+
+    it('searches the bare word when the puzzle has no phrases', () => {
+      setup({
+        solvedCategories: [{ description: 'Category 1', words: ['WORD01', 'WORD02', 'WORD03', 'WORD04'] }],
+        words: wordList.slice(4),
+      })
+
+      expect(screen.getAllByRole('link').map(queryOf)).toEqual(['WORD01', 'WORD02', 'WORD03', 'WORD04'])
+      expect(
+        screen.getByRole('link', { name: 'WORD01, look up WORD01 on DuckDuckGo (opens in a new tab)' }),
+      ).toBeInTheDocument()
+    })
+
+    it('searches the bare word for a word the phrases leave out', () => {
+      setup({
+        solvedCategories: [{ ...fish, searches: { BASS: 'bass fish', PIKE: 'pike fish' } }],
+        words: wordList.slice(4),
+      })
+
+      expect(screen.getAllByRole('link').map(queryOf)).toEqual(['bass fish', 'CARP', 'PERCH', 'pike fish'])
+    })
+
+    it('hides the dot separators from assistive technology', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      const separators = screen.getAllByText('·')
+      expect(separators).toHaveLength(3)
+      expect(separators.map((separator) => separator.getAttribute('aria-hidden'))).toEqual(['true', 'true', 'true'])
+    })
+
+    it('renders plain links that fetch nothing', () => {
+      setup({ solvedCategories: [fish], words: wordList.slice(4) })
+
+      expect(screen.getAllByRole('link').map((link) => link.onclick)).toEqual([null, null, null, null])
+      expect(connections.fetchConnectionsGame).not.toHaveBeenCalled()
+      expect(connections.rerollGame).not.toHaveBeenCalled()
+    })
   })
 
   it('calls selectWord when word tile is clicked', async () => {

@@ -215,6 +215,7 @@ export const ConnectionsGame = ({
               <SolvedCategoryCard
                 color={categoryColors[category.description]}
                 description={category.description}
+                searches={category.searches}
                 words={category.words}
               />
             </motion.div>
